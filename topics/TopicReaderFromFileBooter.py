@@ -1,15 +1,15 @@
-from ctumrs.topics.DumpedTextFile import DumpedTextFile
-from ctumrs.topics.ThreeDPositionToVelocityObsSerieBuilderFromDumpedTextFile import \
-    ThreeDPositionToVelocityObsSerieBuilderFromDumpedTextFile
+from mUtility.database.file.RowsStartWithColNames import RowsStartWithColNames
+from mDynamicSystem.obs.threeDPosVel.PosToVelObsSerieBuilderFromRowsStartWithColNames import \
+    PosToVelObsSerieBuilderFromRowsStartWithColNames
 
-dumpedTextFile = DumpedTextFile(
-    "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-step/uav1-odometry-odom_gps.txt")
+dumpedTextFile = RowsStartWithColNames(
+    "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/inner-squares/uav2OdmGps.txt")
 
-threeDMaker = ThreeDPositionToVelocityObsSerieBuilderFromDumpedTextFile(dumpedTextFile,
-                                                                        ["field.pose.pose.position.x"
+threeDMaker = PosToVelObsSerieBuilderFromRowsStartWithColNames(dumpedTextFile,
+                                                               ["field.pose.pose.position.x"
                                                                             , "field.pose.pose.position.y"
                                                                             , "field.pose.pose.position.z"],
-                                                                        5000)
-threeDMaker.saveToFileWithoutTime(
-    "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-step/manip/pos-vel-measurement-from-gps.txt"
+                                                               100000)
+threeDMaker.saveToFileWithTime(
+    "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/inner-squares/gps-uav2-pos-vel.txt"
     , ",")
