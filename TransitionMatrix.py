@@ -1,6 +1,6 @@
 import numpy as np
 
-from ctumrs.Utilities import *
+from ctumrs.Utility import Utility
 from ctumrs.TimePosVelsClusteringStrgy import TimePosVelsClusteringStrgy
 
 class TransitionMatrix:
@@ -62,6 +62,7 @@ class TransitionMatrix:
                 return rowOrColNum
 
     def getNpTransitionMatrix(self)->np.array:
+        utility = Utility()
         if self.__npTransitionMatrix is None:
             self.__npTransitionMatrix = np.zeros((self.__leaderTimePosVelClusters.getClustersNum() * self.__followerTimePosVelClusters.getClustersNum()
              , self.__leaderTimePosVelClusters.getClustersNum() * self.__followerTimePosVelClusters.getClustersNum()))
@@ -70,25 +71,25 @@ class TransitionMatrix:
             for leaderUavCurTimePosVelCounter, curLeaderUavTimePosVel in enumerate(self.__leaderUavTimePosVels):
                 if leaderUavCurTimePosVelCounter < 100000:
                     if leaderUavCurTimePosVelCounter > 1:
-                        curClosestFollowerTimePosVel = findClosestTimeWiseFollowerTimePosVelToLeaderTimePosVel(
+                        curClosestFollowerTimePosVel = utility.findClosestTimeWiseFollowerTimePosVelToLeaderTimePosVel(
                             curLeaderUavTimePosVel, self.__followerUavTimePosVels)
 
                         # find previous leader follower timewisely
                         prvLeaderUavTimePosVel = self.__leaderUavTimePosVels[leaderUavCurTimePosVelCounter - 1]
-                        prvClosestFollowerTimePosVel = findClosestTimeWiseFollowerTimePosVelToLeaderTimePosVel(
+                        prvClosestFollowerTimePosVel = utility.findClosestTimeWiseFollowerTimePosVelToLeaderTimePosVel(
                             prvLeaderUavTimePosVel, self.__followerUavTimePosVels)
 
                         # Finding the label for previous leader follower  observation
                         prvLeaderUavLabel = \
-                        self.__leaderTimePosVelClusters.getFittedClusters().predict([getPosVelByTimePosVel(prvLeaderUavTimePosVel)])[0]
+                        self.__leaderTimePosVelClusters.getFittedClusters().predict([utility.getPosVelByTimePosVel(prvLeaderUavTimePosVel)])[0]
                         prvFollowerUavLabel = self.__followerTimePosVelClusters.getFittedClusters().predict(
-                            [getPosVelByTimePosVel(prvClosestFollowerTimePosVel)])[0]
+                            [utility.getPosVelByTimePosVel(prvClosestFollowerTimePosVel)])[0]
 
                         # Finding the label for current leader follower  observation
                         curLeaderUavLabel = \
-                        self.__leaderTimePosVelClusters.getFittedClusters().predict([getPosVelByTimePosVel(curLeaderUavTimePosVel)])[0]
+                        self.__leaderTimePosVelClusters.getFittedClusters().predict([utility.getPosVelByTimePosVel(curLeaderUavTimePosVel)])[0]
                         curFollowerUavLabel = self.__followerTimePosVelClusters.getFittedClusters().predict(
-                            [getPosVelByTimePosVel(curClosestFollowerTimePosVel)])[0]
+                            [utility.getPosVelByTimePosVel(curClosestFollowerTimePosVel)])[0]
 
                         if curFollowerUavLabel not in foundFollowerLabels:
                             foundFollowerLabels.append(curFollowerUavLabel)

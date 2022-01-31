@@ -1,4 +1,3 @@
-import array
 from sklearn.cluster import KMeans
 
 

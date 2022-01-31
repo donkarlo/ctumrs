@@ -1,7 +1,8 @@
 from ctumrs.LeaderFollowerFilter import LeaderFollowerFilter
 from ctumrs.TransitionMatrix import TransitionMatrix
-from ctumrs.Utilities import *
+from ctumrs.Utility import Utility
 
+utility = Utility()
 leaderUavClustersNum = 8
 followerUavClustersNum = 8
 velocityCoefficient = 1
@@ -15,9 +16,9 @@ transitionMatrix.loadNpTransitionMatrix(jointfilePathToTransitionMatrix)
 ''''''
 pathToLeaderUavTimePosVelDataFile = jointPathToLeaderAndFollower+"gps-uav1-pos-vel.txt"
 pathToFollowerUavTimePosVelDataFile = jointPathToLeaderAndFollower+"gps-uav2-pos-vel.txt"
-leaderUavPosVelsAndTimePosVels = getTimePosVelsAndPosVels(pathToLeaderUavTimePosVelDataFile, velocityCoefficient)
+leaderUavPosVelsAndTimePosVels = utility.getTimePosVelsAndPosVels(pathToLeaderUavTimePosVelDataFile, velocityCoefficient)
 leaderPosVelObss = leaderUavPosVelsAndTimePosVels['posVels']
-followerUavPosVelsAndTimePosVels = getTimePosVelsAndPosVels(pathToFollowerUavTimePosVelDataFile, velocityCoefficient)
+followerUavPosVelsAndTimePosVels = utility.getTimePosVelsAndPosVels(pathToFollowerUavTimePosVelDataFile, velocityCoefficient)
 followerPosVelObss = followerUavPosVelsAndTimePosVels['posVels']
 
 

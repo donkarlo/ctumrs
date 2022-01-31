@@ -3,7 +3,7 @@ from mDynamicSystem.obs.threeDPosVel.PosToVelObsSerieBuilderFromRowsStartWithCol
     PosToVelObsSerieBuilderFromRowsStartWithColNames
 
 dumpedTextFile = RowsStartWithColNames(
-    "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/inner-squares/uav2OdmGps.txt")
+    "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/inner-squares-decrease-distance-2-p-7/uav-2-gps.txt")
 
 threeDMaker = PosToVelObsSerieBuilderFromRowsStartWithColNames(dumpedTextFile,
                                                                ["field.pose.pose.position.x"
@@ -11,5 +11,5 @@ threeDMaker = PosToVelObsSerieBuilderFromRowsStartWithColNames(dumpedTextFile,
                                                                             , "field.pose.pose.position.z"],
                                                                100000)
 threeDMaker.saveToFileWithTime(
-    "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/inner-squares/gps-uav2-pos-vel.txt"
+    "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/inner-squares-decrease-distance-2-p-7/uav-2-cleaned-gps-pos-vel.txt"
     , ",")
