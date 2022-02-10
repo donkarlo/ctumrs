@@ -45,6 +45,7 @@ class LeaderFollowerFilter():
                      ,followerPosVelObss:[(int,int,int,int,int,int)]
                      )->np.ndarray:
         noveltyValues = []
+        print("Calculating novelty values ...")
         for leaderPosVelObsCounter,leaderPosVelObs in enumerate(leaderPosVelObss):
             if leaderPosVelObsCounter>=1 and leaderPosVelObsCounter<60000:
                 prvLeaderObs = leaderPosVelObss[leaderPosVelObsCounter-1]
@@ -55,14 +56,13 @@ class LeaderFollowerFilter():
                                                                              , prvFolowerObs
                                                                              , curLeaderObs
                                                                              , curFollowerObs)
-                print(curNoveltyValue)
                 noveltyValues.append(curNoveltyValue)
         return noveltyValues
 
     def plotNovelties(self,noveltyValues):
         # Scale the plot
         f = plt.figure()
-        f.set_figwidth(100)
+        f.set_figwidth(20)
         f.set_figheight(1)
 
         # Label

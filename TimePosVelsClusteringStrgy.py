@@ -43,12 +43,12 @@ class TimePosVelsClusteringStrgy:
 
         return self.__labeledTimePosVelClustersDict
 
-    def getClusterCenterByLabel(self, label:int)->(int, int, int, int, int, int):
+    def getClusterCenterByLabel(self, label:int)->tuple:
         return self.getFittedClusters().cluster_centers_[label]
 
     def getClustersNum(self)->int:
         return self.__clustersNum
 
-    def getLabelByPosVel(self,posVel:(int,int,int,int,int,int)):
+    def getLabelByPosVel(self,posVel:tuple):
         posVelArr = [posVel]
         return self.getFittedClusters().predict(posVelArr)[0]

@@ -50,7 +50,7 @@ class Utility():
                 leaderUavTimePosXs.append(uavTimePosVel[1])
                 leaderUavTimePosYs.append(uavTimePosVel[2])
                 leaderUavTimePosZs.append(uavTimePosVel[3])
-            ax.scatter(leaderUavTimePosXs, leaderUavTimePosYs, leaderUavTimePosZs, color=getRandomColor(), marker='.',
+            ax.scatter(leaderUavTimePosXs, leaderUavTimePosYs, leaderUavTimePosZs, color=self.getRandomColor(), marker='.',
                        alpha=0.04,
                        linewidth=1)
 
@@ -62,7 +62,7 @@ class Utility():
                 followerUavTimePosXs.append(uavTimePosVel[1])
                 followerUavTimePosYs.append(uavTimePosVel[2])
                 followerUavTimePosZs.append(uavTimePosVel[3])
-            ax.scatter(followerUavTimePosXs, followerUavTimePosYs, followerUavTimePosZs, color=getRandomColor(),
+            ax.scatter(followerUavTimePosXs, followerUavTimePosYs, followerUavTimePosZs, color=self.getRandomColor(),
                        marker='.', alpha=0.04,
                        linewidth=1)
 
@@ -116,9 +116,8 @@ class Utility():
         return {'posVels':uavPosVels,'timePosVels':uavTimePosVels}
 
 
-    def getPosVelByTimePosVel(self,timePosVel:list)->np.array:
-        return [timePosVel[1],timePosVel[2],timePosVel[3],timePosVel[4],timePosVel[5],timePosVel[6]]
-
+    def getPosVelByTimePosVel(self,timePosVel:list)->list:
+        return timePosVel[1:]
 
     def findClosestTimeWiseFollowerTimePosVelToLeaderTimePosVel(self
                                                                 ,leaderTimePosVel

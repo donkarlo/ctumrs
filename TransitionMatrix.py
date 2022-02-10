@@ -2,6 +2,7 @@ import numpy as np
 
 from ctumrs.Utility import Utility
 from ctumrs.TimePosVelsClusteringStrgy import TimePosVelsClusteringStrgy
+import pickle
 
 class TransitionMatrix:
     def __init__(self
@@ -25,7 +26,8 @@ class TransitionMatrix:
     def getFollowerTimePosVelClusters(self)->TimePosVelsClusteringStrgy:
         return self.__followerTimePosVelClusters
 
-    def __getRowAndColByTwoLabelPairs(self, prvCurFollowerLeaderLabels: ((int, int), (int, int)))->(int, int):
+    def __getRowAndColByTwoLabelPairs(self, prvCurFollowerLeaderLabels: ((int, int)
+                                                                         , (int, int)))->(int, int):
         rowNum = self.getTransitionMatrixRowOrColIdxByLabelPair(prvCurFollowerLeaderLabels[0])
         colNum = self.getTransitionMatrixRowOrColIdxByLabelPair(prvCurFollowerLeaderLabels[1])
         return (rowNum,colNum)
@@ -64,6 +66,7 @@ class TransitionMatrix:
     def getNpTransitionMatrix(self)->np.array:
         utility = Utility()
         if self.__npTransitionMatrix is None:
+            print ("Building the transition matrix ...")
             self.__npTransitionMatrix = np.zeros((self.__leaderTimePosVelClusters.getClustersNum() * self.__followerTimePosVelClusters.getClustersNum()
              , self.__leaderTimePosVelClusters.getClustersNum() * self.__followerTimePosVelClusters.getClustersNum()))
             foundFollowerLabels = []
@@ -106,6 +109,16 @@ class TransitionMatrix:
         rowNum = self.getTransitionMatrixRowOrColIdxByLabelPair(prvLabelPair)
         maxIdx = np.argmax(self.__npTransitionMatrix[rowNum])
         return self.__getLabelPairByIdx(maxIdx)
+
+    def save(self,filePath)->None:
+        self.getNpTransitionMatrix()
+        with open(filePath, 'wb') as file:
+            pickle.dump(self, file)
+
+    def load(self,filePath)->pickle:
+        with open(filePath, 'rb') as file:
+            loadedPickle = pickle.load(file)
+            return loadedPickle
 
     def saveNpTransitionMatrix(self,filePath):
        np.savetxt(filePath,self.getNpTransitionMatrix(),delimiter=',')
