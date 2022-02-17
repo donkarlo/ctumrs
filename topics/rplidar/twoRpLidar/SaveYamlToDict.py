@@ -1,11 +1,10 @@
 import pickle
 
-from ctumrs.topics.rplidar.Utility import getRangeSum
+from ctumrs.topics.rplidar.Ranges import getRangeSum
 import yaml
 from yaml import CLoader
-'''Load the yaml file for the two drones'''
-dataPathToLidarOfTwoDronesTopic = "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/inner-squares/lidar/"
-yamlFilePathToLidarOfTwoDronesTopic = dataPathToLidarOfTwoDronesTopic+"twoLidars.yaml"
+
+
 
 def getRobotsTimeRangeSumVelObssFromYaml(yamlFilePathToLidarOfTwoDronesTopic, extractingDataRowsLimit = 100000):
 
@@ -61,16 +60,20 @@ def getRobotsTimeRangeSumVelObssFromYaml(yamlFilePathToLidarOfTwoDronesTopic, ex
                 followerRangeSumRangeVelObss.append([rangeSum, rangeSumVel])
                 followerTimeRangeSumRangeVelObss.append([time, rangeSum, rangeSumVel])
                 followerLidarCounter += 1
-    returnValue = {"leaderRangeSumRangeVelObss":leaderRangeSumRangeVelObss
-        ,"leaderTimeRangeSumRangeVelObss":leaderTimeRangeSumRangeVelObss
-            ,"followerRangeSumRangeVelObss":followerRangeSumRangeVelObss
-            ,"followerTimeRangeSumRangeVelObss":followerTimeRangeSumRangeVelObss
+    returnValue = {"leaderRangeSumVelObss":leaderRangeSumRangeVelObss
+        ,"leaderTimeRangeSumVelObss":leaderTimeRangeSumRangeVelObss
+            ,"followerRangeSumVelObss":followerRangeSumRangeVelObss
+            ,"followerTimeRangeSumVelObss":followerTimeRangeSumRangeVelObss
             }
     return returnValue
 
 if __name__ == "__main__":
+    '''Load the yaml file for the two drones'''
+    dataPathToLidarOfTwoDronesTopic = "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/follow-scenario/lidars/"
+    yamlFilePathToLidarOfTwoDronesTopic = dataPathToLidarOfTwoDronesTopic + "twoLidars.yaml"
+
     rtnVal = getRobotsTimeRangeSumVelObssFromYaml(yamlFilePathToLidarOfTwoDronesTopic,100000)
 
-    pklFile = open(dataPathToLidarOfTwoDronesTopic+"twoLidarsTimeRangeSumVelsObss.pkl", "wb")
+    pklFile = open(dataPathToLidarOfTwoDronesTopic+"twoLidarsTimeRangeSumVelObss.pkl", "wb")
     pickle.dump(rtnVal, pklFile)
     pklFile.close()

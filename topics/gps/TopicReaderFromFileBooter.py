@@ -3,7 +3,7 @@ from mDynamicSystem.obs.threeDPosVel.PosToVelObsSerieBuilderFromRowsStartWithCol
     PosToVelObsSerieBuilderFromRowsStartWithColNames
 
 dumpedTextFile = RowsStartWithColNames(
-    "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/inner-squares-follow-4/uav-2-gps.txt")
+    "/data/self-aware-drones/ctumrs/two-drones/inner-squares-follow-4/uav-2-gps.txt")
 
 threeDMaker = PosToVelObsSerieBuilderFromRowsStartWithColNames(dumpedTextFile,
                                                                ["field.pose.pose.position.x"

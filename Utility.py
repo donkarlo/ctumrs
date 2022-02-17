@@ -120,19 +120,19 @@ class Utility():
         return timePosVel[1:]
 
     def findClosestTimeWiseFollowerTimePosVelToLeaderTimePosVel(self
-                                                                ,leaderTimePosVel
-                                                                , followerTimePosVels)->int:
+                                                                , leaderTimePosVelObs
+                                                                , followerTimePosVelObss)->list:
         start = 0
-        end = len(followerTimePosVels)-1
+        end = len(followerTimePosVelObss) - 1
 
         while end-start>=3:
             mid = start+int((end-start)/2)
-            if leaderTimePosVel[0] == followerTimePosVels[mid][0]:
-                return followerTimePosVels[mid]
-            elif leaderTimePosVel[0]>followerTimePosVels[mid][0]:
+            if leaderTimePosVelObs[0] == followerTimePosVelObss[mid][0]:
+                return followerTimePosVelObss[mid]
+            elif leaderTimePosVelObs[0]>followerTimePosVelObss[mid][0]:
                 start = mid
                 end = end
-            elif leaderTimePosVel[0]<followerTimePosVels[mid][0]:
+            elif leaderTimePosVelObs[0]<followerTimePosVelObss[mid][0]:
                 start = start
                 end = mid
-        return followerTimePosVels[end-1]
+        return followerTimePosVelObss[end - 1]

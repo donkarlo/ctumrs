@@ -10,10 +10,10 @@ class LeaderFollowerFilter():
         self.__transitionMatrix:TransitionMatrix = transitionMatrix
 
     def getCurNoveltyValueByPrvPosVelObs(self
-                                         , prvLeaderPosVelObs:(int, int, int, int, int, int)
-                                         , prvFollowerPosVelObs:(int, int, int, int, int, int)
-                                         , curLeaderPosVelObs:(int, int, int, int, int, int)
-                                         , curFolowerPosVelObs:(int, int, int, int, int, int))->float:
+                                         , prvLeaderPosVelObs:tuple
+                                         , prvFollowerPosVelObs:tuple
+                                         , curLeaderPosVelObs:tuple
+                                         , curFolowerPosVelObs:tuple)->float:
 
         """
 
@@ -41,13 +41,13 @@ class LeaderFollowerFilter():
         return max(hausdorfDistance1,hausdorfDistance2)
 
     def getPosVelsObssNovelties(self
-                     ,leaderPosVelObss:[(int,int,int,int,int,int)]
-                     ,followerPosVelObss:[(int,int,int,int,int,int)]
+                     ,leaderPosVelObss:[tuple]
+                     ,followerPosVelObss:[tuple]
                      )->np.ndarray:
         noveltyValues = []
         print("Calculating novelty values ...")
         for leaderPosVelObsCounter,leaderPosVelObs in enumerate(leaderPosVelObss):
-            if leaderPosVelObsCounter>=1 and leaderPosVelObsCounter<60000:
+            if leaderPosVelObsCounter>=1 and leaderPosVelObsCounter<50000:
                 prvLeaderObs = leaderPosVelObss[leaderPosVelObsCounter-1]
                 prvFolowerObs = followerPosVelObss[leaderPosVelObsCounter-1]
                 curLeaderObs = leaderPosVelObs
@@ -62,13 +62,13 @@ class LeaderFollowerFilter():
     def plotNovelties(self,noveltyValues):
         # Scale the plot
         f = plt.figure()
-        f.set_figwidth(20)
-        f.set_figheight(1)
+        f.set_figwidth(200)
+        f.set_figheight(5)
 
         # Label
         plt.xlabel('Timestep')
         plt.ylabel('Hausdorff novelty')
-        plt.plot(range(1,60000)
+        plt.plot(range(1,50000)
                  , noveltyValues
                  , label='Novelty'
                  , color='red'

@@ -9,7 +9,8 @@ class TransitionMatrix:
                  , leaderTimePosVelClusters:TimePosVelsClusteringStrgy = None
                  , followerTimePosVelClusters:TimePosVelsClusteringStrgy = None
                  , leaderTimePosVels:list = None
-                 , followerTimePosVels:list = None):
+                 , followerTimePosVels:list = None
+                 ):
 
         self.__leaderTimePosVelClusters: TimePosVelsClusteringStrgy = leaderTimePosVelClusters
         self.__followerTimePosVelClusters: TimePosVelsClusteringStrgy = followerTimePosVelClusters
@@ -19,6 +20,11 @@ class TransitionMatrix:
 
         self.__npTransitionMatrix = None
         self.__mappingRowOrColNumLabelMapDict = None
+
+        self.__leaderFollowerObsMatchStrgy = "FIND_BY_TIMESTAMP"
+
+    def setLeaderFollowerObsMatchStrgy(self,leaderFollowerObsMatchStrgy="ALREADY_INDEX_MATCHED"):
+        self.__leaderFollowerObsMatchStrgy = leaderFollowerObsMatchStrgy
 
     def getLeaderTimePosVelClusters(self)->TimePosVelsClusteringStrgy:
         return self.__leaderTimePosVelClusters
@@ -75,12 +81,14 @@ class TransitionMatrix:
                 if leaderUavCurTimePosVelCounter < 100000:
                     if leaderUavCurTimePosVelCounter > 1:
                         curClosestFollowerTimePosVel = utility.findClosestTimeWiseFollowerTimePosVelToLeaderTimePosVel(
-                            curLeaderUavTimePosVel, self.__followerUavTimePosVels)
+                            curLeaderUavTimePosVel
+                        , self.__followerUavTimePosVels) if self.__leaderFollowerObsMatchStrgy != "ALREADY_INDEX_MATCHED" else self.__followerUavTimePosVels[leaderUavCurTimePosVelCounter]
 
                         # find previous leader follower timewisely
                         prvLeaderUavTimePosVel = self.__leaderUavTimePosVels[leaderUavCurTimePosVelCounter - 1]
                         prvClosestFollowerTimePosVel = utility.findClosestTimeWiseFollowerTimePosVelToLeaderTimePosVel(
-                            prvLeaderUavTimePosVel, self.__followerUavTimePosVels)
+                            prvLeaderUavTimePosVel
+                            ,self.__followerUavTimePosVels)  if self.__leaderFollowerObsMatchStrgy != "ALREADY_INDEX_MATCHED" else self.__followerUavTimePosVels[leaderUavCurTimePosVelCounter - 1]
 
                         # Finding the label for previous leader follower  observation
                         prvLeaderUavLabel = \
@@ -119,9 +127,3 @@ class TransitionMatrix:
         with open(filePath, 'rb') as file:
             loadedPickle = pickle.load(file)
             return loadedPickle
-
-    def saveNpTransitionMatrix(self,filePath):
-       np.savetxt(filePath,self.getNpTransitionMatrix(),delimiter=',')
-
-    def loadNpTransitionMatrix(self,filePath):
-        self.__npTransitionMatrix = np.loadtxt(filePath, delimiter=',')
