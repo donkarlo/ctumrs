@@ -2,30 +2,24 @@ import pickle
 
 from ctumrs.TimePosVelsClusteringStrgy import TimePosVelsClusteringStrgy
 from ctumrs.TransitionMatrix import TransitionMatrix
+from ctumrs.topics.rplidar.twoRpLidar.rangeSumVel.TimeRangeSumVelObss import TimeRangeSumVelObss
 
 dataPathToLidarOfTwoDronesTopic = "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/normal-scenario/lidars/"
 
 velCoefficient = 10000
 leaderClustersNum = 75
 followerClustersNum = 75
+
 '''Load data'''
 pklFile = open(dataPathToLidarOfTwoDronesTopic+"twoLidarsTimeRangeSumVelObss.pkl", "rb")
 leaderFollowerTimeRangeSumVelDict = pickle.load(pklFile)
 
-def velMul(posVelObss:list, timePosVelObss:list, velCoefficient:float):
-    """"""
-    for counter,element in enumerate(posVelObss):
-        posVelObss[counter][1] = velCoefficient * posVelObss[counter][1]
-        timePosVelObss[counter][2] = velCoefficient * timePosVelObss[counter][2]
-    return [posVelObss, timePosVelObss]
-
-
-leaderPosVels,leaderTimePosVels = velMul(
+leaderRangeSumVelObss, leaderTimeRangeSumVelObss = TimeRangeSumVelObss.velMulInRangeSumAndTimeRangeSumObss(
     leaderFollowerTimeRangeSumVelDict["leaderRangeSumVelObss"]
     ,leaderFollowerTimeRangeSumVelDict["leaderTimeRangeSumVelObss"]
     , velCoefficient)
 
-followerPosVels,followerTimePosVels = velMul(
+followerRangeSumVelObss, followerTimeRangeSumVelObss = TimeRangeSumVelObss.velMulInRangeSumAndTimeRangeSumObss(
     leaderFollowerTimeRangeSumVelDict["followerRangeSumVelObss"]
     ,leaderFollowerTimeRangeSumVelDict["followerTimeRangeSumVelObss"]
     ,velCoefficient)
@@ -33,23 +27,18 @@ followerPosVels,followerTimePosVels = velMul(
 
 '''Cluster each'''
 
-leaderTimePosVelClusteringStrgy = TimePosVelsClusteringStrgy(leaderClustersNum
-                                                             , leaderTimePosVels
-                                                             , leaderPosVels)
-leaderTimePosVelClustersDict = leaderTimePosVelClusteringStrgy.getLabeledTimePosVelsClustersDict()
+leaderTimeRangeSumVelClusteringStrgy = TimePosVelsClusteringStrgy(leaderClustersNum
+                                                                  , leaderTimeRangeSumVelObss
+                                                                  , leaderRangeSumVelObss)
 
 followerTimePosVelClusteringStrgy = TimePosVelsClusteringStrgy(followerClustersNum
-                                                               , followerTimePosVels
-                                                               , followerPosVels)
-followerTimePosVelClustersDict = followerTimePosVelClusteringStrgy.getLabeledTimePosVelsClustersDict()
-
-
-
+                                                               , followerTimeRangeSumVelObss
+                                                               , followerRangeSumVelObss)
 '''Build transition matrix'''
-transitionMatrix = TransitionMatrix(leaderTimePosVelClusteringStrgy
+transitionMatrix = TransitionMatrix(leaderTimeRangeSumVelClusteringStrgy
                                     , followerTimePosVelClusteringStrgy
-                                    , leaderTimePosVels
-                                    , followerTimePosVels)
+                                    , leaderTimeRangeSumVelObss
+                                    , followerTimeRangeSumVelObss)
 # transitionMatrix.setLeaderFollowerObsMatchStrgy("ALREADY_INDEX_MATCHED")
 transitionMatrix.save(dataPathToLidarOfTwoDronesTopic +"transtionMatrix-{}*{}.txt".format(leaderClustersNum, followerClustersNum))
 

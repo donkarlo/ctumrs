@@ -2,7 +2,7 @@ import pickle
 
 from ctumrs.LeaderFollowerFilter import LeaderFollowerFilter
 from ctumrs.TransitionMatrix import TransitionMatrix
-from ctumrs.topics.rplidar.twoRpLidar.VelMul import velMul
+from ctumrs.topics.rplidar.twoRpLidar.rangeSumVel.TimeRangeSumVelObss import TimeRangeSumVelObss
 
 leaderUavClustersNum = 75
 followerUavClustersNum = 75
@@ -19,8 +19,8 @@ pklFile = open(jointPathToLeaderAndFollowerNormalScenario+"twoLidarsTimeRangeSum
 leaderFollowerTimeRangeSumVelDict = pickle.load(pklFile)
 
 
-leaderPosVelObss = velMul(leaderFollowerTimeRangeSumVelDict['leaderRangeSumVelObss'],velCoefficient)
-followerPosVelObss = velMul(leaderFollowerTimeRangeSumVelDict['followerRangeSumVelObss'],velCoefficient)
+leaderPosVelObss = TimeRangeSumVelObss.velMulInRangeSumVelObss(leaderFollowerTimeRangeSumVelDict['leaderRangeSumVelObss'], velCoefficient)
+followerPosVelObss = TimeRangeSumVelObss.velMulInRangeSumVelObss(leaderFollowerTimeRangeSumVelDict['followerRangeSumVelObss'], velCoefficient)
 
 
 leaderFollowerFilter = LeaderFollowerFilter(transitionMatrix)
