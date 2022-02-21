@@ -39,7 +39,6 @@ transitionMatrix = TransitionMatrix(leaderTimeRangeSumVelClusteringStrgy
                                     , followerTimePosVelClusteringStrgy
                                     , leaderTimeRangeSumVelObss
                                     , followerTimeRangeSumVelObss)
-# transitionMatrix.setLeaderFollowerObsMatchStrgy("ALREADY_INDEX_MATCHED")
 transitionMatrix.save(dataPathToLidarOfTwoDronesTopic +"transtionMatrix-{}*{}.txt".format(leaderClustersNum, followerClustersNum))
 
 

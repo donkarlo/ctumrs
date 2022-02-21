@@ -2,25 +2,25 @@ import pickle
 
 from ctumrs.LeaderFollowerFilter import LeaderFollowerFilter
 from ctumrs.TransitionMatrix import TransitionMatrix
+from ctumrs.topics.rplidar.twoRpLidar.fourRangesVel.TimeFourRangesVelsObss import TimeFourRangesVelsObss
 from ctumrs.topics.rplidar.twoRpLidar.rangeSumVel.TimeRangeSumVelObss import TimeRangeSumVelObss
 
-leaderUavClustersNum = 75
-followerUavClustersNum = 75
+leaderClustersNum = 75
+followerClustersNum = 75
 velCoefficient = 10000
 
-jointPathToLeaderAndFollowerNormalScenario= "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/normal-scenario/lidars/"
+sharedPathToLeaderAndFollowerNormalScenario= "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/normal-scenario/lidars/fourRangesVels/"
 '''Lodaing the transition matrix'''
-jointfilePathToTransitionMatrix = jointPathToLeaderAndFollowerNormalScenario + "transtionMatrix-{}*{}.txt".format(leaderUavClustersNum, followerUavClustersNum)
+jointfilePathToTransitionMatrix = sharedPathToLeaderAndFollowerNormalScenario + "transtionMatrix-{}*{}.txt".format(leaderClustersNum, followerClustersNum)
 transitionMatrix = TransitionMatrix()
 transitionMatrix = transitionMatrix.load(jointfilePathToTransitionMatrix)
 
 ''''''
-pklFile = open(jointPathToLeaderAndFollowerNormalScenario+"twoLidarsTimeRangeSumVelObss.pkl", "rb")
+pklFile = open("/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/normal-scenario/lidars/fourRangesVels/"+"twoLidarsTimeFourRangesVelsObss.pkl", "rb")
 leaderFollowerTimeRangeSumVelDict = pickle.load(pklFile)
 
-
-leaderPosVelObss = TimeRangeSumVelObss.velMulInRangeSumVelObss(leaderFollowerTimeRangeSumVelDict['leaderRangeSumVelObss'], velCoefficient)
-followerPosVelObss = TimeRangeSumVelObss.velMulInRangeSumVelObss(leaderFollowerTimeRangeSumVelDict['followerRangeSumVelObss'], velCoefficient)
+leaderPosVelObss = TimeFourRangesVelsObss.velMulInRangeSumVelObss(leaderFollowerTimeRangeSumVelDict['leaderFourRangesVelsObss'], velCoefficient)
+followerPosVelObss = TimeFourRangesVelsObss.velMulInRangeSumVelObss(leaderFollowerTimeRangeSumVelDict['followerFourRangesVelsObss'], velCoefficient)
 
 
 leaderFollowerFilter = LeaderFollowerFilter(transitionMatrix)

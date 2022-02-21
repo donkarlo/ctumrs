@@ -13,16 +13,18 @@ import yaml
 # To make yaml file load faster
 from yaml import CLoader
 
+from ctumrs.topics.rplidar.twoRpLidar.fourRangesVel.TimeFourRangesVelsObs import TimeFourRangesVelsObs
+
 
 class YamlTopic:
     @staticmethod
     def getLeaderFollowerTimeRangeSumVelObssDictFromYaml(yamlFilePathToLidarOfTwoDronesTopic:string
                                                          , extractingDataRowsLimit = 100000):
 
-        leaderRangeSumRangeVelObss = []
-        leaderTimeRangeSumRangeVelObss = []
-        followerRangeSumRangeVelObss = []
-        followerTimeRangeSumRangeVelObss = []
+        leaderFourRangesVelsObss = []
+        leaderTimeFourRangesVelsObss = []
+        followerFourRangesVelsObss = []
+        followerTimeFourRangesVelsObss = []
 
         with open(yamlFilePathToLidarOfTwoDronesTopic, "r") as file:
             leaderLidarCounter = 0
@@ -38,14 +40,16 @@ class YamlTopic:
                 countRanges = len(lidarDataRow["ranges"])
                 countRangesInterval = countRanges//4
 
+
+
                 #-pi
-                range1 = float(lidarDataRow["ranges"][0 * countRangesInterval])
+                range1 = TimeFourRangesVelsObs.getFloatRange(lidarDataRow["ranges"][0 * countRangesInterval])
                 #-pi/2
-                range2 = float(lidarDataRow["ranges"][1 * countRangesInterval])
+                range2 = TimeFourRangesVelsObs.getFloatRange(lidarDataRow["ranges"][1 * countRangesInterval])
                 # 0
-                range3 = float(lidarDataRow["ranges"][2 * countRangesInterval])
+                range3 = TimeFourRangesVelsObs.getFloatRange(lidarDataRow["ranges"][2 * countRangesInterval])
                 # pi/2
-                range4 = float(lidarDataRow["ranges"][3 * countRangesInterval])
+                range4 = TimeFourRangesVelsObs.getFloatRange(lidarDataRow["ranges"][3 * countRangesInterval])
 
 
                 if robotId == "uav1":
@@ -60,54 +64,88 @@ class YamlTopic:
                     range4Vel = 0
                 if  robotSpecificLidarCounter >= 1:
                     if robotId == "uav1":
-                        prvTime = leaderTimeRangeSumRangeVelObss[robotSpecificLidarCounter-1][0]
-                        prvRange1 = leaderTimeRangeSumRangeVelObss[robotSpecificLidarCounter-1][1]
-                        prvRange2 = leaderTimeRangeSumRangeVelObss[robotSpecificLidarCounter-1][2]
-                        prvRange3 = leaderTimeRangeSumRangeVelObss[robotSpecificLidarCounter-1][3]
-                        prvRange4 = leaderTimeRangeSumRangeVelObss[robotSpecificLidarCounter-1][4]
+                        prvTime = leaderTimeFourRangesVelsObss[robotSpecificLidarCounter-1][0]
+                        prvRange1 = leaderTimeFourRangesVelsObss[robotSpecificLidarCounter-1][1]
+                        prvRange2 = leaderTimeFourRangesVelsObss[robotSpecificLidarCounter-1][2]
+                        prvRange3 = leaderTimeFourRangesVelsObss[robotSpecificLidarCounter-1][3]
+                        prvRange4 = leaderTimeFourRangesVelsObss[robotSpecificLidarCounter-1][4]
                     else:
-                        prvTime = followerTimeRangeSumRangeVelObss[robotSpecificLidarCounter-1][0]
-                        prvRange1 = followerTimeRangeSumRangeVelObss[robotSpecificLidarCounter-1][1]
-                        prvRange2 = followerTimeRangeSumRangeVelObss[robotSpecificLidarCounter-1][2]
-                        prvRange3 = followerTimeRangeSumRangeVelObss[robotSpecificLidarCounter-1][3]
-                        prvRange4 = followerTimeRangeSumRangeVelObss[robotSpecificLidarCounter-1][4]
+                        prvTime = followerTimeFourRangesVelsObss[robotSpecificLidarCounter-1][0]
+                        prvRange1 = followerTimeFourRangesVelsObss[robotSpecificLidarCounter-1][1]
+                        prvRange2 = followerTimeFourRangesVelsObss[robotSpecificLidarCounter-1][2]
+                        prvRange3 = followerTimeFourRangesVelsObss[robotSpecificLidarCounter-1][3]
+                        prvRange4 = followerTimeFourRangesVelsObss[robotSpecificLidarCounter-1][4]
 
-                    rangeVel1 = (range1 - prvRange1) / (time - prvTime)
-                    rangeVel2 = (range2 - prvRange2) / (time - prvTime)
-                    rangeVel3 = (range3 - prvRange3) / (time - prvTime)
-                    rangeVel4 = (range4 - prvRange4) / (time - prvTime)
+                    range1Vel = (range1 - prvRange1) / (time - prvTime)
+                    range2Vel = (range2 - prvRange2) / (time - prvTime)
+                    range3Vel = (range3 - prvRange3) / (time - prvTime)
+                    range4Vel = (range4 - prvRange4) / (time - prvTime)
 
                     #set the first time sptep range sum vel
                     if robotSpecificLidarCounter == 1:
                         if robotId == "uav1":
-                            leaderRangeSumRangeVelObss[0][1] = rangeSumVel
-                            leaderTimeRangeSumRangeVelObss[0][2]=rangeSumVel
+                            leaderFourRangesVelsObss[0][4] = range1Vel
+                            leaderFourRangesVelsObss[0][5] = range2Vel
+                            leaderFourRangesVelsObss[0][6] = range3Vel
+                            leaderFourRangesVelsObss[0][7] = range4Vel
+                            
+                            leaderTimeFourRangesVelsObss[0][5]=range1Vel
+                            leaderTimeFourRangesVelsObss[0][6]=range2Vel
+                            leaderTimeFourRangesVelsObss[0][7]=range3Vel
+                            leaderTimeFourRangesVelsObss[0][8]=range4Vel
                         else:
-                            followerRangeSumRangeVelObss[0][1] = rangeSumVel
-                            followerTimeRangeSumRangeVelObss[0][2] = rangeSumVel
+                            followerFourRangesVelsObss[0][4] = range1Vel
+                            followerFourRangesVelsObss[0][5] = range2Vel
+                            followerFourRangesVelsObss[0][6] = range3Vel
+                            followerFourRangesVelsObss[0][7] = range4Vel
+
+                            followerTimeFourRangesVelsObss[0][5] = range1Vel
+                            followerTimeFourRangesVelsObss[0][6] = range2Vel
+                            followerTimeFourRangesVelsObss[0][7] = range3Vel
+                            followerTimeFourRangesVelsObss[0][8] = range4Vel
 
 
+                fourRangesVel = [range1
+                                 ,range2
+                                 ,range3
+                                 ,range4
+                                 ,range1Vel
+                                 , range2Vel
+                                 , range3Vel
+                                 , range4Vel
+                                 ]
+
+                timeFourRangesVel = [time
+                    ,range1
+                    , range2
+                    , range3
+                    , range4
+                    , range1Vel
+                    , range2Vel
+                    , range3Vel
+                    , range4Vel
+                                 ]
                 if robotId == "uav1":
-                    leaderRangeSumRangeVelObss.append([rangeSum, rangeSumVel])
-                    leaderTimeRangeSumRangeVelObss.append([time, rangeSum, rangeSumVel])
+                    leaderFourRangesVelsObss.append(fourRangesVel)
+                    leaderTimeFourRangesVelsObss.append(timeFourRangesVel)
                     leaderLidarCounter += 1
                 else:
-                    followerRangeSumRangeVelObss.append([rangeSum, rangeSumVel])
-                    followerTimeRangeSumRangeVelObss.append([time, rangeSum, rangeSumVel])
+                    followerFourRangesVelsObss.append(fourRangesVel)
+                    followerTimeFourRangesVelsObss.append(timeFourRangesVel)
                     followerLidarCounter += 1
-        returnValue = {"leaderRangeSumVelObss":leaderRangeSumRangeVelObss
-            ,"leaderTimeRangeSumVelObss":leaderTimeRangeSumRangeVelObss
-                ,"followerRangeSumVelObss":followerRangeSumRangeVelObss
-                ,"followerTimeRangeSumVelObss":followerTimeRangeSumRangeVelObss
+        returnValue = {"leaderFourRangesVelsObss":leaderFourRangesVelsObss
+            ,"leaderTimeFourRangesVelsObss":leaderTimeFourRangesVelsObss
+                ,"followerFourRangesVelsObss":followerFourRangesVelsObss
+                ,"followerTimeFourRangesVelsObss":followerTimeFourRangesVelsObss
                 }
         return returnValue
 
 if __name__ == "__main__":
     '''Load the yaml file for the two drones'''
-    sharedPathToLidarYaml = "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/normal-scenario/lidars/"
-    sharedPathToFourRangesSum = sharedPathToLidarYaml + "fourRangesVel/"
-    pathToTwoLidarsTopicYamlPath = sharedPathToLidarYaml + "twoLidars.yaml"
+    sharedPathToTwoLidarYaml = "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/follow-scenario/lidars/"
+    pathToTwoLidarsTopicYamlPath = sharedPathToTwoLidarYaml + "twoLidars.yaml"
+    sharedPathToFourRangesVels = sharedPathToTwoLidarYaml + "fourRangesVels/"
     rtnVal = YamlTopic.getLeaderFollowerTimeRangeSumVelObssDictFromYaml(pathToTwoLidarsTopicYamlPath, 100000)
-    pklFile = open(sharedPathToFourRangesSum + "twoLidarsTimeRangeSumVelObss.pkl", "wb")
+    pklFile = open(sharedPathToFourRangesVels + "twoLidarsTimeFourRangesVelsObss.pkl", "wb")
     pickle.dump(rtnVal, pklFile)
     pklFile.close()
