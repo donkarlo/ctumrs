@@ -6,19 +6,17 @@ To use it, first replace # - - - with --- in yaml file to have a lot of yaml fil
 This should be ran for each scenario
 """
 import pickle
-import string
-
 import yaml
 
 # To make yaml file load faster
 from yaml import CLoader
 
-from ctumrs.topics.rplidar.twoRpLidar.fourRangesVel.TimeFourRangesVelsObs import TimeFourRangesVelsObs
+from ctumrs.topics.rplidar.twoRpLidar.fourRegionsMinRangesVel.TimeFourRegionsMinRangesVelsObs import TimeFourRegionsMinRangesVelsObs
 
 
 class YamlTopic:
     @staticmethod
-    def getLeaderFollowerTimeRangeSumVelObssDictFromYaml(yamlFilePathToLidarOfTwoDronesTopic:string
+    def getLeaderFollowerTimeRangeSumVelObssDictFromYaml(yamlFilePathToLidarOfTwoDronesTopic:str
                                                          , extractingDataRowsLimit = 100000):
 
         leaderFourRangesVelsObss = []
@@ -40,10 +38,10 @@ class YamlTopic:
                 countRanges = len(lidarDataRow["ranges"])
                 countRangesInterval = countRanges//4
 
-                range1 = TimeFourRangesVelsObs.getFloatRange(lidarDataRow["ranges"][0 * countRangesInterval])
-                range2 = TimeFourRangesVelsObs.getFloatRange(lidarDataRow["ranges"][1 * countRangesInterval])
-                range3 = TimeFourRangesVelsObs.getFloatRange(lidarDataRow["ranges"][2 * countRangesInterval])
-                range4 = TimeFourRangesVelsObs.getFloatRange(lidarDataRow["ranges"][3 * countRangesInterval])
+                range1 = TimeFourRegionsMinRangesVelsObs.getRangesMin(lidarDataRow["ranges"][0:1 * countRangesInterval - 1])
+                range2 = TimeFourRegionsMinRangesVelsObs.getRangesMin(lidarDataRow["ranges"][1 * countRangesInterval:2 * countRangesInterval - 1])
+                range3 = TimeFourRegionsMinRangesVelsObs.getRangesMin(lidarDataRow["ranges"][2 * countRangesInterval: 3 * countRangesInterval - 1])
+                range4 = TimeFourRegionsMinRangesVelsObs.getRangesMin(lidarDataRow["ranges"][3 * countRangesInterval:4 * countRangesInterval - 1])
 
 
                 if robotId == "uav1":
@@ -127,19 +125,27 @@ class YamlTopic:
                     followerFourRangesVelsObss.append(fourRangesVel)
                     followerTimeFourRangesVelsObss.append(timeFourRangesVel)
                     followerLidarCounter += 1
-        returnValue = {"leaderFourRangesVelsObss":leaderFourRangesVelsObss
-            ,"leaderTimeFourRangesVelsObss":leaderTimeFourRangesVelsObss
-                ,"followerFourRangesVelsObss":followerFourRangesVelsObss
-                ,"followerTimeFourRangesVelsObss":followerTimeFourRangesVelsObss
+        returnValue = {"leaderFourRegionsMinRangesVelsObss":leaderFourRangesVelsObss
+            ,"leaderTimeFourRegionsMinRangesVelsObss":leaderTimeFourRangesVelsObss
+                ,"followerFourRegionsMinRangesVelsObss":followerFourRangesVelsObss
+                ,"followerTimeFourRegionsMinRangesVelsObss":followerTimeFourRangesVelsObss
                 }
         return returnValue
 
 if __name__ == "__main__":
-    '''Load the yaml file for the two drones'''
+    '''
+        Load the yaml file for the two drones
+        - first load the paths to normal scenarios
+        - Build the transition matrix for normal scenario booter
+        - second load the paths to abnormal scenarios
+        - run novelty for that abnormal scenario
+        @todo make it such that each scenario can put its own path
+    '''
     sharedPathToTwoLidarYaml = "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/follow-scenario/lidars/"
     pathToTwoLidarsTopicYamlPath = sharedPathToTwoLidarYaml + "twoLidars.yaml"
-    sharedPathToFourRangesVels = sharedPathToTwoLidarYaml + "fourRangesVels/"
+    sharedPathToFourRangesVels = sharedPathToTwoLidarYaml + "fourRegionsMinRangesVels/"
     rtnVal = YamlTopic.getLeaderFollowerTimeRangeSumVelObssDictFromYaml(pathToTwoLidarsTopicYamlPath, 100000)
-    pklFile = open(sharedPathToFourRangesVels + "twoLidarsTimeFourRangesVelsObss.pkl", "wb")
+    pklFile = open(sharedPathToFourRangesVels + "twoLidarsTimeFourRegionsMinRangesVelsObss.pkl", "wb")
     pickle.dump(rtnVal, pklFile)
     pklFile.close()
+    print("Yaml changed to pkl")

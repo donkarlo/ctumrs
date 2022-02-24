@@ -3,7 +3,7 @@ import string
 
 class TimeRangeSumVelObs:
     @staticmethod
-    def getRangeSumFromListOfStringRanges(ranges: list[string]):
+    def getRangeSumFromListOfStringRanges(ranges):
         rangeSum = 0
         for range in (ranges):
             if range == "inf":

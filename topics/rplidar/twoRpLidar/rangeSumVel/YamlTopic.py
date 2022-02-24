@@ -15,7 +15,6 @@ from yaml import CLoader
 
 from ctumrs.topics.rplidar.twoRpLidar.rangeSumVel.TimeRangeSumVelObs import TimeRangeSumVelObs
 
-
 class YamlTopic:
     @staticmethod
     def getLeaderFollowerTimeRangeSumVelObssDictFromYaml(yamlFilePathToLidarOfTwoDronesTopic:string
@@ -81,11 +80,10 @@ class YamlTopic:
 
 if __name__ == "__main__":
     '''Load the yaml file for the two drones'''
-    dataPathToLidarOfTwoDronesTopic = "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/follow-scenario/lidars/"
-    yamlFilePathToLidarOfTwoDronesTopic = dataPathToLidarOfTwoDronesTopic + "twoLidars.yaml"
-
-    rtnVal = YamlTopic.getLeaderFollowerTimeRangeSumVelObssDictFromYaml(yamlFilePathToLidarOfTwoDronesTopic, 100000)
-
-    pklFile = open(dataPathToLidarOfTwoDronesTopic+"twoLidarsTimeRangeSumVelObss.pkl", "wb")
+    sharedPathToTwoLidarYaml = "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/follow-scenario/lidars/"
+    pathToTwoLidarsTopicYamlPath = sharedPathToTwoLidarYaml + "twoLidars.yaml"
+    sharedPathToFourRangesVels = sharedPathToTwoLidarYaml + "rangeSumVel/"
+    rtnVal = YamlTopic.getLeaderFollowerTimeRangeSumVelObssDictFromYaml(pathToTwoLidarsTopicYamlPath, 100000)
+    pklFile = open(sharedPathToFourRangesVels + "twoLidarsTimeRangeSumVelObss.pkl", "wb")
     pickle.dump(rtnVal, pklFile)
     pklFile.close()
