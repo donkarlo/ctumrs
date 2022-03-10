@@ -2,12 +2,11 @@ import os
 import pickle
 
 import numpy as np
-import tensorflow as tf
 from tensorflow.keras.models import Model, Sequential
 from tensorflow.keras.layers import Dense
 
 from ctumrs.topics.rplidar.twoRpLidar.autoencoder.Plots import Plots
-from mMath.data.preProcess.PreProcess import PreProcess
+from mMath.data.preProcess.RowsNormalizer import RowsNormalizer
 
 
 class FeatureExtractionBooter:
@@ -25,7 +24,7 @@ class FeatureExtractionBooter:
 
 
 
-        normalizedNpLeaderRangesObss = PreProcess.getNpNormalizedNpData(npLeaderRangesObss)
+        normalizedNpLeaderRangesObss = RowsNormalizer.getNpNormalizedNpRows(npLeaderRangesObss)
 
         # This is the dimension of the original space
         inputDim = 720
