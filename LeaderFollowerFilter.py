@@ -42,10 +42,15 @@ class LeaderFollowerFilter():
         #                                                               , curFolowerPosVelObs
         #                                                               , predictedFollowerCenter)
 
-        distance = self.__getGpsKlDistanceAbnormalityValue(curLeaderPosVelObs
-                                                                      , predictedLeaderCenter
-                                                                      , curFolowerPosVelObs
-                                                                      , predictedFollowerCenter)
+        # distance = self.__getGpsKlDistanceAbnormalityValue(curLeaderPosVelObs
+        #                                                               , predictedLeaderCenter
+        #                                                               , curFolowerPosVelObs
+        #                                                               , predictedFollowerCenter)
+
+        distance = self.__getGpsHellingerDistanceAbnormalityValue(curLeaderPosVelObs
+                                                           , predictedLeaderCenter
+                                                           , curFolowerPosVelObs
+                                                           , predictedFollowerCenter)
         return distance
 
     def __getGpsBhattacharyyaDistanceAbnormalityValue(self
@@ -95,15 +100,38 @@ class LeaderFollowerFilter():
                               , [0, xyCovVal, 0]
                               , [0, 0, zCovVal]])
 
-        leaderKlDistance = self.__getKlMvn(leaderObs[0:3]
-                                                      , covMtx
-                                                      ,leaderPrd[0:3]
-                                                      ,covMtx)
-        followerKlDistance = self.__getKlMvn(flwrObs[0:3]
-                                                      , covMtx
-                                                      ,flwrPrd[0:3]
-                                                      ,covMtx)
+        leaderKlDistance = self.__getKullbackLieblerDistance(leaderObs[0:3]
+                                                             , covMtx
+                                                             ,leaderPrd[0:3]
+                                                             , covMtx)
+        followerKlDistance = self.__getKullbackLieblerDistance(flwrObs[0:3]
+                                                               , covMtx
+                                                               ,flwrPrd[0:3]
+                                                               , covMtx)
         distance = (leaderKlDistance + followerKlDistance) / 2
+        return distance
+
+    def __getGpsHellingerDistanceAbnormalityValue(self
+                                                      , leaderObs
+                                                      , leaderPrd
+                                                      , flwrObs
+                                                      , flwrPrd):
+        # Distribution 1
+        xyCovVal = 2.0e-4
+        zCovVal = 4.0e-4
+        covMtx = np.array([[xyCovVal, 0, 0]
+                              , [0, xyCovVal, 0]
+                              , [0, 0, zCovVal]])
+
+        leaderDistance = self.__getHellingerDitance(leaderObs[0:3]
+                                                             , covMtx
+                                                             ,leaderPrd[0:3]
+                                                             , covMtx)
+        followerDistance = self.__getHellingerDitance(flwrObs[0:3]
+                                                               , covMtx
+                                                               ,flwrPrd[0:3]
+                                                               , covMtx)
+        distance = (leaderDistance + followerDistance) / 2
         return distance
 
     def __getHausedorfDistance(self
@@ -193,7 +221,7 @@ class LeaderFollowerFilter():
 
         return T1 + T2
 
-    def __getKlMvn(self, m0, S0, m1, S1):
+    def __getKullbackLieblerDistance(self, m0, S0, m1, S1):
         """
         Kullback-Liebler divergence from Gaussian pm,pv to Gaussian qm,qv.
         Also computes KL divergence from a single Gaussian pm,pv to a set
@@ -216,6 +244,24 @@ class LeaderFollowerFilter():
         quad_term = diff.T @ np.linalg.inv(S1) @ diff  # np.sum( (diff*diff) * iS1, axis=1)
         # print(tr_term,det_term,quad_term)
         return .5 * (tr_term + det_term + quad_term - N)
+
+    def __getHellingerDitance(self,meanX, covX,meanY,covY):
+        """ Calculates Hellinger distance between 2 multivariate normal distribution
+             X = X(x1, x2)
+             Y = Y(y1, y2)
+             The definition can be found at https://en.wikipedia.org/wiki/Hellinger_distance
+        """
+        detX = np.linalg.det(covX)
+        detY = np.linalg.det(covY)
+
+        detXY = np.linalg.det((covX + covY) / 2)
+        if (np.linalg.det(covX + covY) / 2) != 0:
+            covXY_inverted = np.linalg.inv((covX + covY) / 2)
+        else:
+            covXY_inverted = np.linalg.pinv((covX + covY) / 2)
+        dist = 1. - (detX ** .25 * detY ** .25 / detXY ** .5) * np.exp(
+            -.125 * np.dot(np.dot(np.transpose(meanX - meanY), covXY_inverted), (meanX - meanY)))
+        return min(max(dist, 0.), 1.)
 
 
 
