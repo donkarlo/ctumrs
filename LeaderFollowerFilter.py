@@ -1,13 +1,13 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
-from ctumrs.TransitionMatrix import TransitionMatrix
+from ctumrs.TwoAlphabetWordsTransitionMatrix import TwoAlphabetWordsTransitionMatrix
 from scipy.spatial.distance import directed_hausdorff
 
 class LeaderFollowerFilter():
     def __init__(self
-                 , transitionMatrix:TransitionMatrix):
-        self.__transitionMatrix:TransitionMatrix = transitionMatrix
+                 , transitionMatrix:TwoAlphabetWordsTransitionMatrix):
+        self.__transitionMatrix:TwoAlphabetWordsTransitionMatrix = transitionMatrix
         self.__rangeLimit = 15000
 
     def getCurNoveltyValueByPrvPosVelObs(self
@@ -22,8 +22,8 @@ class LeaderFollowerFilter():
         leaderClusters = self.__transitionMatrix.getLeaderTimePosVelClusters()
         followerClusters = self.__transitionMatrix.getFollowerTimePosVelClusters()
 
-        prvLeaderLabel = leaderClusters.getLabelByPosVel(prvLeaderPosVelObs)
-        prvFollowerLabel = followerClusters.getLabelByPosVel(prvFollowerPosVelObs)
+        prvLeaderLabel = leaderClusters.getLabelByPosVelObs(prvLeaderPosVelObs)
+        prvFollowerLabel = followerClusters.getLabelByPosVelObs(prvFollowerPosVelObs)
         prvLeaderFollowerLabelPair = (prvLeaderLabel,prvFollowerLabel)
 
         # Get predicted label
