@@ -72,7 +72,7 @@ class TwoAlphabetWordsTransitionMatrix:
 
     def getNpTransitionMatrix(self)->np.array:
         if self.__npTransitionMatrix is None:
-            print ("Building the transition matrix ...")
+            print ("Building two alphabet words transition matrix ...")
             self.__npTransitionMatrix = np.zeros((self.__leaderTimePosVelClusters.getClustersNum() * self.__followerTimePosVelClusters.getClustersNum()
              , self.__leaderTimePosVelClusters.getClustersNum() * self.__followerTimePosVelClusters.getClustersNum()))
             foundFollowerLabels = []

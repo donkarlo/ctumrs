@@ -29,6 +29,9 @@ class OneAlphabetWordsTransitionMatrix:
 
         return self.__npTransitionMatrix
 
+    def getHighestPorobabelNextLabelBasedOnthePrvOne(self,prvLabel:int)->int:
+        return np.argmax(self.getNpTransitionMatrix()[prvLabel])
+
 
     def save(self,filePath)->None:
         """"""
