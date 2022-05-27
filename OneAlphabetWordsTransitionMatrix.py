@@ -2,12 +2,12 @@ import pickle
 
 import numpy as np
 
-from ctumrs.PosVelObssClusteringStrgy import PosVelObssClusteringStrgy
+from ctumrs.TimePosVelsClusteringStrgy import TimePosVelsClusteringStrgy
 
 
 class OneAlphabetWordsTransitionMatrix:
     def __init__(self
-                 ,posVelObssClusteringStrgy:PosVelObssClusteringStrgy
+                 ,posVelObssClusteringStrgy:TimePosVelsClusteringStrgy
                  ,posVelObss:np.array):
         self.__posVelObssClusteringStrgy = posVelObssClusteringStrgy
         self.__posVelObss = posVelObss

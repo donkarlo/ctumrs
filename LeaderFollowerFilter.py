@@ -1,13 +1,13 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
-from ctumrs.TwoAlphabetWordsTransitionMatrix import TwoAlphabetWordsTransitionMatrix
+from ctumrs.TransitionMatrix import TransitionMatrix
 from scipy.spatial.distance import directed_hausdorff
 
 class LeaderFollowerFilter():
     def __init__(self
-                 , transitionMatrix:TwoAlphabetWordsTransitionMatrix):
-        self.__transitionMatrix:TwoAlphabetWordsTransitionMatrix = transitionMatrix
+                 , transitionMatrix:TransitionMatrix):
+        self.__transitionMatrix:TransitionMatrix = transitionMatrix
         self.__rangeLimit = 15000
 
     def getCurNoveltyValueByPrvPosVelObs(self
@@ -37,20 +37,21 @@ class LeaderFollowerFilter():
         #                                        ,predictedLeaderCenter
         #                                        ,curFolowerPosVelObs
         #                                        ,curFolowerPosVelObs)
+
         # distance = self.__getGpsBhattacharyyaDistanceAbnormalityValue(curLeaderPosVelObs
         #                                                               , predictedLeaderCenter
         #                                                               , curFolowerPosVelObs
         #                                                               , predictedFollowerCenter)
 
-        # distance = self.__getGpsKlDistanceAbnormalityValue(curLeaderPosVelObs
-        #                                                               , predictedLeaderCenter
-        #                                                               , curFolowerPosVelObs
-        #                                                               , predictedFollowerCenter)
+        distance = self.__getLidarKlDistanceAbnormalityValue(curLeaderPosVelObs
+                                                                      , predictedLeaderCenter
+                                                                      , curFolowerPosVelObs
+                                                                      , predictedFollowerCenter)
 
-        distance = self.__getGpsHellingerDistanceAbnormalityValue(curLeaderPosVelObs
-                                                           , predictedLeaderCenter
-                                                           , curFolowerPosVelObs
-                                                           , predictedFollowerCenter)
+        # distance = self.__getGpsHellingerDistanceAbnormalityValue(curLeaderPosVelObs
+        #                                                    , predictedLeaderCenter
+        #                                                    , curFolowerPosVelObs
+        #                                                    , predictedFollowerCenter)
         return distance
 
     def __getGpsBhattacharyyaDistanceAbnormalityValue(self
@@ -89,24 +90,54 @@ class LeaderFollowerFilter():
         return distance
 
     def __getGpsKlDistanceAbnormalityValue(self
-                                                      , leaderObs
-                                                      , leaderPrd
-                                                      , flwrObs
-                                                      , flwrPrd):
+                                          , leaderObs
+                                          , leaderPrd
+                                          , flwrObs
+                                          , flwrPrd):
         # Distribution 1
         xyCovVal = 2.0e-4
-        zCovVal = 4.0e-4
-        covMtx = np.array([[xyCovVal, 0, 0]
-                              , [0, xyCovVal, 0]
-                              , [0, 0, zCovVal]])
+        zzCovVal = 4.0e-4
+        covMtx = np.array([
+          [xyCovVal, 0, 0, 0, 0, 0]
+        , [0, xyCovVal, 0, 0, 0, 0]
+        , [0, 0, zzCovVal, 0, 0, 0]
+        , [0, 0, 0, xyCovVal, 0, 0]
+        , [0, 0, 0, 0, xyCovVal, 0]
+        , [0, 0, 0, 0, 0, zzCovVal]
+        ])
 
-        leaderKlDistance = self.__getKullbackLieblerDistance(leaderObs[0:3]
+        leaderKlDistance = self.__getKullbackLieblerDistance(leaderObs
                                                              , covMtx
-                                                             ,leaderPrd[0:3]
+                                                             ,leaderPrd
                                                              , covMtx)
-        followerKlDistance = self.__getKullbackLieblerDistance(flwrObs[0:3]
+        followerKlDistance = self.__getKullbackLieblerDistance(flwrObs
                                                                , covMtx
-                                                               ,flwrPrd[0:3]
+                                                               ,flwrPrd
+                                                               , covMtx)
+        distance = (leaderKlDistance + followerKlDistance) / 2
+        return distance
+
+    def __getLidarKlDistanceAbnormalityValue(self
+                                          , leaderObs
+                                          , leaderPrd
+                                          , flwrObs
+                                          , flwrPrd):
+        # Distribution 1
+        covVal = 0.01
+        covMtx = np.array([
+          [covVal, 0, 0, 0]
+        , [0, covVal, 0, 0]
+        , [0, 0, covVal, 0]
+        , [0, 0, 0, covVal]
+        ])
+
+        leaderKlDistance = self.__getKullbackLieblerDistance(np.array(leaderObs)
+                                                             , covMtx
+                                                             ,np.array(leaderPrd)
+                                                             , covMtx)
+        followerKlDistance = self.__getKullbackLieblerDistance(np.array(flwrObs)
+                                                               , covMtx
+                                                               ,np.array(flwrPrd)
                                                                , covMtx)
         distance = (leaderKlDistance + followerKlDistance) / 2
         return distance
@@ -167,7 +198,7 @@ class LeaderFollowerFilter():
                 noveltyValues.append(curNoveltyValue)
         return noveltyValues
 
-    def plotNovelties(self,noveltyValues):
+    def plotNovelties(self, abnormalValuesScenario1,abnormalValuesScenario2=None):
         # Scale the plot
         f = plt.figure()
         f.set_figwidth(10)
@@ -176,12 +207,21 @@ class LeaderFollowerFilter():
         # Label
         plt.xlabel('Timestep')
         plt.ylabel('Abnormality value')
-        slicedNoveltyValues = noveltyValues[0:self.__rangeLimit]
+        slicedAbnormalValuesScenario1 = abnormalValuesScenario1[0:self.__rangeLimit]
         plt.plot(range(0,self.__rangeLimit)
-                 , slicedNoveltyValues
+                 , slicedAbnormalValuesScenario1
                  , label=''
                  , color='red'
                  , linewidth=1)
+
+        if abnormalValuesScenario2 is not None:
+            slicedAbnormalValuesScenario2 = abnormalValuesScenario2[0:self.__rangeLimit]
+            plt.plot(range(0, self.__rangeLimit)
+                     , slicedAbnormalValuesScenario2
+                     , label=''
+                     , color='blue'
+                     , linewidth=1)
+
         # To show xlabel
         plt.tight_layout()
 

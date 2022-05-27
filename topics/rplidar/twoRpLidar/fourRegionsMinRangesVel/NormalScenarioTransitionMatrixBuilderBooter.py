@@ -1,7 +1,7 @@
 import pickle
 
-from ctumrs.PosVelObssClusteringStrgy import PosVelObssClusteringStrgy
-from ctumrs.TwoAlphabetWordsTransitionMatrix import TwoAlphabetWordsTransitionMatrix
+from ctumrs.TimePosVelsClusteringStrgy import TimePosVelsClusteringStrgy
+from ctumrs.TransitionMatrix import TransitionMatrix
 from ctumrs.topics.rplidar.twoRpLidar.fourRegionsMinRangesVel.TimeFourRegionsMinVelsObss import \
     TimeFourRegionsMinRangesVelsObss
 
@@ -28,18 +28,18 @@ followerRangeSumVelObss, followerTimeRangeSumVelObss = TimeFourRegionsMinRangesV
 
 '''Cluster each'''
 
-leaderTimeRangeSumVelClusteringStrgy = PosVelObssClusteringStrgy(leaderClustersNum
-                                                                 , leaderTimeRangeSumVelObss
-                                                                 , leaderRangeSumVelObss)
+leaderTimeRangeSumVelClusteringStrgy = TimePosVelsClusteringStrgy(leaderClustersNum
+                                                                  , leaderTimeRangeSumVelObss
+                                                                  , leaderRangeSumVelObss)
 
-followerTimePosVelClusteringStrgy = PosVelObssClusteringStrgy(followerClustersNum
-                                                              , followerTimeRangeSumVelObss
-                                                              , followerRangeSumVelObss)
+followerTimePosVelClusteringStrgy = TimePosVelsClusteringStrgy(followerClustersNum
+                                                               , followerTimeRangeSumVelObss
+                                                               , followerRangeSumVelObss)
 '''Build transition matrix'''
-transitionMatrix = TwoAlphabetWordsTransitionMatrix(leaderTimeRangeSumVelClusteringStrgy
-                                                    , followerTimePosVelClusteringStrgy
-                                                    , leaderTimeRangeSumVelObss
-                                                    , followerTimeRangeSumVelObss)
+transitionMatrix = TransitionMatrix(leaderTimeRangeSumVelClusteringStrgy
+                                    , followerTimePosVelClusteringStrgy
+                                    , leaderTimeRangeSumVelObss
+                                    , followerTimeRangeSumVelObss)
 # transitionMatrix.setLeaderFollowerObsMatchStrgy("ALREADY_INDEX_MATCHED")
 transitionMatrix.save(sharedPathToTwoLidarsNormalScenarioFourRangesVels + "transtionMatrix-{}*{}.txt".format(leaderClustersNum, followerClustersNum))
 

@@ -1,7 +1,7 @@
 from ctumrs.TimePosVelObssUtility import TimePosVelObssUtility
-from ctumrs.TwoAlphabetWordsTransitionMatrix import TwoAlphabetWordsTransitionMatrix
+from ctumrs.TransitionMatrix import TransitionMatrix
 from ctumrs.TimePosVelObssPlottingUtility import TimePosVelObssPlottingUtility
-from ctumrs.PosVelObssClusteringStrgy import PosVelObssClusteringStrgy
+from ctumrs.TimePosVelsClusteringStrgy import TimePosVelsClusteringStrgy
 
 timePosVelObssPlottingUtility = TimePosVelObssPlottingUtility()
 timePosVelObssUtility = TimePosVelObssUtility()
@@ -27,12 +27,12 @@ timePosVelObssPlottingUtility.plotPos(leaderPosVels)
 timePosVelObssPlottingUtility.plotPos(followerPosVels)
 
 ############CLUSTERING###########
-leaderTimePosVelClusteringStrgy = PosVelObssClusteringStrgy(leaderClustersNum
-                                                            , leaderPosVels)
+leaderTimePosVelClusteringStrgy = TimePosVelsClusteringStrgy(leaderClustersNum
+                                                             , leaderPosVels)
 leaderTimePosVelClustersDict = leaderTimePosVelClusteringStrgy.getLabeledTimePosVelsClustersDict(leaderTimePosVels)
 
-followerTimePosVelClusteringStrgy = PosVelObssClusteringStrgy(followerClustersNum
-                                                              , followerPosVels)
+followerTimePosVelClusteringStrgy = TimePosVelsClusteringStrgy(followerClustersNum
+                                                               , followerPosVels)
 followerTimePosVelClustersDict = followerTimePosVelClusteringStrgy.getLabeledTimePosVelsClustersDict(followerTimePosVels)
 
 '''PLOTING THE CLUSTERS'''
@@ -44,8 +44,8 @@ timePosVelObssPlottingUtility.plotLeaderFollowerUavPosWithCLusters(leaderTimePos
 '''
 Building the transition matrix
 '''
-transitionMatrix = TwoAlphabetWordsTransitionMatrix(leaderTimePosVelClusteringStrgy
-                                                    , followerTimePosVelClusteringStrgy
-                                                    , leaderTimePosVels
-                                                    , followerTimePosVels)
+transitionMatrix = TransitionMatrix(leaderTimePosVelClusteringStrgy
+                                    , followerTimePosVelClusteringStrgy
+                                    , leaderTimePosVels
+                                    , followerTimePosVels)
 transitionMatrix.save(jointPathToLeaderAndFollower +"transtionMatrix-{}*{}.txt".format(leaderClustersNum, followerClustersNum))

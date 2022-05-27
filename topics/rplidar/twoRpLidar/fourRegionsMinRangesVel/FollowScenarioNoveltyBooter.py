@@ -1,7 +1,7 @@
 import pickle
 
 from ctumrs.LeaderFollowerFilter import LeaderFollowerFilter
-from ctumrs.TwoAlphabetWordsTransitionMatrix import TwoAlphabetWordsTransitionMatrix
+from ctumrs.TransitionMatrix import TransitionMatrix
 from ctumrs.topics.rplidar.twoRpLidar.fourRegionsMinRangesVel.TimeFourRegionsMinVelsObss import \
     TimeFourRegionsMinRangesVelsObss
 
@@ -12,7 +12,7 @@ velCoefficient = 10000
 sharedPathToLeaderAndFollowerNormalScenario= "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/normal-scenario/lidars/fourRegionsMinRangesVels/"
 '''Lodaing the transition matrix'''
 jointfilePathToTransitionMatrix = sharedPathToLeaderAndFollowerNormalScenario + "transtionMatrix-{}*{}.txt".format(leaderClustersNum, followerClustersNum)
-transitionMatrix = TwoAlphabetWordsTransitionMatrix()
+transitionMatrix = TransitionMatrix()
 transitionMatrix = transitionMatrix.load(jointfilePathToTransitionMatrix)
 
 ''''''

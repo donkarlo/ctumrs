@@ -1,20 +1,20 @@
 import numpy as np
-from ctumrs.PosVelObssClusteringStrgy import PosVelObssClusteringStrgy
+from ctumrs.TimePosVelsClusteringStrgy import TimePosVelsClusteringStrgy
 import pickle
 
 from ctumrs.TimePosVelObssUtility import TimePosVelObssUtility
 
 
-class TwoAlphabetWordsTransitionMatrix:
+class TransitionMatrix:
     def __init__(self
-                 , leaderTimePosVelClusters:PosVelObssClusteringStrgy = None
-                 , followerTimePosVelClusters:PosVelObssClusteringStrgy = None
+                 , leaderTimePosVelClusters:TimePosVelsClusteringStrgy = None
+                 , followerTimePosVelClusters:TimePosVelsClusteringStrgy = None
                  , leaderTimePosVels:list = None
                  , followerTimePosVels:list = None
                  ):
 
-        self.__leaderTimePosVelClusters: PosVelObssClusteringStrgy = leaderTimePosVelClusters
-        self.__followerTimePosVelClusters: PosVelObssClusteringStrgy = followerTimePosVelClusters
+        self.__leaderTimePosVelClusters: TimePosVelsClusteringStrgy = leaderTimePosVelClusters
+        self.__followerTimePosVelClusters: TimePosVelsClusteringStrgy = followerTimePosVelClusters
 
         self.__leaderUavTimePosVels = leaderTimePosVels
         self.__followerUavTimePosVels = followerTimePosVels
@@ -27,10 +27,10 @@ class TwoAlphabetWordsTransitionMatrix:
     def setLeaderFollowerObsMatchStrgy(self,leaderFollowerObsMatchStrgy="ALREADY_INDEX_MATCHED"):
         self.__leaderFollowerObsMatchStrgy = leaderFollowerObsMatchStrgy
 
-    def getLeaderTimePosVelClusters(self)->PosVelObssClusteringStrgy:
+    def getLeaderTimePosVelClusters(self)->TimePosVelsClusteringStrgy:
         return self.__leaderTimePosVelClusters
 
-    def getFollowerTimePosVelClusters(self)->PosVelObssClusteringStrgy:
+    def getFollowerTimePosVelClusters(self)->TimePosVelsClusteringStrgy:
         return self.__followerTimePosVelClusters
 
     def __getRowAndColByTwoLabelPairs(self, prvCurFollowerLeaderLabels: ((int, int)

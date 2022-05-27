@@ -2,7 +2,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 from ctumrs.OneAlphabetWordsTransitionMatrix import OneAlphabetWordsTransitionMatrix
-from ctumrs.PosVelObssClusteringStrgy import PosVelObssClusteringStrgy
+from ctumrs.TimePosVelsClusteringStrgy import TimePosVelsClusteringStrgy
 from ctumrs.TimePosVelObssPlottingUtility import TimePosVelObssPlottingUtility
 from ctumrs.TimePosVelObssUtility import TimePosVelObssUtility
 
@@ -38,7 +38,7 @@ for uav1TimePosVelObsCounter, uav1TimePosVelObs in enumerate(uav1TimePosVelObssD
 
 
 # cluster together vectors
-posVelObssClusteringStrgy = PosVelObssClusteringStrgy(clustersNum,uav1Uav2PosVelObss)
+posVelObssClusteringStrgy = TimePosVelsClusteringStrgy(clustersNum, uav1Uav2PosVelObss)
 fittedClusters = posVelObssClusteringStrgy.getFittedClusters()
 # Make the transition matrix
 oneAlphabetWordsTransitionMatrix = OneAlphabetWordsTransitionMatrix(posVelObssClusteringStrgy,uav1Uav2PosVelObss)

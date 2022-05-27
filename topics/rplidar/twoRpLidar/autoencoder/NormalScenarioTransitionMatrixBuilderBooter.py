@@ -3,8 +3,8 @@ import pickle
 
 import numpy as np
 
-from ctumrs.PosVelObssClusteringStrgy import PosVelObssClusteringStrgy
-from ctumrs.TwoAlphabetWordsTransitionMatrix import TwoAlphabetWordsTransitionMatrix
+from ctumrs.TimePosVelsClusteringStrgy import TimePosVelsClusteringStrgy
+from ctumrs.TransitionMatrix import TransitionMatrix
 from keras.models import load_model
 from ctumrs.topics.rplidar.twoRpLidar.autoencoder.Plots import Plots
 from mMath.data.RowsTimeDerivativeComputer import RowsTimeDerivativeComputer
@@ -49,18 +49,18 @@ class NormalScenarioTransitionMatrixBuilderBooter:
 
         '''Cluster each'''
 
-        leaderTimePosVelClusteringStrgy = PosVelObssClusteringStrgy(leaderClustersNum
-                                                                    , leaderLowDimTimePosVelObss
-                                                                    , leaderLowDimPosVelObss)
+        leaderTimePosVelClusteringStrgy = TimePosVelsClusteringStrgy(leaderClustersNum
+                                                                     , leaderLowDimTimePosVelObss
+                                                                     , leaderLowDimPosVelObss)
 
-        followerTimePosVelClusteringStrgy = PosVelObssClusteringStrgy(followerClustersNum
-                                                                      , followerLowDimTimePosVelObss
-                                                                      , followerLowDimPosVelObss)
+        followerTimePosVelClusteringStrgy = TimePosVelsClusteringStrgy(followerClustersNum
+                                                                       , followerLowDimTimePosVelObss
+                                                                       , followerLowDimPosVelObss)
         '''Build transition matrix'''
-        transitionMatrix = TwoAlphabetWordsTransitionMatrix(leaderTimePosVelClusteringStrgy
-                                                            , followerTimePosVelClusteringStrgy
-                                                            , leaderLowDimTimePosVelObss
-                                                            , followerLowDimTimePosVelObss)
+        transitionMatrix = TransitionMatrix(leaderTimePosVelClusteringStrgy
+                                            , followerTimePosVelClusteringStrgy
+                                            , leaderLowDimTimePosVelObss
+                                            , followerLowDimTimePosVelObss)
         # transitionMatrix.setLeaderFollowerObsMatchStrgy("ALREADY_INDEX_MATCHED")
         transitionMatrix.save(sharedPathToTwoLidars + "autoencoders/transtionMatrix-{}*{}.txt".format(leaderClustersNum, followerClustersNum))
 

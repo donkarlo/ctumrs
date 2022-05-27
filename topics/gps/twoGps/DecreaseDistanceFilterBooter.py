@@ -1,5 +1,5 @@
 from ctumrs.LeaderFollowerFilter import LeaderFollowerFilter
-from ctumrs.TwoAlphabetWordsTransitionMatrix import TwoAlphabetWordsTransitionMatrix
+from ctumrs.TransitionMatrix import TransitionMatrix
 from ctumrs.TimePosVelObssPlottingUtility import TimePosVelObssPlottingUtility
 
 utility = TimePosVelObssPlottingUtility()
@@ -11,7 +11,7 @@ velocityCoefficient = 10000
 jointPathToLeaderAndFollowerNormalScenario= "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/inner-squares/"
 '''Lodaing the transition matrix'''
 jointfilePathToTransitionMatrix = jointPathToLeaderAndFollowerNormalScenario + "transtionMatrix-{}*{}.txt".format(leaderUavClustersNum, followerUavClustersNum)
-transitionMatrix = TwoAlphabetWordsTransitionMatrix()
+transitionMatrix = TransitionMatrix()
 transitionMatrix = transitionMatrix.load(jointfilePathToTransitionMatrix)
 
 ''''''

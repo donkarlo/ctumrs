@@ -3,7 +3,7 @@ import pickle
 import numpy as np
 
 from ctumrs.LeaderFollowerFilter import LeaderFollowerFilter
-from ctumrs.TwoAlphabetWordsTransitionMatrix import TwoAlphabetWordsTransitionMatrix
+from ctumrs.TransitionMatrix import TransitionMatrix
 from mMath.data.RowsTimeDerivativeComputer import RowsTimeDerivativeComputer
 from mMath.data.preProcess.RowsNormalizer import RowsNormalizer
 from keras.models import load_model
@@ -22,7 +22,7 @@ class FollowScenarioAbnormalityBooter:
 
         '''Lodaing the transition matrix'''
         jointfilePathToTransitionMatrix = sharedPathToLeaderAndFollowerNormalScenario + "autoencoders/transtionMatrix-{}*{}.txt".format(leaderClustersNum, followerClustersNum)
-        transitionMatrix = TwoAlphabetWordsTransitionMatrix()
+        transitionMatrix = TransitionMatrix()
         transitionMatrix = transitionMatrix.load(jointfilePathToTransitionMatrix)
 
         '''Loading normal scenrio data'''
