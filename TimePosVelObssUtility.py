@@ -52,7 +52,7 @@ class TimePosVelObssUtility():
         uavTimePosVels = np.array(uavTimePosVels)
         return {'posVels': uavPosVels, 'timePosVels': uavTimePosVels}
 
-    def getPosVelByTimePosVel(self, timePosVel: list) -> list:
+    def getPosVelByTimePosVel(timePosVel: list) -> list:
         return timePosVel[1:]
 
     @staticmethod

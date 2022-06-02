@@ -5,7 +5,7 @@ import random as rand
 
 class TimePosVelObssPlottingUtility():
     @staticmethod
-    def getRandomColor(self):
+    def getRandomColor():
         return [rand.uniform(0, 1.0) for i in [1, 2, 3]]
 
     @staticmethod
@@ -21,6 +21,7 @@ class TimePosVelObssPlottingUtility():
         fig = plt.figure()
         ax = Axes3D(fig)
         ax.scatter(uavPosXs, uavPosYs, uavPosZs, marker='.', alpha=0.04, linewidth=1)
+        ax.set_zlim3d(-15, 15)
         plt.show()
 
     @staticmethod
@@ -65,9 +66,12 @@ class TimePosVelObssPlottingUtility():
                 followerUavTimePosXs.append(uavTimePosVel[1])
                 followerUavTimePosYs.append(uavTimePosVel[2])
                 followerUavTimePosZs.append(uavTimePosVel[3])
-            ax.scatter(followerUavTimePosXs, followerUavTimePosYs, followerUavTimePosZs, color=self.getRandomColor(),
+            ax.scatter(followerUavTimePosXs, followerUavTimePosYs, followerUavTimePosZs, color=TimePosVelObssPlottingUtility.getRandomColor(),
                        marker='.', alpha=0.04,
                        linewidth=1)
 
-        ax.set_zlim3d(4.9, 5.1)
+        ax.set_zlim3d(-15, 15)
+        ax.set_xlabel("X")
+        ax.set_ylabel("Y")
+        ax.set_zlabel("Z")
         plt.show()
