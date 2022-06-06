@@ -24,7 +24,7 @@ class YamlTopic:
         leaderTimeRangeSumRangeVelObss = []
         followerRangeSumRangeVelObss = []
         followerTimeRangeSumRangeVelObss = []
-        rangeVelCoefficient = 1
+        rangeVelCoefficient = 10000
 
         with open(yamlFilePathToLidarOfTwoDronesTopic, "r") as file:
             leaderLidarCounter = 0

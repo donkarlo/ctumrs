@@ -12,7 +12,9 @@ class TimeFourRegionsMinRangesVelsObss:
         return fourRangesVelsObss
 
     @staticmethod
-    def velMulInFourRangesVelsAndTimeFourRangesVelsObss(fourRangesVelsObss: list, timeFourRangesVelsObss: list, coefficient: float):
+    def velMulInFourRangesVelsAndTimeFourRangesVelsObss(fourRangesVelsObss: list
+                                                        , timeFourRangesVelsObss: list
+                                                        , coefficient: float):
         """"""
         for counter, element in enumerate(fourRangesVelsObss):
             fourRangesVelsObss[counter][4] = coefficient * fourRangesVelsObss[counter][4]
