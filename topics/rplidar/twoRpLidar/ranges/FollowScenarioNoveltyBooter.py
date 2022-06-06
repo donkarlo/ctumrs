@@ -12,9 +12,7 @@ velCoefficient = 20
 
 sharedPathToLeaderAndFollowerNormalScenario= "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/normal-scenario/lidars/ranges/"
 '''Lodaing the transition matrix'''
-jointfilePathToTransitionMatrix = sharedPathToLeaderAndFollowerNormalScenario + "transtionMatrix-clusters-{}*{}-velco-{}.txt".format(leaderClustersNum
-                                                                                                                                     , followerClustersNum
-                                                                                                                                     ,velCoefficient)
+jointfilePathToTransitionMatrix = sharedPathToLeaderAndFollowerNormalScenario + "transtionMatrix-clusters-{}-{}-velco-{}}.txt".format(leaderClustersNum, followerClustersNum, velCoefficient)
 transitionMatrix = TransitionMatrix()
 transitionMatrix = transitionMatrix.load(jointfilePathToTransitionMatrix)
 
