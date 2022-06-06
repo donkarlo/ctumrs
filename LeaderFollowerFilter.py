@@ -33,20 +33,20 @@ class LeaderFollowerFilter():
         predictedLeaderCenter = leaderClusters.getClusterCenterByLabel(predictedLabelPair[0])
         predictedFollowerCenter = followerClusters.getClusterCenterByLabel(predictedLabelPair[1])
 
-        # distance = self.__getHausedorfDistance(curLeaderPosVelObs
-        #                                        ,predictedLeaderCenter
-        #                                        ,curFolowerPosVelObs
-        #                                        ,curFolowerPosVelObs)
+        distance = self.__getHausedorfDistance(curLeaderPosVelObs
+                                               ,predictedLeaderCenter
+                                               ,curFolowerPosVelObs
+                                               ,curFolowerPosVelObs)
 
         # distance = self.__getGpsBhattacharyyaDistanceAbnormalityValue(curLeaderPosVelObs
         #                                                               , predictedLeaderCenter
         #                                                               , curFolowerPosVelObs
         #                                                               , predictedFollowerCenter)
 
-        distance = self.__getLidarKlDistanceAbnormalityValue(curLeaderPosVelObs
-                                                                      , predictedLeaderCenter
-                                                                      , curFolowerPosVelObs
-                                                                      , predictedFollowerCenter)
+        # distance = self.__getLidarKlDistanceAbnormalityValue(curLeaderPosVelObs
+        #                                                               , predictedLeaderCenter
+        #                                                               , curFolowerPosVelObs
+        #                                                               , predictedFollowerCenter)
 
         # distance = self.__getGpsHellingerDistanceAbnormalityValue(curLeaderPosVelObs
         #                                                    , predictedLeaderCenter
@@ -124,12 +124,7 @@ class LeaderFollowerFilter():
                                           , flwrPrd):
         # Distribution 1
         covVal = 0.01
-        covMtx = np.array([
-          [covVal, 0, 0, 0]
-        , [0, covVal, 0, 0]
-        , [0, 0, covVal, 0]
-        , [0, 0, 0, covVal]
-        ])
+        covMtx = covVal*np.identity(len(leaderObs))
 
         leaderKlDistance = self.__getKullbackLieblerDistance(np.array(leaderObs)
                                                              , covMtx
