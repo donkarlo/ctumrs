@@ -8,9 +8,9 @@ from ctumrs.topics.rplidar.twoRpLidar.ranges.TimeRangesVelsObss import TimeRange
 
 sharedPathToTwoLidarsNormalScenarioFourRangesVels = "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/normal-scenario/lidars/ranges/"
 
-velCoefficient = 10000
 leaderClustersNum = 75
 followerClustersNum = 75
+velCoefficient = 20
 
 '''Load data'''
 pklFile = open(sharedPathToTwoLidarsNormalScenarioFourRangesVels + "twoLidarsTimeRangesVelsObss.pkl", "rb")
@@ -39,7 +39,9 @@ transitionMatrix = TransitionMatrix(leaderTimeRangeSumVelClusteringStrgy
                                     , npLeaderTimeRangesCoefVelsObss
                                     , npFollowerTimeRangesCoefVelsObss)
 # transitionMatrix.setLeaderFollowerObsMatchStrgy("ALREADY_INDEX_MATCHED")
-transitionMatrix.save(sharedPathToTwoLidarsNormalScenarioFourRangesVels + "transtionMatrix-{}*{}.txt".format(leaderClustersNum, followerClustersNum))
+transitionMatrix.save(sharedPathToTwoLidarsNormalScenarioFourRangesVels + "transtionMatrix-clusters-{}*{}-velco-{}.txt".format(leaderClustersNum
+                                                                                                                      , followerClustersNum
+                                                                                                                      ,velCoefficient))
 
 
 print("Ended")
