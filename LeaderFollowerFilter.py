@@ -33,20 +33,20 @@ class LeaderFollowerFilter():
         predictedLeaderCenter = leaderClusters.getClusterCenterByLabel(predictedLabelPair[0])
         predictedFollowerCenter = followerClusters.getClusterCenterByLabel(predictedLabelPair[1])
 
-        distance = self.__getHausedorfDistance(curLeaderPosVelObs
-                                               ,predictedLeaderCenter
-                                               ,curFolowerPosVelObs
-                                               ,curFolowerPosVelObs)
+        # distance = self.__getHausedorfDistance(curLeaderPosVelObs
+        #                                        ,predictedLeaderCenter
+        #                                        ,curFolowerPosVelObs
+        #                                        ,curFolowerPosVelObs)
 
         # distance = self.__getGpsBhattacharyyaDistanceAbnormalityValue(curLeaderPosVelObs
         #                                                               , predictedLeaderCenter
         #                                                               , curFolowerPosVelObs
         #                                                               , predictedFollowerCenter)
 
-        # distance = self.__getLidarKlDistanceAbnormalityValue(curLeaderPosVelObs
-        #                                                               , predictedLeaderCenter
-        #                                                               , curFolowerPosVelObs
-        #                                                               , predictedFollowerCenter)
+        distance = self.__getLidarKlDistanceAbnormalityValue(curLeaderPosVelObs
+                                                                      , predictedLeaderCenter
+                                                                      , curFolowerPosVelObs
+                                                                      , predictedFollowerCenter)
 
         # distance = self.__getGpsHellingerDistanceAbnormalityValue(curLeaderPosVelObs
         #                                                    , predictedLeaderCenter

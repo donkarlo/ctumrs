@@ -1,8 +1,3 @@
 class MachineSettings:
-    def __init__(self,user):
-        self.__user = pathToProjsResearch
-    def getPathToProjsResearch(self):
-        pass
-
-user  = "donkarlo"
-machineSttings = MachineSettings("home/don")
+    MAIN_PATH = "/home/donkarlo/Dropbox/"
+    # MAIN_PATH = "/home/users/morahmani/"
