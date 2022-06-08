@@ -1,8 +1,12 @@
+import multiprocessing
+import os
+
 import numpy as np
 from matplotlib import pyplot as plt
 
 from ctumrs.TransitionMatrix import TransitionMatrix
 from scipy.spatial.distance import directed_hausdorff
+from multiprocessing import Pool
 
 class LeaderFollowerFilter():
     def __init__(self
@@ -11,10 +15,10 @@ class LeaderFollowerFilter():
         self.__rangeLimit = 15000
 
     def getCurNoveltyValueByPrvPosVelObs(self
-                                         , prvLeaderPosVelObs:tuple
-                                         , prvFollowerPosVelObs:tuple
-                                         , curLeaderPosVelObs:tuple
-                                         , curFolowerPosVelObs:tuple)->float:
+                                         , prvLeaderPosVelObs
+                                         , prvFollowerPosVelObs
+                                         , curLeaderPosVelObs
+                                         , curFolowerPosVelObs)->float:
 
         """
 
@@ -177,21 +181,31 @@ class LeaderFollowerFilter():
                      ,leaderPosVelObss:[tuple]
                      ,followerPosVelObss:[tuple]
                      )->np.ndarray:
-        noveltyValues = []
         print("Calculating abnormality values ...")
+
+        noveltyValues = []
+        leaderFollowerObssPreds = []
         for leaderPosVelObsCounter,leaderPosVelObs in enumerate(leaderPosVelObss):
             if leaderPosVelObsCounter>=1 and leaderPosVelObsCounter<=self.__rangeLimit:
                 prvLeaderObs = leaderPosVelObss[leaderPosVelObsCounter-1]
                 prvFolowerObs = followerPosVelObss[leaderPosVelObsCounter-1]
                 curLeaderObs = leaderPosVelObs
                 curFollowerObs = followerPosVelObss[leaderPosVelObsCounter]
-                curNoveltyValue = self.getCurNoveltyValueByPrvPosVelObs(prvLeaderObs
-                                                                             , prvFolowerObs
-                                                                             , curLeaderObs
-                                                                             , curFollowerObs)
-                print(curNoveltyValue)
-                noveltyValues.append(curNoveltyValue)
-        return noveltyValues
+                leaderFollowerObssPreds.append((prvLeaderObs
+                                , prvFolowerObs
+                                , curLeaderObs
+                                , curFollowerObs))
+                # curNoveltyValue = self.getCurNoveltyValueByPrvPosVelObs(prvLeaderObs
+                #                                                              , prvFolowerObs
+                #                                                              , curLeaderObs
+                #                                                              , curFollowerObs)
+                # print(curNoveltyValue)
+                # noveltyValues.append(curNoveltyValue)
+
+        with Pool(os.cpu_count()) as p:
+            results = p.starmap(self.getCurNoveltyValueByPrvPosVelObs, leaderFollowerObssPreds)
+        print(results)
+        return results
 
     def plotNovelties(self, abnormalValuesScenario1,abnormalValuesScenario2=None):
         # Scale the plot

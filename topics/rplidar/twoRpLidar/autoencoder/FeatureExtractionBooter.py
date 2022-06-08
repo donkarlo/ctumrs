@@ -5,6 +5,7 @@ import numpy as np
 from tensorflow.keras.models import Model, Sequential
 from tensorflow.keras.layers import Dense
 
+from MachineSettings import MachineSettings
 from ctumrs.topics.rplidar.twoRpLidar.autoencoder.Plots import Plots
 from mMath.data.preProcess.RowsNormalizer import RowsNormalizer
 
@@ -14,8 +15,8 @@ class FeatureExtractionBooter:
     def extractFeatures()->None:
         #settings
         scenarioName = "normal-scenario"
-        leaderFollower = "follower"
-        sharedDataPathToLidarsScenario = "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/{}/lidars/".format(scenarioName)
+        leaderFollower = "leader"
+        sharedDataPathToLidarsScenario = MachineSettings.MAIN_PATH+"projs/research/data/self-aware-drones/ctumrs/two-drones/{}/lidars/".format(scenarioName)
 
         #Loading data
         twoLidarsTimeRangesObssPickleFile = open(sharedDataPathToLidarsScenario+"twoLidarsTimeRangesObss.pkl", 'rb')
@@ -30,7 +31,7 @@ class FeatureExtractionBooter:
         inputDim = 720
 
         # This is the dimension of the latent space (encoding space)
-        latentDim = 2
+        latentDim = 3
 
         encoder = Sequential([
             Dense(512, activation='relu', input_shape=(inputDim,)),
@@ -54,7 +55,11 @@ class FeatureExtractionBooter:
         autoencoder.compile(loss='mse', optimizer='adam')
 
 
-        modelHistory = autoencoder.fit(normalizedNpLeaderRangesObss, normalizedNpLeaderRangesObss, epochs=50, batch_size=10, verbose=0)
+        modelHistory = autoencoder.fit(normalizedNpLeaderRangesObss
+                                       , normalizedNpLeaderRangesObss
+                                       , epochs=100
+                                       , batch_size=10
+                                       , verbose=0)
 
 
         encoder.save(filepath = sharedDataPathToLidarsScenario+"autoencoders/{}-encoder.h5".format(leaderFollower))
@@ -64,8 +69,8 @@ class FeatureExtractionBooter:
 
         #let check the latent space
         encodedXtrain = encoder(normalizedNpLeaderRangesObss)
-        Plots.plot2DEncodedXTrain(encodedXtrain)
-        # Plots.plot3DEncodedXTrain(encodedXtrain)
+        # Plots.plot2DEncodedXTrain(encodedXtrain)
+        Plots.plot3DEncodedXTrain(encodedXtrain)
 
 if __name__=="__main__":
     FeatureExtractionBooter.extractFeatures()

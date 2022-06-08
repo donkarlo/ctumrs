@@ -3,6 +3,7 @@ import pickle
 
 import numpy as np
 
+from MachineSettings import MachineSettings
 from ctumrs.TimePosVelsClusteringStrgy import TimePosVelsClusteringStrgy
 from ctumrs.TransitionMatrix import TransitionMatrix
 from keras.models import load_model
@@ -13,7 +14,7 @@ from mMath.data.preProcess.RowsNormalizer import RowsNormalizer
 class NormalScenarioTransitionMatrixBuilderBooter:
     @staticmethod
     def boot():
-        sharedPathToTwoLidars = "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/normal-scenario/lidars/"
+        sharedPathToTwoLidars = MachineSettings.MAIN_PATH+"projs/research/data/self-aware-drones/ctumrs/two-drones/normal-scenario/lidars/"
         pickleFileName = "twoLidarsTimeRangesObss.pkl"
 
         rowsNum = 50000

@@ -5,7 +5,7 @@ import numpy as np
 from ctumrs.LeaderFollowerFilter import LeaderFollowerFilter
 from ctumrs.TransitionMatrix import TransitionMatrix
 from ctumrs.topics.rplidar.twoRpLidar.ranges.TimeRangesVelsObss import TimeRangesVelsObss
-from ctumrs.MachineSettings import MachineSettings
+from MachineSettings import MachineSettings
 
 leaderClustersNum = 75
 followerClustersNum = 75

@@ -50,7 +50,13 @@ class Plots:
         ax = plt.axes(projection="3d")
 
         # Creating plot
-        ax.scatter3D(encodedXtrain[:, 0], encodedXtrain[:, 1], encodedXtrain[:, 2],alpha=0.4)
+        ax.scatter3D(encodedXtrain[:, 0]
+                     , encodedXtrain[:, 1]
+                     , encodedXtrain[:, 2]
+                     ,alpha=0.4
+                     ,edgecolors='red'
+                     , s = 20
+                     )
         plt.title("Latent dimentions")
 
         # show plot

@@ -3,6 +3,7 @@ import pickle
 import numpy as np
 
 from ctumrs.LeaderFollowerFilter import LeaderFollowerFilter
+from MachineSettings import MachineSettings
 from ctumrs.TransitionMatrix import TransitionMatrix
 from mMath.data.RowsTimeDerivativeComputer import RowsTimeDerivativeComputer
 from mMath.data.preProcess.RowsNormalizer import RowsNormalizer
@@ -17,7 +18,7 @@ class FollowScenarioAbnormalityBooter:
         leaderClustersNum = 75
         followerClustersNum = 75
         velCoefficient = 10000
-        sharedPathToTwoDronesData = "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/"
+        sharedPathToTwoDronesData = MachineSettings.MAIN_PATH+"projs/research/data/self-aware-drones/ctumrs/two-drones/"
         sharedPathToLeaderAndFollowerNormalScenario= sharedPathToTwoDronesData+"normal-scenario/lidars/"
 
         '''Lodaing the transition matrix'''
