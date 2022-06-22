@@ -15,13 +15,15 @@ class FeatureExtractionBooter:
     def extractFeatures()->None:
         #settings
         scenarioName = "normal-scenario"
-        leaderFollower = "leader"
+        #leader or follower
+        leadership = "leader"
+        epochs = 500
         sharedDataPathToLidarsScenario = MachineSettings.MAIN_PATH+"projs/research/data/self-aware-drones/ctumrs/two-drones/{}/lidars/".format(scenarioName)
 
         #Loading data
         twoLidarsTimeRangesObssPickleFile = open(sharedDataPathToLidarsScenario+"twoLidarsTimeRangesObss.pkl", 'rb')
         pklDict = pickle.load(twoLidarsTimeRangesObssPickleFile)
-        npLeaderRangesObss = np.array(pklDict["{}TimeRangesObss".format(leaderFollower)])[:50000, 1:]
+        npLeaderRangesObss = np.array(pklDict["{}TimeRangesObss".format(leadership)])[:50000, 1:]
 
 
 
@@ -57,18 +59,19 @@ class FeatureExtractionBooter:
 
         modelHistory = autoencoder.fit(normalizedNpLeaderRangesObss
                                        , normalizedNpLeaderRangesObss
-                                       , epochs=100
+                                       , epochs=epochs
                                        , batch_size=10
                                        , verbose=0)
 
 
-        encoder.save(filepath = sharedDataPathToLidarsScenario+"autoencoders/{}-encoder.h5".format(leaderFollower))
+        encoder.save(filepath = sharedDataPathToLidarsScenario+"autoencoders/{}-encoder-epochs-{}.h5".format(leadership,epochs))
         #plot Loss vs Epoch
         Plots.plotLossVsEpoch(modelHistory.history["loss"])
 
 
         #let check the latent space
         encodedXtrain = encoder(normalizedNpLeaderRangesObss)
+
         # Plots.plot2DEncodedXTrain(encodedXtrain)
         Plots.plot3DEncodedXTrain(encodedXtrain)
 
