@@ -15,25 +15,37 @@ class FeatureExtractionBooter:
     def extractFeatures()->None:
         #settings
         scenarioName = "normal-scenario"
+
         #leader or follower
         leadership = "leader"
-        epochs = 500
-        sharedDataPathToLidarsScenario = MachineSettings.MAIN_PATH+"projs/research/data/self-aware-drones/ctumrs/two-drones/{}/lidars/".format(scenarioName)
 
-        #Loading data
-        twoLidarsTimeRangesObssPickleFile = open(sharedDataPathToLidarsScenario+"twoLidarsTimeRangesObss.pkl", 'rb')
-        pklDict = pickle.load(twoLidarsTimeRangesObssPickleFile)
-        npLeaderRangesObss = np.array(pklDict["{}TimeRangesObss".format(leadership)])[:50000, 1:]
+        rowsNum = 50000
 
+        #some websites say epochs must start from three times the number of the columns
+        epochs = 1000
 
-
-        normalizedNpLeaderRangesObss = RowsNormalizer.getNpNormalizedNpRows(npLeaderRangesObss)
+        #How many data per time feed into the NN for training
+        #some websites siad that this amount is the best
+        batchSize = 32
 
         # This is the dimension of the original space
         inputDim = 720
 
         # This is the dimension of the latent space (encoding space)
         latentDim = 3
+
+        sharedDataPathToLidarsScenario = MachineSettings.MAIN_PATH+"projs/research/data/self-aware-drones/ctumrs/two-drones/{}/lidars/".format(scenarioName)
+
+        #Loading data
+        twoLidarsTimeRangesObssPickleFile = open(sharedDataPathToLidarsScenario+"twoLidarsTimeRangesObss.pkl", 'rb')
+        pklDict = pickle.load(twoLidarsTimeRangesObssPickleFile)
+        npLeaderRangesObss = np.array(pklDict["{}TimeRangesObss".format(leadership)])[:rowsNum, 1:]
+
+
+
+        normalizedNpLeaderRangesObss = RowsNormalizer.getNpNormalizedNpRows(npLeaderRangesObss)
+
+
 
         encoder = Sequential([
             Dense(512, activation='relu', input_shape=(inputDim,)),
@@ -60,11 +72,11 @@ class FeatureExtractionBooter:
         modelHistory = autoencoder.fit(normalizedNpLeaderRangesObss
                                        , normalizedNpLeaderRangesObss
                                        , epochs=epochs
-                                       , batch_size=10
+                                       , batch_size=batchSize
                                        , verbose=0)
 
 
-        encoder.save(filepath = sharedDataPathToLidarsScenario+"autoencoders/{}-encoder-epochs-{}.h5".format(leadership,epochs))
+        encoder.save(filepath = sharedDataPathToLidarsScenario+"autoencoders/{}-encoder-rows-num-{}-epochs-{}-batch-size-{}.h5".format(leadership,rowsNum,epochs,batchSize))
         #plot Loss vs Epoch
         Plots.plotLossVsEpoch(modelHistory.history["loss"])
 

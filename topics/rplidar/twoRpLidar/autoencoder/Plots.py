@@ -53,8 +53,6 @@ class Plots:
         ax.scatter3D(encodedXtrain[:, 0]
                      , encodedXtrain[:, 1]
                      , encodedXtrain[:, 2]
-                     ,alpha=0.4
-                     ,edgecolors='red'
                      , s = 20
                      )
         plt.title("Latent dimentions")
