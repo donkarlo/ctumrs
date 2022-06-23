@@ -22,7 +22,7 @@ class FeatureExtractionBooter:
         rowsNum = 50000
 
         #some websites say epochs must start from three times the number of the columns
-        epochs = 1000
+        epochs = 2000
 
         #How many data per time feed into the NN for training
         #some websites siad that this amount is the best

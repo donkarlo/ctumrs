@@ -1,6 +1,14 @@
+import pickle
+
 import numpy as np
 from matplotlib import pyplot as plt
 import random
+from tensorflow.keras.models import Model, Sequential,load_model
+from tensorflow.keras.layers import Dense
+
+from MachineSettings import MachineSettings
+from mMath.data.preProcess.RowsNormalizer import RowsNormalizer
+
 
 class Plots:
     @staticmethod
@@ -59,3 +67,43 @@ class Plots:
 
         # show plot
         plt.show()
+
+
+if __name__=="__main__":
+    # settings
+    scenarioName = "normal-scenario"
+
+    # leader or follower
+    leadership = "leader"
+
+    rowsNum = 6000
+
+    # some websites say epochs must start from three times the number of the columns
+    epochs = 2000
+
+    # How many data per time feed into the NN for training
+    # some websites siad that this amount is the best
+    batchSize = 32
+
+    # This is the dimension of the original space
+    inputDim = 720
+
+    # This is the dimension of the latent space (encoding space)
+    latentDim = 3
+
+    sharedDataPathToLidarsScenario = MachineSettings.MAIN_PATH + "projs/research/data/self-aware-drones/ctumrs/two-drones/{}/lidars/".format(
+        scenarioName)
+
+    # Loading data
+    twoLidarsTimeRangesObssPickleFile = open(sharedDataPathToLidarsScenario + "twoLidarsTimeRangesObss.pkl", 'rb')
+    pklDict = pickle.load(twoLidarsTimeRangesObssPickleFile)
+    npLeaderRangesObss = np.array(pklDict["{}TimeRangesObss".format(leadership)])[:rowsNum, 1:]
+    normalizedNpLeaderRangesObss = RowsNormalizer.getNpNormalizedNpRows(npLeaderRangesObss)
+
+    #load model
+    encoder = load_model(filepath = sharedDataPathToLidarsScenario+"autoencoders/{}-encoder-rows-num-{}-epochs-{}-batch-size-{}.h5".format(leadership,rowsNum,epochs,batchSize))
+    # let check the latent space
+    encodedXtrain = encoder(normalizedNpLeaderRangesObss)
+
+    Plots.plot3DEncodedXTrain(encodedXtrain)
+
