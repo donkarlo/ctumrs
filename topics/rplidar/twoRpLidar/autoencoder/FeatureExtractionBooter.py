@@ -19,10 +19,10 @@ class FeatureExtractionBooter:
         #leader or follower
         leadership = "leader"
 
-        rowsNum = 50000
+        rowsNum = 35000
 
         #some websites say epochs must start from three times the number of the columns
-        epochs = 2000
+        epochs = 1000
 
         #How many data per time feed into the NN for training
         #some websites siad that this amount is the best
@@ -40,9 +40,6 @@ class FeatureExtractionBooter:
         twoLidarsTimeRangesObssPickleFile = open(sharedDataPathToLidarsScenario+"twoLidarsTimeRangesObss.pkl", 'rb')
         pklDict = pickle.load(twoLidarsTimeRangesObssPickleFile)
         npLeaderRangesObss = np.array(pklDict["{}TimeRangesObss".format(leadership)])[:rowsNum, 1:]
-
-
-
         normalizedNpLeaderRangesObss = RowsNormalizer.getNpNormalizedNpRows(npLeaderRangesObss)
 
 
@@ -75,8 +72,11 @@ class FeatureExtractionBooter:
                                        , batch_size=batchSize
                                        , verbose=0)
 
-
+        #saving the model
+        autoencoder.save(filepath = sharedDataPathToLidarsScenario+"autoencoders/{}-encoder-decoder-rows-num-{}-epochs-{}-batch-size-{}.h5".format(leadership,rowsNum,epochs,batchSize))
+        decoder.save(filepath = sharedDataPathToLidarsScenario+"autoencoders/{}-decoder-rows-num-{}-epochs-{}-batch-size-{}.h5".format(leadership,rowsNum,epochs,batchSize))
         encoder.save(filepath = sharedDataPathToLidarsScenario+"autoencoders/{}-encoder-rows-num-{}-epochs-{}-batch-size-{}.h5".format(leadership,rowsNum,epochs,batchSize))
+
         #plot Loss vs Epoch
         Plots.plotLossVsEpoch(modelHistory.history["loss"])
 

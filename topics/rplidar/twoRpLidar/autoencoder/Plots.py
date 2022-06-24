@@ -1,4 +1,6 @@
 import pickle
+from builtins import range
+from turtle import color
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -61,7 +63,7 @@ class Plots:
         ax.scatter3D(encodedXtrain[:, 0]
                      , encodedXtrain[:, 1]
                      , encodedXtrain[:, 2]
-                     , s = 20
+                     , s = 0.05
                      )
         plt.title("Latent dimentions")
 
@@ -70,16 +72,16 @@ class Plots:
 
 
 if __name__=="__main__":
-    # settings
+    ############ settings
     scenarioName = "normal-scenario"
 
     # leader or follower
     leadership = "leader"
 
-    rowsNum = 6000
+    rowsNum = 50000
 
     # some websites say epochs must start from three times the number of the columns
-    epochs = 2000
+    epochs = 2160
 
     # How many data per time feed into the NN for training
     # some websites siad that this amount is the best
@@ -106,4 +108,20 @@ if __name__=="__main__":
     encodedXtrain = encoder(normalizedNpLeaderRangesObss)
 
     Plots.plot3DEncodedXTrain(encodedXtrain)
+
+    ########## reconstructing
+
+    #Load auto encoder
+    autoencoder = load_model(filepath = sharedDataPathToLidarsScenario+"autoencoders/{}-encoder-decoder-rows-num-{}-epochs-{}-batch-size-{}.h5".format(leadership,rowsNum,epochs,batchSize))
+    #choose a random data
+    realRandomNpRow = normalizedNpLeaderRangesObss[np.random.choice(normalizedNpLeaderRangesObss.shape[0]
+                                                                    , 1
+                                                                    , replace=False)]
+    predictionForRandomRow = autoencoder.predict(realRandomNpRow)
+    #plotting
+    plt.figure(figsize=(20, 6))
+    plt.scatter(range(0,720), realRandomNpRow,alpha=0.2)
+    plt.scatter(range(0,720), predictionForRandomRow, color="red",alpha=0.1)
+    plt.legend(["Real", "Reconstructed"])
+    plt.show()
 
