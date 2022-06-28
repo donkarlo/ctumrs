@@ -34,7 +34,7 @@ class FollowScenarioAbnormalityBooter:
         leaderNpTimePosObss = np.array(leaderFollowerTimeRangesDict["leaderTimeRangesObss"])[0:rowsNum]
         leaderNpNormalPosObss = RowsNormalizer.getNpNormalizedNpRows(leaderNpTimePosObss[0:, 1:])
         leaderNpTimeRows = leaderNpTimePosObss[0:, 0:1]
-        leaderEncoderModel = load_model(sharedPathToLeaderAndFollowerNormalScenario + "autoencoders/leader-encoder.h5")
+        leaderEncoderModel = load_model(sharedPathToLeaderAndFollowerNormalScenario + "autoencoders/leader-encoder-rows-num-50000-epochs-2160-batch-size-32.h5")
         leaderLowDimPos = leaderEncoderModel(leaderNpNormalPosObss)
         leaderLowDimTimePosObss = np.hstack((leaderNpTimeRows, leaderLowDimPos))
         leaderLowDimTimePosVelObss = RowsTimeDerivativeComputer.computer(leaderLowDimTimePosObss, velCoefficient)
@@ -44,7 +44,7 @@ class FollowScenarioAbnormalityBooter:
         followerNpTimePosObss = np.array(leaderFollowerTimeRangesDict["followerTimeRangesObss"])[0:rowsNum]
         followerNpNormalPosObss = RowsNormalizer.getNpNormalizedNpRows(followerNpTimePosObss[0:, 1:])
         followerNpTimeRows = followerNpTimePosObss[0:, 0:1]
-        followerEncoderModel = load_model(sharedPathToLeaderAndFollowerNormalScenario + "autoencoders/follower-encoder.h5")
+        followerEncoderModel = load_model(sharedPathToLeaderAndFollowerNormalScenario + "autoencoders/follower-encoder-rows-num-50000-epochs-2160-batch-size-32.h5")
         followerLowDimPos = followerEncoderModel(followerNpNormalPosObss)
         followerLowDimTimePosObss = np.hstack((followerNpTimeRows, followerLowDimPos))
         followerLowDimTimePosVelObss = RowsTimeDerivativeComputer.computer(followerLowDimTimePosObss, velCoefficient)

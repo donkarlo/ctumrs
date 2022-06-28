@@ -17,12 +17,29 @@ class NormalScenarioTransitionMatrixBuilderBooter:
         sharedPathToTwoLidars = MachineSettings.MAIN_PATH+"projs/research/data/self-aware-drones/ctumrs/two-drones/normal-scenario/lidars/"
         pickleFileName = "twoLidarsTimeRangesObss.pkl"
 
+        ####### Feature extraction settings
+        rowsNum = 50000
+
+        # some websites say epochs must start from three times the number of the columns
+        epochs = 2160
+
+        # How many data per time feed into the NN for training
+        # some websites siad that this amount is the best
+        batchSize = 32
+
+        # This is the dimension of the original space
+        inputDim = 720
+
+        # This is the dimension of the latent space (encoding space)
+        latentDim = 3
+
+        ####### Transition matrix settings
         rowsNum = 50000
         velCoefficient = 10000
         leaderClustersNum = 75
         followerClustersNum = 75
 
-        '''Load data'''
+        #########Load data
         pklFile = open(sharedPathToTwoLidars + pickleFileName, "rb")
         leaderFollowerTimeRangesDict = pickle.load(pklFile)
 
@@ -30,33 +47,31 @@ class NormalScenarioTransitionMatrixBuilderBooter:
         leaderNpTimePosObss = np.array(leaderFollowerTimeRangesDict["leaderTimeRangesObss"])[0:rowsNum]
         leaderNpNormalPosObss = RowsNormalizer.getNpNormalizedNpRows(leaderNpTimePosObss[0:, 1:])
         leaderNpTimeRows = leaderNpTimePosObss[0:,0:1]
-        leaderEncoderModel = load_model(sharedPathToTwoLidars+"autoencoders/leader-encoder.h5")
+        leaderEncoderModel = load_model(sharedPathToTwoLidars+"autoencoders/leader-encoder-rows-num-50000-epochs-2160-batch-size-32.h5")
         leaderLowDimPos = leaderEncoderModel(leaderNpNormalPosObss)
         leaderLowDimTimePosObss = np.hstack((leaderNpTimeRows, leaderLowDimPos))
         leaderLowDimTimePosVelObss = RowsTimeDerivativeComputer.computer(leaderLowDimTimePosObss,velCoefficient)
         leaderLowDimPosVelObss = leaderLowDimTimePosVelObss[0:,1:]
-        Plots.plot2DEncodedXTrain(leaderLowDimPos)
+        Plots.plot3DEncodedXTrain(leaderLowDimPos)
 
         # Follower
         followerNpTimePosObss = np.array(leaderFollowerTimeRangesDict["followerTimeRangesObss"])[0:rowsNum]
         followerNpNormalPosObss = RowsNormalizer.getNpNormalizedNpRows(followerNpTimePosObss[0:, 1:])
         followerNpTimeRows = followerNpTimePosObss[0:,0:1]
-        followerEncoderModel = load_model(sharedPathToTwoLidars+"autoencoders/follower-encoder.h5")
+        followerEncoderModel = load_model(sharedPathToTwoLidars+"autoencoders/follower-encoder-rows-num-50000-epochs-2160-batch-size-32.h5")
         followerLowDimPos = followerEncoderModel(followerNpNormalPosObss)
         followerLowDimTimePosObss = np.hstack((followerNpTimeRows, followerLowDimPos))
         followerLowDimTimePosVelObss = RowsTimeDerivativeComputer.computer(followerLowDimTimePosObss,velCoefficient)
         followerLowDimPosVelObss = followerLowDimTimePosVelObss[0:,1:]
-        Plots.plot2DEncodedXTrain(followerLowDimPos)
+        Plots.plot3DEncodedXTrain(followerLowDimPos)
 
         '''Cluster each'''
 
         leaderTimePosVelClusteringStrgy = TimePosVelsClusteringStrgy(leaderClustersNum
-                                                                     , leaderLowDimTimePosVelObss
-                                                                     , leaderLowDimPosVelObss)
+                                                                     ,leaderLowDimPosVelObss)
 
         followerTimePosVelClusteringStrgy = TimePosVelsClusteringStrgy(followerClustersNum
-                                                                       , followerLowDimTimePosVelObss
-                                                                       , followerLowDimPosVelObss)
+                                                                       ,followerLowDimPosVelObss)
         '''Build transition matrix'''
         transitionMatrix = TransitionMatrix(leaderTimePosVelClusteringStrgy
                                             , followerTimePosVelClusteringStrgy

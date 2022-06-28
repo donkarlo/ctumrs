@@ -195,17 +195,17 @@ class LeaderFollowerFilter():
                                 , prvFolowerObs
                                 , curLeaderObs
                                 , curFollowerObs))
-                # curNoveltyValue = self.getCurNoveltyValueByPrvPosVelObs(prvLeaderObs
-                #                                                              , prvFolowerObs
-                #                                                              , curLeaderObs
-                #                                                              , curFollowerObs)
-                # print(curNoveltyValue)
-                # noveltyValues.append(curNoveltyValue)
+                curNoveltyValue = self.getCurNoveltyValueByPrvPosVelObs(prvLeaderObs
+                                                                             , prvFolowerObs
+                                                                             , curLeaderObs
+                                                                             , curFollowerObs)
+                print(curNoveltyValue)
+                noveltyValues.append(curNoveltyValue)
 
-        with Pool(os.cpu_count()) as p:
-            results = p.starmap(self.getCurNoveltyValueByPrvPosVelObs, leaderFollowerObssPreds)
-        print(results)
-        return results
+        # with Pool(os.cpu_count()) as p:
+        #     results = p.starmap(self.getCurNoveltyValueByPrvPosVelObs, leaderFollowerObssPreds)
+        # print(results)
+        return noveltyValues
 
     def plotNovelties(self, abnormalValuesScenario1,abnormalValuesScenario2=None):
         # Scale the plot

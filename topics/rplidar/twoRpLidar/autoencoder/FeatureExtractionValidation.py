@@ -114,7 +114,7 @@ class FeatureExtractionValidation:
 
 
 if __name__ == "__main__":
-    FeatureExtractionValidation.trainTest()
+    # FeatureExtractionValidation.trainTest()
     FeatureExtractionValidation.randomPoint()
 
 

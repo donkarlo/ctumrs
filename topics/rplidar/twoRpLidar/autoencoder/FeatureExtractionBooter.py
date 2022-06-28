@@ -19,10 +19,10 @@ class FeatureExtractionBooter:
         #leader or follower
         leadership = "leader"
 
-        rowsNum = 35000
+        rowsNum = 50000
 
         #some websites say epochs must start from three times the number of the columns
-        epochs = 1000
+        epochs = 2160
 
         #How many data per time feed into the NN for training
         #some websites siad that this amount is the best

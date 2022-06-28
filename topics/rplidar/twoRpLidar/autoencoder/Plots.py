@@ -109,19 +109,3 @@ if __name__=="__main__":
 
     Plots.plot3DEncodedXTrain(encodedXtrain)
 
-    ########## reconstructing
-
-    #Load auto encoder
-    autoencoder = load_model(filepath = sharedDataPathToLidarsScenario+"autoencoders/{}-encoder-decoder-rows-num-{}-epochs-{}-batch-size-{}.h5".format(leadership,rowsNum,epochs,batchSize))
-    #choose a random data
-    realRandomNpRow = normalizedNpLeaderRangesObss[np.random.choice(normalizedNpLeaderRangesObss.shape[0]
-                                                                    , 1
-                                                                    , replace=False)]
-    predictionForRandomRow = autoencoder.predict(realRandomNpRow)
-    #plotting
-    plt.figure(figsize=(20, 6))
-    plt.scatter(range(0,720), realRandomNpRow,alpha=0.2)
-    plt.scatter(range(0,720), predictionForRandomRow, color="red",alpha=0.1)
-    plt.legend(["Real", "Reconstructed"])
-    plt.show()
-
