@@ -35,7 +35,7 @@ class YamlTopic:
                 robotId = lidarDataRow["header"]["frame_id"].split("/")[0]
                 time = float(lidarDataRow["header"]["stamp"]["nsecs"])
 
-                ranges = RangesSubTopic.getNpFloatedRanges(lidarDataRow["ranges"],15)
+                ranges = RangesSubTopic.getNpFloatedRanges(lidarDataRow["allRanges"],15)
 
                 timeRanges = [time]
                 for range in ranges:

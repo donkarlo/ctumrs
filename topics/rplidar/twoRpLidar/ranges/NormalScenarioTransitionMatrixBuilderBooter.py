@@ -7,7 +7,7 @@ from ctumrs.TransitionMatrix import TransitionMatrix
 from ctumrs.topics.rplidar.twoRpLidar.ranges.TimeRangesVelsObss import TimeRangesVelsObss
 from MachineSettings import MachineSettings
 
-sharedPathToTwoLidarsNormalScenarioFourRangesVels = "{}projs/research/data/self-aware-drones/ctumrs/two-drones/normal-scenario/lidars/ranges/".format(MachineSettings.MAIN_PATH)
+sharedPathToTwoLidarsNormalScenarioFourRangesVels = "{}projs/research/data/self-aware-drones/ctumrs/two-drones/normal-scenario/lidars/allRanges/".format(MachineSettings.MAIN_PATH)
 
 velCoefficient = 20
 leaderClustersNum = 75

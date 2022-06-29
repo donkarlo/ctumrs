@@ -26,7 +26,7 @@ class PlotMinRangeTime:
         # Label
         oneCycleLength = 5000
         plt.xlabel('Timestep')
-        plt.ylabel('Leader and follower sum of ranges')
+        plt.ylabel('Leader and follower sum of allRanges')
         plt.plot(range(0, oneCycleLength)
                  , leaderSumValues[0:oneCycleLength]
                  , label="Leader"
@@ -42,7 +42,7 @@ class PlotMinRangeTime:
         plt.tight_layout()
 
         # To show the inner labels
-        plt.legend("Leader sum of ranges, normal")
+        plt.legend("Leader sum of allRanges, normal")
 
         # Novelty signal
         plt.show()
@@ -70,7 +70,7 @@ class PlotMinRangeTime:
         # Label
         oneCycleLength = 5000
         plt.xlabel('Timestep')
-        plt.ylabel('Leader and follower sum of ranges')
+        plt.ylabel('Leader and follower sum of allRanges')
         plt.plot(range(0, oneCycleLength)
                  , leaderSumValues[0:oneCycleLength]
                  , label="Leader"
@@ -86,7 +86,7 @@ class PlotMinRangeTime:
         plt.tight_layout()
 
         # To show the inner labels
-        plt.legend("Leader sum of ranges, normal")
+        plt.legend("Leader sum of allRanges, normal")
 
         # Novelty signal
         plt.show()

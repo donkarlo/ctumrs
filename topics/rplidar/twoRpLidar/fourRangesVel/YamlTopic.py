@@ -37,13 +37,13 @@ class YamlTopic:
                 robotId = lidarDataRow["header"]["frame_id"].split("/")[0]
                 time = float(lidarDataRow["header"]["stamp"]["nsecs"])
 
-                countRanges = len(lidarDataRow["ranges"])
+                countRanges = len(lidarDataRow["allRanges"])
                 countRangesInterval = countRanges//4
 
-                range1 = TimeFourRangesVelsObs.getFloatRange(lidarDataRow["ranges"][0 * countRangesInterval])
-                range2 = TimeFourRangesVelsObs.getFloatRange(lidarDataRow["ranges"][1 * countRangesInterval])
-                range3 = TimeFourRangesVelsObs.getFloatRange(lidarDataRow["ranges"][2 * countRangesInterval])
-                range4 = TimeFourRangesVelsObs.getFloatRange(lidarDataRow["ranges"][3 * countRangesInterval])
+                range1 = TimeFourRangesVelsObs.getFloatRange(lidarDataRow["allRanges"][0 * countRangesInterval])
+                range2 = TimeFourRangesVelsObs.getFloatRange(lidarDataRow["allRanges"][1 * countRangesInterval])
+                range3 = TimeFourRangesVelsObs.getFloatRange(lidarDataRow["allRanges"][2 * countRangesInterval])
+                range4 = TimeFourRangesVelsObs.getFloatRange(lidarDataRow["allRanges"][3 * countRangesInterval])
 
 
                 if robotId == "uav1":

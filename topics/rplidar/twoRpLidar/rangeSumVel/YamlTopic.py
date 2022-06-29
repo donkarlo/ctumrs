@@ -36,7 +36,7 @@ class YamlTopic:
 
                 robotId = lidarDataRow["header"]["frame_id"].split("/")[0]
                 time = float(lidarDataRow["header"]["stamp"]["nsecs"])
-                rangeSum = TimeRangeSumVelObs.getRangeSumFromListOfStringRanges(lidarDataRow["ranges"])
+                rangeSum = TimeRangeSumVelObs.getRangeSumFromListOfStringRanges(lidarDataRow["allRanges"])
 
                 if robotId == "uav1":
                     robotSpecificLidarCounter = leaderLidarCounter
