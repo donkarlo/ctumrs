@@ -2,7 +2,7 @@ import pickle
 
 from ctumrs.LeaderFollowerFilter import LeaderFollowerFilter
 from ctumrs.TransitionMatrix import TransitionMatrix
-from ctumrs.topics.rplidar.twoRpLidar.fourRegionsMinRangesVel.TimeFourRegionsMinVelsObss import \
+from ctumrs.topics.lidar.two.fourRegionsMinRangesVel.TimeFourRegionsMinVelsObss import \
     TimeFourRegionsMinRangesVelsObss
 
 leaderClustersNum = 75

@@ -4,7 +4,7 @@ import numpy as np
 
 from ctumrs.TimePosVelsClusteringStrgy import TimePosVelsClusteringStrgy
 from ctumrs.TransitionMatrix import TransitionMatrix
-from ctumrs.topics.rplidar.twoRpLidar.ranges.TimeRangesVelsObss import TimeRangesVelsObss
+from ctumrs.topics.lidar.two.ranges.TimeRangesVelsObss import TimeRangesVelsObss
 from MachineSettings import MachineSettings
 
 sharedPathToTwoLidarsNormalScenarioFourRangesVels = "{}projs/research/data/self-aware-drones/ctumrs/two-drones/normal-scenario/lidars/allRanges/".format(MachineSettings.MAIN_PATH)

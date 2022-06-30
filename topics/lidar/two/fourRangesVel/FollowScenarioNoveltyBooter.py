@@ -2,8 +2,8 @@ import pickle
 
 from ctumrs.LeaderFollowerFilter import LeaderFollowerFilter
 from ctumrs.TransitionMatrix import TransitionMatrix
-from ctumrs.topics.rplidar.twoRpLidar.fourRangesVel.TimeFourRangesVelsObss import TimeFourRangesVelsObss
-from ctumrs.topics.rplidar.twoRpLidar.rangeSumVel.TimeRangeSumVelObss import TimeRangeSumVelObss
+from ctumrs.topics.lidar.two.fourRangesVel.TimeFourRangesVelsObss import TimeFourRangesVelsObss
+from ctumrs.topics.lidar.two.rangeSumVel.TimeRangeSumVelObss import TimeRangeSumVelObss
 
 leaderClustersNum = 75
 followerClustersNum = 75

@@ -13,7 +13,7 @@ import yaml
 # To make yaml file load faster
 from yaml import CLoader
 
-from ctumrs.topics.rplidar.twoRpLidar.fourRangesVel.TimeFourRangesVelsObs import TimeFourRangesVelsObs
+from ctumrs.topics.lidar.two.fourRangesVel.TimeFourRangesVelsObs import TimeFourRangesVelsObs
 
 
 class YamlTopic:

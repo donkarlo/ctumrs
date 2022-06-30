@@ -7,7 +7,7 @@ from MachineSettings import MachineSettings
 from ctumrs.TimePosVelsClusteringStrgy import TimePosVelsClusteringStrgy
 from ctumrs.TransitionMatrix import TransitionMatrix
 from keras.models import load_model
-from ctumrs.topics.rplidar.twoRpLidar.autoencoder.Plots import Plots
+from ctumrs.topics.lidar.two.autoencoder.Plots import Plots
 from mMath.data.RowsTimeDerivativeComputer import RowsTimeDerivativeComputer
 from mMath.data.preProcess.RowsNormalizer import RowsNormalizer
 

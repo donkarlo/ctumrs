@@ -6,7 +6,7 @@ from tensorflow.keras.models import Model, Sequential
 from tensorflow.keras.layers import Dense
 
 from MachineSettings import MachineSettings
-from ctumrs.topics.rplidar.twoRpLidar.autoencoder.Plots import Plots
+from ctumrs.topics.lidar.two.autoencoder.Plots import Plots
 from mMath.data.preProcess.RowsNormalizer import RowsNormalizer
 
 

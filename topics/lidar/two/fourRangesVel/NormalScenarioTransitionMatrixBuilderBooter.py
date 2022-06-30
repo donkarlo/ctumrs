@@ -2,27 +2,26 @@ import pickle
 
 from ctumrs.TimePosVelsClusteringStrgy import TimePosVelsClusteringStrgy
 from ctumrs.TransitionMatrix import TransitionMatrix
-from ctumrs.topics.rplidar.twoRpLidar.fourRegionsMinRangesVel.TimeFourRegionsMinVelsObss import \
-    TimeFourRegionsMinRangesVelsObss
+from ctumrs.topics.lidar.two.fourRangesVel.TimeFourRangesVelsObss import TimeFourRangesVelsObss
 
-sharedPathToTwoLidarsNormalScenarioFourRangesVels = "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/normal-scenario/lidars/fourRegionsMinRangesVels/"
+sharedPathToTwoLidarsNormalScenarioFourRangesVels = "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/normal-scenario/lidars/fourRangesVels/"
 
 velCoefficient = 10000
 leaderClustersNum = 75
 followerClustersNum = 75
 
 '''Load data'''
-pklFile = open(sharedPathToTwoLidarsNormalScenarioFourRangesVels + "twoLidarsTimeFourRegionsMinRangesVelsObss.pkl", "rb")
+pklFile = open(sharedPathToTwoLidarsNormalScenarioFourRangesVels + "twoLidarsTimeFourRangesVelsObss.pkl", "rb")
 leaderFollowerTimeRangeSumVelDict = pickle.load(pklFile)
 
-leaderRangeSumVelObss, leaderTimeRangeSumVelObss = TimeFourRegionsMinRangesVelsObss.velMulInFourRangesVelsAndTimeFourRangesVelsObss(
-    leaderFollowerTimeRangeSumVelDict["leaderFourRegionsMinRangesVelsObss"]
-    ,leaderFollowerTimeRangeSumVelDict["leaderTimeFourRegionsMinRangesVelsObss"]
+leaderRangeSumVelObss, leaderTimeRangeSumVelObss = TimeFourRangesVelsObss.velMulInFourRangesVelsAndTimeFourRangesVelsObss(
+    leaderFollowerTimeRangeSumVelDict["leaderFourRangesVelsObss"]
+    ,leaderFollowerTimeRangeSumVelDict["leaderTimeFourRangesVelsObss"]
     , velCoefficient)
 
-followerRangeSumVelObss, followerTimeRangeSumVelObss = TimeFourRegionsMinRangesVelsObss.velMulInFourRangesVelsAndTimeFourRangesVelsObss(
-    leaderFollowerTimeRangeSumVelDict["followerFourRegionsMinRangesVelsObss"]
-    ,leaderFollowerTimeRangeSumVelDict["followerTimeFourRegionsMinRangesVelsObss"]
+followerRangeSumVelObss, followerTimeRangeSumVelObss = TimeFourRangesVelsObss.velMulInFourRangesVelsAndTimeFourRangesVelsObss(
+    leaderFollowerTimeRangeSumVelDict["followerFourRangesVelsObss"]
+    ,leaderFollowerTimeRangeSumVelDict["followerTimeFourRangesVelsObss"]
     ,velCoefficient)
 
 
@@ -44,4 +43,4 @@ transitionMatrix = TransitionMatrix(leaderTimeRangeSumVelClusteringStrgy
 transitionMatrix.save(sharedPathToTwoLidarsNormalScenarioFourRangesVels + "transtionMatrix-{}*{}.txt".format(leaderClustersNum, followerClustersNum))
 
 
-print("Transition matrix built")
+print("Ended")

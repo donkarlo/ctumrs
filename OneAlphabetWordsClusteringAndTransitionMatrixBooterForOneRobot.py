@@ -5,9 +5,11 @@ from ctumrs.OneAlphabetWordsTransitionMatrix import OneAlphabetWordsTransitionMa
 from ctumrs.TimePosVelsClusteringStrgy import TimePosVelsClusteringStrgy
 from ctumrs.TimePosVelObssPlottingUtility import TimePosVelObssPlottingUtility
 from ctumrs.TimePosVelObssUtility import TimePosVelObssUtility
+from mMath.statistic.Distance import Distance
 
 clustersNum = 75
 velocityCoefficient = 10000
+obsDim = 6
 
 timePosVelObssUtility = TimePosVelObssPlottingUtility()
 
@@ -22,7 +24,7 @@ pathToUav1TimePosVelObssFile = basePathToProject + scenarioName +"/" + sensorNam
 uav1TimePosVelObssDict = TimePosVelObssUtility.getTimePosVelsAndPosVels(pathToUav1TimePosVelObssFile, velocityCoefficient)
 
 
-uav1PosVelObss = uav1TimePosVelObssDict["timePosVels"][:,1:7]
+uav1PosVelObss = uav1TimePosVelObssDict["timePosVels"][:, 1:obsDim + 1]
 # cluster together vectors
 posVelObssClusteringStrgy = TimePosVelsClusteringStrgy(clustersNum, uav1PosVelObss)
 fittedClusters = posVelObssClusteringStrgy.getFittedClusters()
@@ -32,7 +34,7 @@ oneAlphabetWordsTransitionMatrix.getNpTransitionMatrix()
 
 # Save the transition matrix
 
-#########loading follow secanarion#########
+#########loading follow scenarion#########
 
 basePathToProject = "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/"
 scenarioName = "follow-scenario"
@@ -44,20 +46,31 @@ pathToUav1TimePosVelObssFile = basePathToProject + scenarioName + "/" + sensorNa
 # Get data for UAV 1
 uav1TimePosVelObssDict = TimePosVelObssUtility.getTimePosVelsAndPosVels(pathToUav1TimePosVelObssFile, velocityCoefficient)
 
+uav1PosVelObss = uav1TimePosVelObssDict["timePosVels"][:, 1:obsDim + 1]
 
-# Put related data together in one vector
-def getGaussianKullbackLieblerDistance(m0, S0, m1, S1):
-    # store inv diag covariance of S1 and diff between means
-    N = m0.shape[0]
-    iS1 = np.linalg.inv(S1)
-    diff = m1 - m0
+rangeLimit = 15000
+xyCovVal = 2.0e-4
+zzCovVal = 4.0e-4
+covMtx = np.array([
+    [xyCovVal,0,0,0,0,0]
+  , [0,xyCovVal,0,0,0,0]
+  , [0,0,zzCovVal,0,0,0]
+  , [0,0,0,xyCovVal,0,0]
+  , [0,0,0,0,xyCovVal,0]
+  , [0,0,0,0,0,zzCovVal]
+                   ])
 
-    # kl is made of three terms
-    tr_term = np.trace(iS1 @ S0)
-    det_term = np.log(np.linalg.det(S1) / np.linalg.det(S0))  # np.sum(np.log(S1)) - np.sum(np.log(S0))
-    quad_term = diff.T @ np.linalg.inv(S1) @ diff  # np.sum( (diff*diff) * iS1, axis=1)
-    # print(tr_term,det_term,quad_term)
-    return .5 * (tr_term + det_term + quad_term - N)
+
+abnormalityValues = []
+for counter,curObs in enumerate(uav1PosVelObss):
+    if counter >= 1 and counter <= rangeLimit:
+        prvObs = uav1PosVelObss[counter-1]
+        prvObsLabel = posVelObssClusteringStrgy.getLabelByPosVelObs(prvObs)
+        predictedNextLabel = oneAlphabetWordsTransitionMatrix.getHighestPorobabelNextLabelBasedOnthePrvOne(prvObsLabel)
+        predictedNextLabelCenter = posVelObssClusteringStrgy.getClusterCenterByLabel(predictedNextLabel)
+        abnormalityValue = Distance.getGaussianKullbackLieblerDistance(curObs,covMtx,predictedNextLabelCenter,covMtx)
+        print(abnormalityValue)
+        abnormalityValues.append(abnormalityValue)
 
 def plotAbnormalities(abnormalityValues,rangeLimit):
     # Scale the plot
@@ -83,32 +96,6 @@ def plotAbnormalities(abnormalityValues,rangeLimit):
     # Novelty signal
     plt.show()
 
-
-uav1PosVelObss = uav1TimePosVelObssDict["timePosVels"][:,1:7]
-
-rangeLimit = 15000
-xyCovVal = 2.0e-4
-zzCovVal = 4.0e-4
-covMtx = np.array([
-    [xyCovVal,0,0,0,0,0]
-  , [0,xyCovVal,0,0,0,0]
-  , [0,0,zzCovVal,0,0,0]
-  , [0,0,0,xyCovVal,0,0]
-  , [0,0,0,0,xyCovVal,0]
-  , [0,0,0,0,0,zzCovVal]
-                   ])
-
-
-abnormalityValues = []
-for counter,curObs in enumerate(uav1PosVelObss):
-    if counter >= 1 and counter <= rangeLimit:
-        prvObs = uav1PosVelObss[counter-1]
-        prvObsLabel = posVelObssClusteringStrgy.getLabelByPosVelObs(prvObs)
-        predictedNextLabel = oneAlphabetWordsTransitionMatrix.getHighestPorobabelNextLabelBasedOnthePrvOne(prvObsLabel)
-        predictedNextLabelCenter = posVelObssClusteringStrgy.getClusterCenterByLabel(predictedNextLabel)
-        abnormalityValue = getGaussianKullbackLieblerDistance(curObs,covMtx,predictedNextLabelCenter,covMtx)
-        print(abnormalityValue)
-        abnormalityValues.append(abnormalityValue)
-
 plotAbnormalities(abnormalityValues,rangeLimit)
+
 
