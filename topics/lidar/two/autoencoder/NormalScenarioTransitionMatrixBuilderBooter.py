@@ -14,7 +14,7 @@ from mMath.data.preProcess.RowsNormalizer import RowsNormalizer
 class NormalScenarioTransitionMatrixBuilderBooter:
     @staticmethod
     def boot():
-        sharedPathToTwoLidars = MachineSettings.MAIN_PATH+"projs/research/data/self-aware-drones/ctumrs/two-drones/normal-scenario/lidars/"
+        sharedPathToTwoLidars = MachineSettings.MAIN_PATH+"projs/research/data/self-aware-drones/ctumrs/two-drones/normal-scenario/lidar/"
         pickleFileName = "twoLidarsTimeRangesObss.pkl"
 
         ####### Feature extraction settings

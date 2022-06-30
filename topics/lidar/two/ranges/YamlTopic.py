@@ -81,7 +81,7 @@ if __name__ == "__main__":
     scenarioName  = "follow"
     strategyName = "allRanges"
 
-    sharedPathToTwoLidarYaml = "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/{}-scenario/lidars/".format(scenarioName)
+    sharedPathToTwoLidarYaml = "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/{}-scenario/lidar/".format(scenarioName)
     pathToTwoLidarsTopicYamlPath = sharedPathToTwoLidarYaml + "twoLidars.yaml"
     sharedPathToFourRangesVels = sharedPathToTwoLidarYaml + "{}/".format(strategyName)
     rtnVal = YamlTopic.getLeaderFollowerTimeRangesVelsObssDictFromYaml(pathToTwoLidarsTopicYamlPath, 100000)

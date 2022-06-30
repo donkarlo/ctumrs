@@ -5,7 +5,7 @@ class PlotMinRangeTime:
 
     @staticmethod
     def plotNormalLeaderSumTime():
-        jointPathToLeaderAndFollowerNormalScenario = "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/normal-scenario/lidars/fourRegionsMinRangesVels/"
+        jointPathToLeaderAndFollowerNormalScenario = "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/normal-scenario/lidar/fourRegionsMinRangesVels/"
         pklFile = open(jointPathToLeaderAndFollowerNormalScenario + "twoLidarsTimeFourRegionsMinRangesVelsObss.pkl", "rb")
         leaderFollowerTimeRangeSumVelDict = pickle.load(pklFile)
 
@@ -49,7 +49,7 @@ class PlotMinRangeTime:
 
     @staticmethod
     def plotFollowLeaderSumTime():
-        jointPathToLeaderAndFollowerNormalScenario = "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/follow-scenario/lidars/fourRegionsMinRangesVels/"
+        jointPathToLeaderAndFollowerNormalScenario = "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/follow-scenario/lidar/fourRegionsMinRangesVels/"
         pklFile = open(jointPathToLeaderAndFollowerNormalScenario + "twoLidarsTimeFourRegionsMinRangesVelsObss.pkl", "rb")
         leaderFollowerTimeRangeSumVelDict = pickle.load(pklFile)
 

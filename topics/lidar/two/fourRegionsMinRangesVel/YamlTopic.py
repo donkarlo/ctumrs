@@ -141,7 +141,7 @@ if __name__ == "__main__":
         - run novelty for that abnormal scenario
         @todo make it such that each scenario can put its own path
     '''
-    sharedPathToTwoLidarYaml = "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/follow-scenario/lidars/"
+    sharedPathToTwoLidarYaml = "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/follow-scenario/lidar/"
     pathToTwoLidarsTopicYamlPath = sharedPathToTwoLidarYaml + "twoLidars.yaml"
     sharedPathToFourRangesVels = sharedPathToTwoLidarYaml + "fourRegionsMinRangesVels/"
     rtnVal = YamlTopic.getLeaderFollowerTimeRangeSumVelObssDictFromYaml(pathToTwoLidarsTopicYamlPath, 100000)

@@ -93,7 +93,7 @@ if __name__=="__main__":
     # This is the dimension of the latent space (encoding space)
     latentDim = 3
 
-    sharedDataPathToLidarsScenario = MachineSettings.MAIN_PATH + "projs/research/data/self-aware-drones/ctumrs/two-drones/{}/lidars/".format(
+    sharedDataPathToLidarsScenario = MachineSettings.MAIN_PATH + "projs/research/data/self-aware-drones/ctumrs/two-drones/{}/lidar/".format(
         scenarioName)
 
     # Loading data

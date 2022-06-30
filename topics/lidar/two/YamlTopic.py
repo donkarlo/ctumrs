@@ -53,7 +53,7 @@ class YamlTopic:
 
 if __name__ == "__main__":
     '''Load the yaml file for the two drones'''
-    sharedPathToTwoLidarYaml = "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/follow-scenario/lidars/"
+    sharedPathToTwoLidarYaml = "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/follow-scenario/lidar/"
     pathToTwoLidarsTopicYamlPath = sharedPathToTwoLidarYaml + "twoLidars.yaml"
     sharedPathToTimeRangesVel = sharedPathToTwoLidarYaml + "/"
     rtnVal = YamlTopic.getLeaderFollowerTimeRangesDictFromYaml(pathToTwoLidarsTopicYamlPath, 100000)

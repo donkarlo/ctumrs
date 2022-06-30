@@ -4,7 +4,7 @@ from ctumrs.TimePosVelsClusteringStrgy import TimePosVelsClusteringStrgy
 from ctumrs.TransitionMatrix import TransitionMatrix
 from ctumrs.topics.lidar.two.rangeSumVel.TimeRangeSumVelObss import TimeRangeSumVelObss
 
-dataPathToLidarOfTwoDronesTopic = "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/normal-scenario/lidars/rangeSumVel/"
+dataPathToLidarOfTwoDronesTopic = "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/normal-scenario/lidar/rangeSumVel/"
 
 velCoefficient = 10000
 leaderClustersNum = 75

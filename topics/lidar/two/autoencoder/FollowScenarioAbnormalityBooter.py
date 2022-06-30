@@ -19,7 +19,7 @@ class FollowScenarioAbnormalityBooter:
         followerClustersNum = 75
         velCoefficient = 10000
         sharedPathToTwoDronesData = MachineSettings.MAIN_PATH+"projs/research/data/self-aware-drones/ctumrs/two-drones/"
-        sharedPathToLeaderAndFollowerNormalScenario= sharedPathToTwoDronesData+"normal-scenario/lidars/"
+        sharedPathToLeaderAndFollowerNormalScenario= sharedPathToTwoDronesData+"normal-scenario/lidar/"
 
         '''Lodaing the transition matrix'''
         jointfilePathToTransitionMatrix = sharedPathToLeaderAndFollowerNormalScenario + "autoencoders/transtionMatrix-{}*{}.txt".format(leaderClustersNum, followerClustersNum)
@@ -27,7 +27,7 @@ class FollowScenarioAbnormalityBooter:
         transitionMatrix = transitionMatrix.load(jointfilePathToTransitionMatrix)
 
         '''Loading follow scenrio data'''
-        pklFile = open(sharedPathToTwoDronesData+"follow-scenario/lidars/"+"twoLidarsTimeRangesObss.pkl", "rb")
+        pklFile = open(sharedPathToTwoDronesData+"follow-scenario/lidar/"+"twoLidarsTimeRangesObss.pkl", "rb")
         leaderFollowerTimeRangesDict = pickle.load(pklFile)
 
         # Leader

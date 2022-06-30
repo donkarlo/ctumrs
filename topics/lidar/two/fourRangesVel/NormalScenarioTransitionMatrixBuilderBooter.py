@@ -4,7 +4,7 @@ from ctumrs.TimePosVelsClusteringStrgy import TimePosVelsClusteringStrgy
 from ctumrs.TransitionMatrix import TransitionMatrix
 from ctumrs.topics.lidar.two.fourRangesVel.TimeFourRangesVelsObss import TimeFourRangesVelsObss
 
-sharedPathToTwoLidarsNormalScenarioFourRangesVels = "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/normal-scenario/lidars/fourRangesVels/"
+sharedPathToTwoLidarsNormalScenarioFourRangesVels = "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/normal-scenario/lidar/fourRangesVels/"
 
 velCoefficient = 10000
 leaderClustersNum = 75

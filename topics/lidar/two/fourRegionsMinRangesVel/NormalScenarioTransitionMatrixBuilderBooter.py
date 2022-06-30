@@ -5,7 +5,7 @@ from ctumrs.TransitionMatrix import TransitionMatrix
 from ctumrs.topics.lidar.two.fourRegionsMinRangesVel.TimeFourRegionsMinVelsObss import \
     TimeFourRegionsMinRangesVelsObss
 
-sharedPathToTwoLidarsNormalScenarioFourRangesVels = "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/normal-scenario/lidars/fourRegionsMinRangesVels/"
+sharedPathToTwoLidarsNormalScenarioFourRangesVels = "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/normal-scenario/lidar/fourRegionsMinRangesVels/"
 
 velCoefficient = 10000
 leaderClustersNum = 75

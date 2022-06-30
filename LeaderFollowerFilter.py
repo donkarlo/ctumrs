@@ -137,7 +137,7 @@ class LeaderFollowerFilter():
                                           , flwrObs
                                           , flwrPrd):
         # Distribution 1
-        covVal = 1
+        covVal = 0.01
         covMtx = covVal*np.identity(len(leaderObs))
 
         leaderKlDistance = self.__getKullbackLieblerDistance(np.array(leaderObs)
