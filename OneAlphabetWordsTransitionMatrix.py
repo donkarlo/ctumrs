@@ -44,3 +44,6 @@ class OneAlphabetWordsTransitionMatrix:
         with open(filePath, 'rb') as file:
             loadedPickle = pickle.load(file)
             return loadedPickle
+
+    def getClusteringStrgy(self)->TimePosVelsClusteringStrgy:
+        return self.__posVelObssClusteringStrgy
