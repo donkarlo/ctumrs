@@ -8,7 +8,7 @@ from ctumrs.TimePosVelsClusteringStrgy import TimePosVelsClusteringStrgy
 from ctumrs.TransitionMatrix import TransitionMatrix
 from keras.models import load_model
 from ctumrs.topics.lidar.two.autoencoder.Plots import Plots
-from mMath.data.RowsTimeDerivativeComputer import RowsTimeDerivativeComputer
+from mMath.calculus.derivative.TimePosRowsDerivativeComputer import TimePosRowsDerivativeComputer
 from mMath.data.preProcess.RowsNormalizer import RowsNormalizer
 
 class NormalScenarioTransitionMatrixBuilderBooter:
@@ -50,7 +50,7 @@ class NormalScenarioTransitionMatrixBuilderBooter:
         leaderEncoderModel = load_model(sharedPathToTwoLidars+"autoencoders/leader-encoder-rows-num-50000-epochs-2160-batch-size-32.h5")
         leaderLowDimPos = leaderEncoderModel(leaderNpNormalPosObss)
         leaderLowDimTimePosObss = np.hstack((leaderNpTimeRows, leaderLowDimPos))
-        leaderLowDimTimePosVelObss = RowsTimeDerivativeComputer.computer(leaderLowDimTimePosObss,velCoefficient)
+        leaderLowDimTimePosVelObss = TimePosRowsDerivativeComputer.computer(leaderLowDimTimePosObss, velCoefficient)
         leaderLowDimPosVelObss = leaderLowDimTimePosVelObss[0:,1:]
         Plots.plot3DEncodedXTrain(leaderLowDimPos)
 
@@ -61,7 +61,7 @@ class NormalScenarioTransitionMatrixBuilderBooter:
         followerEncoderModel = load_model(sharedPathToTwoLidars+"autoencoders/follower-encoder-rows-num-50000-epochs-2160-batch-size-32.h5")
         followerLowDimPos = followerEncoderModel(followerNpNormalPosObss)
         followerLowDimTimePosObss = np.hstack((followerNpTimeRows, followerLowDimPos))
-        followerLowDimTimePosVelObss = RowsTimeDerivativeComputer.computer(followerLowDimTimePosObss,velCoefficient)
+        followerLowDimTimePosVelObss = TimePosRowsDerivativeComputer.computer(followerLowDimTimePosObss, velCoefficient)
         followerLowDimPosVelObss = followerLowDimTimePosVelObss[0:,1:]
         Plots.plot3DEncodedXTrain(followerLowDimPos)
 
