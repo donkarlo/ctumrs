@@ -49,3 +49,6 @@ class TimePosVelsClusteringStrgy:
                 self.__labeledTimePosVelClustersDict[posVelLabel].append(timePosVels[labelCounter])
 
         return self.__labeledTimePosVelClustersDict
+
+    def getClueterVelCenterByLabel(self, label):
+        return self.getClusterCenterByLabel(label)[0:3]
