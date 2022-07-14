@@ -133,7 +133,7 @@ abnormalityValues = []
 for counter,curObs in enumerate(uav1Uav2PosVelObss):
     if counter >= 1 and counter <= rangeLimit:
         prvObs = uav1Uav2PosVelObss[counter-1]
-        prvObsLabel = posVelObssClusteringStrgy.getLabelByPosVelObs(prvObs)
+        prvObsLabel = posVelObssClusteringStrgy.getPredictedLabelByPosVelObs(prvObs)
         predictedNextLabel = oneAlphabetWordsTransitionMatrix.getHighestPorobabelNextLabelBasedOnthePrvOne(prvObsLabel)
         predictedNextLabelCenter = posVelObssClusteringStrgy.getClusterCenterByLabel(predictedNextLabel)
         abnormalityValue = getGaussianKullbackLieblerDistance(curObs,covMtx,predictedNextLabelCenter,covMtx)

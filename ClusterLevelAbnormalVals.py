@@ -30,8 +30,8 @@ class ClusterLevelAbnormalVals():
         leaderClusters = self.__transitionMatrix.getLeaderTimePosVelClusters()
         followerClusters = self.__transitionMatrix.getFollowerTimePosVelClusters()
 
-        prvLeaderLabel = leaderClusters.getLabelByPosVelObs(prvLeaderPosVelObs)
-        prvFollowerLabel = followerClusters.getLabelByPosVelObs(prvFollowerPosVelObs)
+        prvLeaderLabel = leaderClusters.getPredictedLabelByPosVelObs(prvLeaderPosVelObs)
+        prvFollowerLabel = followerClusters.getPredictedLabelByPosVelObs(prvFollowerPosVelObs)
         prvLeaderFollowerLabelPair = (prvLeaderLabel,prvFollowerLabel)
 
         # Get predicted label

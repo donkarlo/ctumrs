@@ -74,7 +74,7 @@ abnormalityValues = []
 for counter,curObs in enumerate(robotTimeRangesVelsObss[:,1:dataDim+1]):
     if counter >= 1 and counter <= rangeLimit:
         prvObs = robotTimeRangesVelsObss[counter-1][1:dataDim+1]
-        prvObsLabel = oneAlphabetWordsTransitionMatrix.getClusteringStrgy().getLabelByPosVelObs(prvObs)
+        prvObsLabel = oneAlphabetWordsTransitionMatrix.getClusteringStrgy().getPredictedLabelByPosVelObs(prvObs)
         predictedNextLabel = oneAlphabetWordsTransitionMatrix.getHighestPorobabelNextLabelBasedOnthePrvOne(prvObsLabel)
         predictedNextLabelCenter = oneAlphabetWordsTransitionMatrix.getClusteringStrgy().getClusterCenterByLabel(predictedNextLabel)
         abnormalityValue = np.linalg.norm(np.array(curObs)-np.array(predictedNextLabelCenter))

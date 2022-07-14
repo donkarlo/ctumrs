@@ -1,15 +1,16 @@
+import numpy as np
 from sklearn.cluster import KMeans
 
 
 class TimePosVelsClusteringStrgy:
     def __init__(self
                  , clustersNum: int
-                 , posVelObss):
+                 , posVels:np.ndarray):
         '''
 
         '''
         self.__clustersNum:int = clustersNum
-        self.__posVelObss:list = posVelObss
+        self.__posVels:np.ndarray = np.asarray(posVels)
 
         # Just for lazy loading
         self.__fittedPosVelsClusters: KMeans = None
@@ -25,7 +26,7 @@ class TimePosVelsClusteringStrgy:
         like this, Kmeans.labels_ and .cluster_centers_[label] etc are getting values
         '''
         if self.__fittedPosVelsClusters is None:
-            self.__fittedPosVelsClusters = self.__getClusteringStrgy().fit(self.__posVelObss)
+            self.__fittedPosVelsClusters = self.__getClusteringStrgy().fit(self.__posVels)
         return self.__fittedPosVelsClusters
 
     def getClusterCenterByLabel(self, label:int)->tuple:
@@ -34,7 +35,7 @@ class TimePosVelsClusteringStrgy:
     def getClustersNum(self)->int:
         return self.__clustersNum
 
-    def getLabelByPosVelObs(self, posVel:tuple):
+    def getPredictedLabelByPosVelObs(self, posVel:tuple):
         posVelArr = [posVel]
         return self.getFittedClusters().predict(posVelArr)[0]
 
@@ -50,5 +51,9 @@ class TimePosVelsClusteringStrgy:
 
         return self.__labeledTimePosVelClustersDict
 
+    def __getPosVelDim(self):
+        return self.__posVels.shape[0]
+
+
     def getClueterVelCenterByLabel(self, label):
-        return self.getClusterCenterByLabel(label)[0:3]
+        return self.getClusterCenterByLabel(label)[int(self.__posVels.shape[1]/2):]

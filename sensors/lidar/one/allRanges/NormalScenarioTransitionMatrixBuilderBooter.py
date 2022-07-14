@@ -12,12 +12,12 @@ from MachineSettings import MachineSettings
 
 
 
-leadership = "leader"
+leadership = "follower"
 sensorName = "lidar"
 scenarioName = "normal"
 strgyName = "ranges"
 velMulCo = 10000
-clustersNum = 75
+clustersNum = 150
 dataDim = 1440
 basePathToProject = format(MachineSettings.MAIN_PATH)+"projs/research/data/self-aware-drones/ctumrs/two-drones/"
 pathToScenrioSensor = basePathToProject + "{}-scenario/{}/{}/".format(scenarioName,sensorName,strgyName)
@@ -27,10 +27,10 @@ pathToScenrioSensor = basePathToProject + "{}-scenario/{}/{}/".format(scenarioNa
 ########## Build transition matrix from normal scenario
 
 
-if not os.path.exists("/home/donkarlo/Desktop/OneRobotLeaderLidarTranMtx.pkl"):
+if not os.path.exists("/home/donkarlo/Desktop/OneRobotFollowerLidarTranMtx.pkl"):
     # load lidar normal data from relevant robot
     pklFile = open(pathToScenrioSensor + "twoLidarsTimeRangesVelsObss.pkl", "rb")
-    robotTimeRangesVelsObss = pickle.load(pklFile)["leaderTimeRangesVelsObss"]
+    robotTimeRangesVelsObss = pickle.load(pklFile)["followerTimeRangesVelsObss"]
     robotTimeRangesVelsObss = TimeRangesVelsObss.velMulInTimeRangesVelsObss(np.array(robotTimeRangesVelsObss)
                                                                             , velMulCo)
 
@@ -42,19 +42,19 @@ if not os.path.exists("/home/donkarlo/Desktop/OneRobotLeaderLidarTranMtx.pkl"):
     oneAlphabetWordsTransitionMatrix = OneAlphabetWordsTransitionMatrix(posVelObssClusteringStrgy
                                                                         ,robotTimeRangesVelsObss[:,1:dataDim+1])
     oneAlphabetWordsTransitionMatrix.getNpTransitionMatrix()
-    oneAlphabetWordsTransitionMatrix.save("/home/donkarlo/Desktop/OneRobotLeaderLidarTranMtx.pkl")
+    oneAlphabetWordsTransitionMatrix.save("/home/donkarlo/Desktop/OneRobotFollowerLidarTranMtx.pkl")
 else:
-    with open("/home/donkarlo/Desktop/OneRobotLeaderLidarTranMtx.pkl", 'rb') as file:
+    with open("/home/donkarlo/Desktop/OneRobotFollowerLidarTranMtx.pkl", 'rb') as file:
         oneAlphabetWordsTransitionMatrix = loadedPickle = pickle.load(file)
 
 
 
 
-########## load again normal scenraio leader data
+########## load again normal scenraio follower data
 scenarioName = "follow"
 pathToScenrioSensor = basePathToProject + "{}-scenario/{}/{}/".format(scenarioName,sensorName,strgyName)
 pklFile = open(pathToScenrioSensor + "twoLidarsTimeRangesVelsObss.pkl", "rb")
-robotTimeRangesVelsObss = pickle.load(pklFile)["leaderTimeRangesVelsObss"]
+robotTimeRangesVelsObss = pickle.load(pklFile)["followerTimeRangesVelsObss"]
 robotTimeRangesVelsObss = TimeRangesVelsObss.velMulInTimeRangesVelsObss(np.array(robotTimeRangesVelsObss)
                                                                         ,velMulCo)
 # detect abnormality
@@ -63,7 +63,7 @@ abnormalityValues = []
 for counter,curObs in enumerate(robotTimeRangesVelsObss[:,1:dataDim+1]):
     if counter >= 1 and counter <= rangeLimit:
         prvObs = robotTimeRangesVelsObss[counter-1][1:dataDim+1]
-        prvObsLabel = oneAlphabetWordsTransitionMatrix.getClusteringStrgy().getLabelByPosVelObs(prvObs)
+        prvObsLabel = oneAlphabetWordsTransitionMatrix.getClusteringStrgy().getPredictedLabelByPosVelObs(prvObs)
         predictedNextLabel = oneAlphabetWordsTransitionMatrix.getHighestPorobabelNextLabelBasedOnthePrvOne(prvObsLabel)
         predictedNextLabelCenter = oneAlphabetWordsTransitionMatrix.getClusteringStrgy().getClusterCenterByLabel(predictedNextLabel)
         abnormalityValue = np.linalg.norm(np.array(curObs)-np.array(predictedNextLabelCenter))
