@@ -60,7 +60,7 @@ covMtx = np.array([
   , [0,0,0,0,0,zzCovVal]
                    ])
 
-
+#Calculating abnormality values
 abnormalityValues = []
 for counter,curObs in enumerate(uav1PosVelObss):
     if counter >= 1 and counter <= rangeLimit:

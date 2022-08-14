@@ -20,7 +20,7 @@ from ctumrs.sensors.lidar.two.ranges.TimeRangesVelsObs import TimeRangesVelsObs
 class YamlTopic:
     @staticmethod
     def getLeaderFollowerTimeRangesVelsObssDictFromYaml(yamlFilePathToLidarOfTwoDronesTopic:string
-                                                        , extractingDataRowsLimit = 100000):
+                                                        , extractingDataRowsLimit):
 
         leaderTimeRangesVelsObss = []
         followerTimeRangesVelsObss = []
@@ -35,7 +35,7 @@ class YamlTopic:
 
                 robotId = lidarDataRow["header"]["frame_id"].split("/")[0]
                 time = float(lidarDataRow["header"]["stamp"]["nsecs"])
-                npRanges = TimeRangesVelsObs.getNpFloatRanges(lidarDataRow["allRanges"])
+                npRanges = TimeRangesVelsObs.getNpFloatRanges(lidarDataRow["ranges"])
                 rangesLen = len(npRanges)
 
 
@@ -78,8 +78,8 @@ class YamlTopic:
 
 if __name__ == "__main__":
     '''Load the yaml file for the two drones'''
-    scenarioName  = "follow"
-    strategyName = "allRanges"
+    scenarioName  = "normal"
+    strategyName = "ranges"
 
     sharedPathToTwoLidarYaml = "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/{}-scenario/lidar/".format(scenarioName)
     pathToTwoLidarsTopicYamlPath = sharedPathToTwoLidarYaml + "twoLidars.yaml"

@@ -17,7 +17,7 @@ sensorName = "lidar"
 scenarioName = "normal"
 strgyName = "ranges"
 velMulCo = 10000
-clustersNum = 150
+clustersNum = 75
 dataDim = 1440
 basePathToProject = format(MachineSettings.MAIN_PATH)+"projs/research/data/self-aware-drones/ctumrs/two-drones/"
 pathToScenrioSensor = basePathToProject + "{}-scenario/{}/{}/".format(scenarioName,sensorName,strgyName)
@@ -50,7 +50,7 @@ else:
 
 
 
-########## load again normal scenraio follower data
+########## load test scenraio for follower data
 scenarioName = "follow"
 pathToScenrioSensor = basePathToProject + "{}-scenario/{}/{}/".format(scenarioName,sensorName,strgyName)
 pklFile = open(pathToScenrioSensor + "twoLidarsTimeRangesVelsObss.pkl", "rb")
