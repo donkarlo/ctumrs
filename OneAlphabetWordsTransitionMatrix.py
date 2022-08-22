@@ -21,11 +21,10 @@ class OneAlphabetWordsTransitionMatrix:
             self.__npTransitionMatrix = np.zeros((self.__posVelObssClusteringStrgy.getClustersNum()
                                                   ,self.__posVelObssClusteringStrgy.getClustersNum()))
             for posVelObssCounter,curPosVelObs in enumerate(self.__posVelObss):
-                if posVelObssCounter < 100000:
-                    if posVelObssCounter > 1:
-                        prvLabel = self.__posVelObssClusteringStrgy.getPredictedLabelByPosVelObs(self.__posVelObss[posVelObssCounter - 1])
-                        curLabel = self.__posVelObssClusteringStrgy.getPredictedLabelByPosVelObs(self.__posVelObss[posVelObssCounter])
-                        self.__npTransitionMatrix[prvLabel][curLabel]+=1
+                if posVelObssCounter >= 1:
+                    prvLabel = self.__posVelObssClusteringStrgy.getPredictedLabelByPosVelObs(self.__posVelObss[posVelObssCounter - 1])
+                    curLabel = self.__posVelObssClusteringStrgy.getPredictedLabelByPosVelObs(self.__posVelObss[posVelObssCounter])
+                    self.__npTransitionMatrix[prvLabel][curLabel]+=1
 
         return self.__npTransitionMatrix
 

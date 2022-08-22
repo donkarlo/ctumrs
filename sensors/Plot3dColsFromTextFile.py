@@ -59,7 +59,7 @@ class PlotFromCtuMrsTopicTextFile:
                 break
         file.close()
 
-        # Plot from here
+        # PlotAll.py from here
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
         ax.scatter(x, y, z, c='r', marker='*', s=0.001)
