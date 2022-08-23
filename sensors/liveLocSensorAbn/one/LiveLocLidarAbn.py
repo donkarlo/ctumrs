@@ -11,6 +11,8 @@ import yaml
 from yaml import CLoader
 
 from ctumrs.sensors.liveLocSensorAbn.one.PlotAll import PlotAll
+from ctumrs.topic.GpsOrigin import GpsOrigin
+from ctumrs.topic.RpLidar import RpLidar
 from ctumrs.topic.Time import Time
 from mMath.calculus.derivative.TimePosRowsDerivativeComputer import TimePosRowsDerivativeComputer
 
@@ -19,7 +21,7 @@ class LiveLocLidarAbn:
 
 if __name__ == "__main__":
     #the settings
-    targetRobotId = "uav2"
+    targetRobotId = "uav1"
     normalScenarioName = "normal"
     testScenarioName = "follow"
     basePath = MachineSettings.MAIN_PATH+"projs/research/data/self-aware-drones/ctumrs/two-drones/"
@@ -33,7 +35,7 @@ if __name__ == "__main__":
     lidarVelCo = 25
     lidarRangesVelsDim = 1440
     # for example for uav1 and lidar
-    targetRobotLidarTopicRowLimit = 6000
+    targetRobotLidarTopicRowLimit = 100000
     pathToLidarTransMtx = "/home/donkarlo/Desktop/transition_matrix_scenario_{}_robotid_{}_sensor_{}_training_{}_velco_{}_clusters_{}.pkl".format(
         normalScenarioName
         , targetRobotId
@@ -85,15 +87,11 @@ if __name__ == "__main__":
 
                 if not os.path.exists(pathToLidarTransMtx):
                     if sensorName==lidarSensorName:
-                        npRanges = np.array(topicRow["ranges"]).astype(float)
-                        #replace infs with 15 in np.range
-                        npRanges[npRanges == np.inf]=15
+                        npRanges = RpLidar.getNpRanges(topicRow)
                         robotTimeLidarRangesVelsObss.append(np.insert(npRanges, 0, time, axis=0))
                 if not os.path.exists(pathToGpsTransMtx):
                     if sensorName==gpsSensorName:
-                        gpsX = float(topicRow["pose"]["pose"]["position"]["x"])
-                        gpsY = float(topicRow["pose"]["pose"]["position"]["y"])
-                        gpsZ = float(topicRow["pose"]["pose"]["position"]["z"])
+                        gpsX,gpsY,gpsZ = GpsOrigin.getXyz(topicRow)
                         robotTimeGpsVelsObss.append([time, gpsX, gpsY, gpsZ])
 
         # calculating transMtx for rplidar
@@ -159,6 +157,7 @@ if __name__ == "__main__":
     targetRobotGpsCounter = 0
     targetRobotGpsTimeVelsObss = []
     targetRobotGpsTimeRangesVelsObss = np.empty([1, gpsVelsDim + 1])
+    gpsTimeAbnormalityValues = []
 
 
 
@@ -181,18 +180,43 @@ if __name__ == "__main__":
             time = Time.staticFloatTimeFromTopicDict(topicRow)
 
             if sensorName == "gps_origin":
-                gpsX = float(topicRow["pose"]["pose"]["position"]["x"])
-                gpsY = float(topicRow["pose"]["pose"]["position"]["y"])
-                gpsZ = float(topicRow["pose"]["pose"]["position"]["z"])
-                targetRobotGpsTimeRows.append([time, gpsX, gpsY, gpsZ])
+                gpsX,gpsY,gpsZ = GpsOrigin.getXyz(topicRow)
 
+                if targetRobotGpsCounter == 0:
+                    targetRobotGpsTimeXyzVelsObss = np.asarray([[time, gpsX, gpsY, gpsZ,0,0,0]])
+                    targetRobotGpsCounter += 1
+                    continue
+                if targetRobotGpsCounter >= 1:
+                    targetRobotGpsTimeXyzVelsObss = np.vstack((targetRobotGpsTimeXyzVelsObss, [time, gpsX, gpsY, gpsZ,0,0,0]))
+                    timeDiff = targetRobotGpsTimeXyzVelsObss[-1][0]-targetRobotGpsTimeXyzVelsObss[-2][0]
+                    if timeDiff == 0:
+                        timeDiff = gpsUpdateRate
+                    diffGps = np.subtract(targetRobotGpsTimeXyzVelsObss[-1][1:int(gpsVelsDim/2)],targetRobotGpsTimeXyzVelsObss[-2][1:int(gpsVelsDim/2)])
+                    gpsVels = gpsVelCo*diffGps/timeDiff
+                    targetRobotGpsTimeXyzVelsObss[-1][int(gpsVelsDim/2)+1:gpsVelsDim]=gpsVels
 
-
-                plotAll.updateGpsPlot(np.asarray(targetRobotGpsTimeRows))
+                plotAll.updateGpsPlot(np.asarray(targetRobotGpsTimeXyzVelsObss))
                 targetRobotGpsCounter += 1
+
+                # gps abn computer
+                gpsCurObs = targetRobotGpsTimeXyzVelsObss[-1, 1:]
+                gpsPrvObs = targetRobotGpsTimeXyzVelsObss[-2, 1:]
+                gpsPrvObsLabel = gpsOneAlphabetWordsTransitionMatrix.getClusteringStrgy().getPredictedLabelByPosVelObs(
+                    gpsPrvObs)
+                gpsPredictedNextLabel = gpsOneAlphabetWordsTransitionMatrix.getHighestPorobabelNextLabelBasedOnthePrvOne(
+                    gpsPrvObsLabel)
+                gpsPredictedNextLabelCenter = gpsOneAlphabetWordsTransitionMatrix.getClusteringStrgy().getClusterCenterByLabel(
+                    gpsPredictedNextLabel)
+                gpsAbnormalityValue = np.linalg.norm(
+                    np.array(gpsCurObs) - np.array(gpsPredictedNextLabelCenter))
+                print("Gps abnormality value: " + str(gpsAbnormalityValue))
+                gpsTimeAbnormalityValues.append([time, gpsAbnormalityValue])
+
+                plotAll.updateGpsAbnPlot(np.array(gpsTimeAbnormalityValues))
+
+
             elif sensorName == "rplidar":
-                npRanges = np.array(topicRow["ranges"]).astype(float)
-                npRanges[npRanges == np.inf] = 15
+                npRanges = RpLidar.getNpRanges(topicRow)
                 targetRobotLidarTimeRangesObss.append(np.insert(npRanges, 0, time, axis=0))
                 if targetRobotLidarCounter == 0:
                     targetRobotLidarCounter += 1
@@ -215,11 +239,10 @@ if __name__ == "__main__":
                     targetRobotLidarTimeRangesVelsObss= np.insert(targetRobotLidarTimeRangesVelsObss, 0, liarRangesVelsToAdd, axis=0)
 
                 targetRobotLidarTimeRangesVelsObss = np.array(targetRobotLidarTimeRangesVelsObss)
+
+                # lidar abn computer
                 lidarCurObs = targetRobotLidarTimeRangesVelsObss[-1, 1:]
                 lidarPrvObs = targetRobotLidarTimeRangesVelsObss[-2, 1:]
-
-
-                #abn computer
                 lidarPrvObsLabel = lidarOneAlphabetWordsTransitionMatrix.getClusteringStrgy().getPredictedLabelByPosVelObs(lidarPrvObs)
                 lidarPredictedNextLabel = lidarOneAlphabetWordsTransitionMatrix.getHighestPorobabelNextLabelBasedOnthePrvOne(
                     lidarPrvObsLabel)
