@@ -9,7 +9,7 @@ class GpsOrigin(Topic):
         super().__init__(topicRow)
 
     @staticmethod
-    def getXyz(topicRow:dict)->tuple:
+    def staticGetXyz(topicRow:dict)->tuple:
         gpsX = float(topicRow["pose"]["pose"]["position"]["x"])
         gpsY = float(topicRow["pose"]["pose"]["position"]["y"])
         gpsZ = float(topicRow["pose"]["pose"]["position"]["z"])

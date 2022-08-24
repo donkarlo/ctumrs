@@ -13,7 +13,7 @@ from yaml import CLoader
 from ctumrs.sensors.liveLocSensorAbn.one.PlotAll import PlotAll
 from ctumrs.topic.GpsOrigin import GpsOrigin
 from ctumrs.topic.RpLidar import RpLidar
-from ctumrs.topic.Time import Time
+from ctumrs.topic.Topic import Topic
 from mMath.calculus.derivative.TimePosRowsDerivativeComputer import TimePosRowsDerivativeComputer
 
 class LiveLocLidarAbn:
@@ -21,7 +21,7 @@ class LiveLocLidarAbn:
 
 if __name__ == "__main__":
     #the settings
-    targetRobotId = "uav1"
+    targetRobotId = "uav2"
     normalScenarioName = "normal"
     testScenarioName = "follow"
     basePath = MachineSettings.MAIN_PATH+"projs/research/data/self-aware-drones/ctumrs/two-drones/"
@@ -35,7 +35,7 @@ if __name__ == "__main__":
     lidarVelCo = 25
     lidarRangesVelsDim = 1440
     # for example for uav1 and lidar
-    targetRobotLidarTopicRowLimit = 100000
+    targetRobotLidarTopicRowLimit = 60023
     pathToLidarTransMtx = "/home/donkarlo/Desktop/transition_matrix_scenario_{}_robotid_{}_sensor_{}_training_{}_velco_{}_clusters_{}.pkl".format(
         normalScenarioName
         , targetRobotId
@@ -50,7 +50,7 @@ if __name__ == "__main__":
     gpsVelsDim = 6
     gpsClustersNum = 75
     gpsUpdateRate = 0.01
-    targetRobotGpsTopicRowLimit = targetRobotLidarTopicRowLimit * 3
+    targetRobotGpsTopicRowLimit = 300000
     pathToGpsTransMtx = "/home/donkarlo/Desktop/transition_matrix_scenario_{}_robotid_{}_sensor_{}_training_{}_velco_{}_clusters_{}.pkl".format(
         normalScenarioName
         , targetRobotId
@@ -60,39 +60,42 @@ if __name__ == "__main__":
         , gpsClustersNum)
 
 
-    # normal scenrio trans matrix builder
+    # normal scenrio lidar and gps trans matrix builder if not exist
     if not os.path.exists(pathToLidarTransMtx) or not os.path.exists(pathToGpsTransMtx):
-        robotTimeLidarRangesVelsObss = []
-        robotTimeGpsVelsObss = []
+
         with open(pathToNormalScenarioYamlFile, "r") as file:
             topicRows = yaml.load_all(file, Loader=CLoader)
+
+            robotTimeLidarRangesVelsObss = []
+            robotTimeGpsVelsObss = []
             targetRobotLidarTopicRowCounter = 0
             targetRobotGpsTopicRowCounter = 0
+
             for topicRowCounter, topicRow in enumerate(topicRows):
-                robotId, sensorName = topicRow["header"]["frame_id"].split("/")
+                if targetRobotLidarTopicRowCounter >= targetRobotLidarTopicRowLimit and targetRobotGpsTopicRowCounter>=targetRobotGpsTopicRowLimit:
+                    break
+                robotId, sensorName = Topic.getRobotIdAndSensorName(topicRow)
                 if robotId!=targetRobotId:
                     continue
-                if targetRobotLidarTopicRowCounter >= targetRobotLidarTopicRowLimit or targetRobotGpsTopicRowCounter>=targetRobotGpsTopicRowLimit:
-                    break
 
-                if sensorName == lidarSensorName:
-                    targetRobotLidarTopicRowCounter += 1
-                    print("robot: {}, Sensor: {}, count: {}".format(robotId, sensorName, targetRobotLidarTopicRowCounter))
+                time = Topic.staticGetTimeByTopicDict(topicRow)
 
-                if sensorName == gpsSensorName:
-                    targetRobotGpsTopicRowCounter += 1
-                    print("robot: {}, Sensor: {}, count: {}".format(robotId, sensorName, targetRobotGpsTopicRowCounter))
-
-                time = Time.staticFloatTimeFromTopicDict(topicRow)
-
-                if not os.path.exists(pathToLidarTransMtx):
-                    if sensorName==lidarSensorName:
-                        npRanges = RpLidar.getNpRanges(topicRow)
-                        robotTimeLidarRangesVelsObss.append(np.insert(npRanges, 0, time, axis=0))
-                if not os.path.exists(pathToGpsTransMtx):
-                    if sensorName==gpsSensorName:
-                        gpsX,gpsY,gpsZ = GpsOrigin.getXyz(topicRow)
-                        robotTimeGpsVelsObss.append([time, gpsX, gpsY, gpsZ])
+                if targetRobotLidarTopicRowCounter < targetRobotLidarTopicRowLimit:
+                    if not os.path.exists(pathToLidarTransMtx):
+                        if sensorName==lidarSensorName:
+                            npRanges = RpLidar.staticGetNpRanges(topicRow)
+                            robotTimeLidarRangesVelsObss.append(np.insert(npRanges, 0, time, axis=0))
+                            targetRobotLidarTopicRowCounter += 1
+                            print("robot: {}, Sensor: {}, count: {}".format(robotId, sensorName
+                                                                            ,targetRobotLidarTopicRowCounter))
+                if targetRobotGpsTopicRowCounter < targetRobotGpsTopicRowLimit:
+                    if not os.path.exists(pathToGpsTransMtx):
+                        if sensorName==gpsSensorName:
+                            gpsX,gpsY,gpsZ = GpsOrigin.staticGetXyz(topicRow)
+                            robotTimeGpsVelsObss.append([time, gpsX, gpsY, gpsZ])
+                            targetRobotGpsTopicRowCounter += 1
+                            print("robot: {}, Sensor: {}, count: {}".format(robotId, sensorName,
+                                                                            targetRobotGpsTopicRowCounter))
 
         # calculating transMtx for rplidar
         if not os.path.exists(pathToLidarTransMtx):
@@ -118,7 +121,7 @@ if __name__ == "__main__":
             robotTimeGpsVelsObss = TimePosRowsDerivativeComputer.computer(robotTimeGpsVelsObss,
                                                                                   gpsVelCo,gpsUpdateRate)
 
-            # clustering
+            # clustering gps data
             gpsVelsObssClusteringStrgy = TimePosVelsClusteringStrgy(gpsClustersNum
                                                                     , robotTimeGpsVelsObss[:,
                                                                               1:gpsVelsDim + 1])
@@ -169,18 +172,17 @@ if __name__ == "__main__":
         topicRows = yaml.load_all(file, Loader=CLoader)
         targetRobotLidarTopicRowCounter = 0
         for topicRowCounter, topicRow in enumerate(topicRows):
-            robotId, sensorName = topicRow["header"]["frame_id"].split("/")
-            if robotId != targetRobotId:
-                continue
-
             if targetRobotLidarCounter >= targetRobotLidarCounterLimit:
                 break
 
+            robotId, sensorName = Topic.getRobotIdAndSensorName(topicRow)
+            if robotId != targetRobotId:
+                continue
 
-            time = Time.staticFloatTimeFromTopicDict(topicRow)
+            time = Topic.staticGetTimeByTopicDict(topicRow)
 
             if sensorName == "gps_origin":
-                gpsX,gpsY,gpsZ = GpsOrigin.getXyz(topicRow)
+                gpsX,gpsY,gpsZ = GpsOrigin.staticGetXyz(topicRow)
 
                 if targetRobotGpsCounter == 0:
                     targetRobotGpsTimeXyzVelsObss = np.asarray([[time, gpsX, gpsY, gpsZ,0,0,0]])
@@ -216,7 +218,7 @@ if __name__ == "__main__":
 
 
             elif sensorName == "rplidar":
-                npRanges = RpLidar.getNpRanges(topicRow)
+                npRanges = RpLidar.staticGetNpRanges(topicRow)
                 targetRobotLidarTimeRangesObss.append(np.insert(npRanges, 0, time, axis=0))
                 if targetRobotLidarCounter == 0:
                     targetRobotLidarCounter += 1

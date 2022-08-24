@@ -7,7 +7,7 @@ class RpLidar(Topic):
         super().__init__(topicRow)
 
     @staticmethod
-    def getNpRanges(topicRow:dict,infReplacement=15):
+    def staticGetNpRanges(topicRow:dict, infReplacement=15):
         npRanges = np.array(topicRow["ranges"]).astype(float)
         # replace infs with 15 in np.range
         npRanges[npRanges == np.inf] = infReplacement
