@@ -18,8 +18,6 @@ from mMath.calculus.derivative.TimePosRowsDerivativeComputer import TimePosRowsD
 from tensorflow.keras.models import Model, Sequential,load_model
 from tensorflow.keras.layers import Dense
 
-from mMath.data.preProcess.RowsNormalizer import RowsNormalizer
-
 if __name__ == "__main__":
     #the settings
     targetRobotId = "uav1"
@@ -109,7 +107,7 @@ if __name__ == "__main__":
             os.mkdir(pathToTargetRobotLidarMindDir)
             targetRobotTimeLidarRangesVelsObss = np.asarray(targetRobotTimeLidarRangesVelsObss)
             #normalize lidar data
-            normalizedNpLeaderRangesObss = RowsNormalizer.getNpNormalizedNpRows(targetRobotTimeLidarRangesVelsObss[:,1:])
+            normalizedNpLeaderRangesObss = targetRobotTimeLidarRangesVelsObss[:,1:]
             #train the auto encoder
             encoder = Sequential([
                 Dense(512, activation='relu', input_shape=(lidarRangesDim,)),
@@ -269,8 +267,7 @@ if __name__ == "__main__":
 
             elif sensorName == "rplidar":
                 npRanges = RpLidar.staticGetNpRanges(topicRow)
-                nmNpRanges = np.asarray([npRanges/np.sum(npRanges)])
-                lowDimLidarObs = encoder(nmNpRanges)[0]
+                lowDimLidarObs = encoder(np.asarray([npRanges]))[0]
                 targetRobotLidarTimeLowDimRangesObss.append(np.insert(lowDimLidarObs, 0, time, axis=0))
                 if targetRobotLidarCounter == 0:
                     targetRobotLidarCounter += 1
@@ -308,7 +305,3 @@ if __name__ == "__main__":
 
                 plotAll.updateLidarAbnPlot(np.array(lidarTimeAbnormalityValues))
                 targetRobotLidarCounter += 1
-
-
-
-
