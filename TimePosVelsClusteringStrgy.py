@@ -40,6 +40,12 @@ class TimePosVelsClusteringStrgy:
         return self.getFittedClusters().predict(posVelArr)[0]
 
     def getLabeledTimePosVelsClustersDict(self,timePosVels) -> dict:
+        """
+
+        Returns
+        -------
+        object
+        """
         self.__fittedPosVelsClusters = self.getFittedClusters()
 
         if self.__labeledTimePosVelClustersDict is None:

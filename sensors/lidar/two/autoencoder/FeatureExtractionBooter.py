@@ -81,7 +81,7 @@ class FeatureExtractionBooter:
         Plots.plotLossVsEpoch(modelHistory.history["loss"])
 
 
-        #let check the latent space
+        #lets check the latent space
         encodedXtrain = encoder(normalizedNpLeaderRangesObss)
 
         # Plots.plot2DEncodedXTrain(encodedXtrain)

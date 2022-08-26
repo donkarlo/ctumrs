@@ -15,13 +15,14 @@ from ctumrs.topic.GpsOrigin import GpsOrigin
 from ctumrs.topic.RpLidar import RpLidar
 from ctumrs.topic.Topic import Topic
 from mMath.calculus.derivative.TimePosRowsDerivativeComputer import TimePosRowsDerivativeComputer
+from tensorflow.keras.models import Model, Sequential,load_model
+from tensorflow.keras.layers import Dense
 
-class LiveLocLidarAbn:
-    pass
+from mMath.data.preProcess.RowsNormalizer import RowsNormalizer
 
 if __name__ == "__main__":
     #the settings
-    targetRobotId = "uav2"
+    targetRobotId = "uav1"
     normalScenarioName = "normal"
     testScenarioName = "follow"
     basePath = MachineSettings.MAIN_PATH+"projs/research/data/self-aware-drones/ctumrs/two-drones/"
@@ -34,15 +35,21 @@ if __name__ == "__main__":
     lidarClustersNum = 75
     lidarVelCo = 25
     lidarRangesVelsDim = 1440
-    # for example for uav1 and lidar
-    targetRobotLidarTopicRowLimit = 60023
-    pathToLidarTransMtx = "/home/donkarlo/Desktop/transition_matrix_scenario_{}_robotid_{}_sensor_{}_training_{}_velco_{}_clusters_{}.pkl".format(
-        normalScenarioName
-        , targetRobotId
+
+    lidarAutoencoderLatentDim = 3
+    lidarRangesDim = 720
+    lidarAutoencoderEpochs = 1000
+    lidarAutoencoderBatchSize = 32
+    targetRobotLidarTopicRowLimit = 82000
+    pathToTargetRobotLidarMindDir = pathToNormalScenario + "{}/{}_mind_training_{}_velco_{}_clusters_{}_autoencoder_latentdim_{}_epochs_{}/".format(
+        targetRobotId
         , lidarSensorName
         , targetRobotLidarTopicRowLimit
         , lidarVelCo
-        , lidarClustersNum)
+        , lidarClustersNum
+        , lidarAutoencoderLatentDim
+        , lidarAutoencoderEpochs
+    )
 
     #Gps settings
     gpsSensorName = "gps_origin"
@@ -50,23 +57,23 @@ if __name__ == "__main__":
     gpsVelsDim = 6
     gpsClustersNum = 75
     gpsUpdateRate = 0.01
-    targetRobotGpsTopicRowLimit = 300000
-    pathToGpsTransMtx = "/home/donkarlo/Desktop/transition_matrix_scenario_{}_robotid_{}_sensor_{}_training_{}_velco_{}_clusters_{}.pkl".format(
-        normalScenarioName
-        , targetRobotId
+    targetRobotGpsTopicRowLimit = 100000
+    pathToTargetRobotGpsMindDir = pathToNormalScenario + "{}/{}_mind_training_{}_velco_{}_clusters_{}/".format(
+        targetRobotId
         , gpsSensorName
         , targetRobotGpsTopicRowLimit
         , gpsVelCo
-        , gpsClustersNum)
+        , gpsClustersNum
+    )
 
 
     # normal scenrio lidar and gps trans matrix builder if not exist
-    if not os.path.exists(pathToLidarTransMtx) or not os.path.exists(pathToGpsTransMtx):
+    if not os.path.exists(pathToTargetRobotLidarMindDir) or not os.path.exists(pathToTargetRobotGpsMindDir):
 
         with open(pathToNormalScenarioYamlFile, "r") as file:
             topicRows = yaml.load_all(file, Loader=CLoader)
 
-            robotTimeLidarRangesVelsObss = []
+            targetRobotTimeLidarRangesVelsObss = []
             robotTimeGpsVelsObss = []
             targetRobotLidarTopicRowCounter = 0
             targetRobotGpsTopicRowCounter = 0
@@ -74,22 +81,22 @@ if __name__ == "__main__":
             for topicRowCounter, topicRow in enumerate(topicRows):
                 if targetRobotLidarTopicRowCounter >= targetRobotLidarTopicRowLimit and targetRobotGpsTopicRowCounter>=targetRobotGpsTopicRowLimit:
                     break
-                robotId, sensorName = Topic.getRobotIdAndSensorName(topicRow)
+                robotId, sensorName = Topic.staticGetRobotIdAndSensorName(topicRow)
                 if robotId!=targetRobotId:
                     continue
 
                 time = Topic.staticGetTimeByTopicDict(topicRow)
 
                 if targetRobotLidarTopicRowCounter < targetRobotLidarTopicRowLimit:
-                    if not os.path.exists(pathToLidarTransMtx):
+                    if not os.path.exists(pathToTargetRobotLidarMindDir):
                         if sensorName==lidarSensorName:
                             npRanges = RpLidar.staticGetNpRanges(topicRow)
-                            robotTimeLidarRangesVelsObss.append(np.insert(npRanges, 0, time, axis=0))
+                            targetRobotTimeLidarRangesVelsObss.append(np.insert(npRanges, 0, time, axis=0))
                             targetRobotLidarTopicRowCounter += 1
                             print("robot: {}, Sensor: {}, count: {}".format(robotId, sensorName
                                                                             ,targetRobotLidarTopicRowCounter))
                 if targetRobotGpsTopicRowCounter < targetRobotGpsTopicRowLimit:
-                    if not os.path.exists(pathToGpsTransMtx):
+                    if not os.path.exists(pathToTargetRobotGpsMindDir):
                         if sensorName==gpsSensorName:
                             gpsX,gpsY,gpsZ = GpsOrigin.staticGetXyz(topicRow)
                             robotTimeGpsVelsObss.append([time, gpsX, gpsY, gpsZ])
@@ -98,25 +105,65 @@ if __name__ == "__main__":
                                                                             targetRobotGpsTopicRowCounter))
 
         # calculating transMtx for rplidar
-        if not os.path.exists(pathToLidarTransMtx):
-            robotTimeLidarRangesVelsObss = np.asarray(robotTimeLidarRangesVelsObss)
-            robotTimeLidarRangesVelsObss = TimePosRowsDerivativeComputer.computer(robotTimeLidarRangesVelsObss, lidarVelCo)
+        if not os.path.exists(pathToTargetRobotLidarMindDir):
+            os.mkdir(pathToTargetRobotLidarMindDir)
+            targetRobotTimeLidarRangesVelsObss = np.asarray(targetRobotTimeLidarRangesVelsObss)
+            #normalize lidar data
+            normalizedNpLeaderRangesObss = RowsNormalizer.getNpNormalizedNpRows(targetRobotTimeLidarRangesVelsObss[:,1:])
+            #train the auto encoder
+            encoder = Sequential([
+                Dense(512, activation='relu', input_shape=(lidarRangesDim,)),
+                Dense(256, activation='relu'),
+                Dense(128, activation='relu'),
+                Dense(64, activation='relu'),
+                Dense(32, activation='relu'),
+                Dense(lidarAutoencoderLatentDim, activation='relu')
+            ])
+
+            decoder = Sequential([
+                Dense(32, activation='relu', input_shape=(lidarAutoencoderLatentDim,)),
+                Dense(64, activation='relu'),
+                Dense(128, activation='relu'),
+                Dense(256, activation='relu'),
+                Dense(512, activation='relu'),
+                Dense(lidarRangesDim, activation=None)
+            ])
+            autoencoder = Model(inputs=encoder.input, outputs=decoder(encoder.output))
+            autoencoder.compile(loss='mse', optimizer='adam')
+
+            print("Fitting the auto encoder ...")
+            modelHistory = autoencoder.fit(normalizedNpLeaderRangesObss
+                                           , normalizedNpLeaderRangesObss
+                                           , epochs=lidarAutoencoderEpochs
+                                           , batch_size=lidarAutoencoderBatchSize
+                                           , verbose=0)
+
+            autoencoder.save(filepath=pathToTargetRobotLidarMindDir + "encoder-decoder.h5")
+            decoder.save(filepath=pathToTargetRobotLidarMindDir + "decoder.h5")
+            encoder.save(filepath=pathToTargetRobotLidarMindDir + "encoder.h5")
+
+            print("Building the latent space of normal scenario ladar data ...")
+            lidarLowDimObss = encoder.predict(normalizedNpLeaderRangesObss)
+            lidarLowDimTimeObss = np.hstack((targetRobotTimeLidarRangesVelsObss[0:, 0:1],lidarLowDimObss))
+            #compute velocities
+            targetRobotTimeLidarRangesVelsObss = TimePosRowsDerivativeComputer.computer(lidarLowDimTimeObss, lidarVelCo)
 
             #clustering
             lidarRangesVelsObssClusteringStrgy = TimePosVelsClusteringStrgy(lidarClustersNum
-                                                                            , robotTimeLidarRangesVelsObss[:, 1:lidarRangesVelsDim + 1])
-            lidarRangesVelsObssClusteringStrgyDict = lidarRangesVelsObssClusteringStrgy.getLabeledTimePosVelsClustersDict(robotTimeLidarRangesVelsObss[:, 1:lidarRangesVelsDim + 1])
+                                                                            , targetRobotTimeLidarRangesVelsObss[:, 1:])
             #Building Lidar transition matrix
             lidarOneAlphabetWordsTransitionMatrix = OneAlphabetWordsTransitionMatrix(lidarRangesVelsObssClusteringStrgy
-                                                                                     , robotTimeLidarRangesVelsObss[:, 1:lidarRangesVelsDim + 1])
+                                                                                     , targetRobotTimeLidarRangesVelsObss[:, 1:])
             lidarOneAlphabetWordsTransitionMatrix.getNpTransitionMatrix()
-            lidarOneAlphabetWordsTransitionMatrix.save(pathToLidarTransMtx)
+            lidarOneAlphabetWordsTransitionMatrix.save(pathToTargetRobotLidarMindDir+"transmtx.pkl")
         else:
-            with open(pathToLidarTransMtx, 'rb') as file:
+            with open(pathToTargetRobotLidarMindDir+"transmtx.pkl", 'rb') as file:
                 lidarOneAlphabetWordsTransitionMatrix = pickle.load(file)
 
         # calculating transMtx for GPS
-        if not os.path.exists(pathToGpsTransMtx):
+        if not os.path.exists(pathToTargetRobotGpsMindDir):
+            os.mkdir(pathToTargetRobotGpsMindDir)
+
             robotTimeGpsVelsObss = np.asarray(robotTimeGpsVelsObss)
             robotTimeGpsVelsObss = TimePosRowsDerivativeComputer.computer(robotTimeGpsVelsObss,
                                                                                   gpsVelCo,gpsUpdateRate)
@@ -132,14 +179,16 @@ if __name__ == "__main__":
                                                                                    , robotTimeGpsVelsObss[:,
                                                                                        1:gpsVelsDim + 1])
             gpsOneAlphabetWordsTransitionMatrix.getNpTransitionMatrix()
-            gpsOneAlphabetWordsTransitionMatrix.save(pathToGpsTransMtx)
+
+
+            gpsOneAlphabetWordsTransitionMatrix.save(pathToTargetRobotGpsMindDir+"transmtx.pkl")
         else:
-            with open(pathToGpsTransMtx, 'rb') as file:
+            with open(pathToTargetRobotGpsMindDir+"transmtx.pkl", 'rb') as file:
                 gpsOneAlphabetWordsTransitionMatrix = pickle.load(file)
     else:
-        with open(pathToLidarTransMtx, 'rb') as file:
+        with open(pathToTargetRobotLidarMindDir+"transmtx.pkl", 'rb') as file:
             lidarOneAlphabetWordsTransitionMatrix = pickle.load(file)
-        with open(pathToGpsTransMtx, 'rb') as file:
+        with open(pathToTargetRobotGpsMindDir+"transmtx.pkl", 'rb') as file:
             gpsOneAlphabetWordsTransitionMatrix = pickle.load(file)
 
 
@@ -151,8 +200,8 @@ if __name__ == "__main__":
     #Lidar settings
     targetRobotLidarCounterLimit = 6000
     targetRobotLidarCounter = 0
-    targetRobotLidarTimeRangesObss = []
-    targetRobotLidarTimeRangesVelsObss = np.empty([1, lidarRangesVelsDim + 1])
+    targetRobotLidarTimeLowDimRangesObss = []
+    targetRobotLidarTimeLowDimRangesVelsObss = np.empty([1, 2 * lidarAutoencoderLatentDim + 1])
     lidarTimeAbnormalityValues = []
 
     #GPS settings
@@ -166,16 +215,17 @@ if __name__ == "__main__":
 
     plotAll = PlotAll()
 
-
-
     with open(pathToTestScenarioYamlFile, "r") as file:
         topicRows = yaml.load_all(file, Loader=CLoader)
         targetRobotLidarTopicRowCounter = 0
+
+        # load encoder
+        encoder = load_model(pathToTargetRobotLidarMindDir + "encoder.h5")
         for topicRowCounter, topicRow in enumerate(topicRows):
             if targetRobotLidarCounter >= targetRobotLidarCounterLimit:
                 break
 
-            robotId, sensorName = Topic.getRobotIdAndSensorName(topicRow)
+            robotId, sensorName = Topic.staticGetRobotIdAndSensorName(topicRow)
             if robotId != targetRobotId:
                 continue
 
@@ -219,32 +269,34 @@ if __name__ == "__main__":
 
             elif sensorName == "rplidar":
                 npRanges = RpLidar.staticGetNpRanges(topicRow)
-                targetRobotLidarTimeRangesObss.append(np.insert(npRanges, 0, time, axis=0))
+                nmNpRanges = np.asarray([npRanges/np.sum(npRanges)])
+                lowDimLidarObs = encoder(nmNpRanges)[0]
+                targetRobotLidarTimeLowDimRangesObss.append(np.insert(lowDimLidarObs, 0, time, axis=0))
                 if targetRobotLidarCounter == 0:
                     targetRobotLidarCounter += 1
                     continue
                 if targetRobotLidarCounter >= 1:
-                    prvLidarTime = targetRobotLidarTimeRangesObss[targetRobotLidarCounter - 1][0]
-                    curLidarTime = targetRobotLidarTimeRangesObss[targetRobotLidarCounter][0]
+                    prvLidarTime = targetRobotLidarTimeLowDimRangesObss[targetRobotLidarCounter - 1][0]
+                    curLidarTime = targetRobotLidarTimeLowDimRangesObss[targetRobotLidarCounter][0]
                     diffLidarTime = curLidarTime - prvLidarTime
 
-                    prvLidarRanges = targetRobotLidarTimeRangesObss[targetRobotLidarCounter - 1][1:]
-                    curLidarRanges = targetRobotLidarTimeRangesObss[targetRobotLidarCounter][1:]
+                    prvLidarRanges = targetRobotLidarTimeLowDimRangesObss[targetRobotLidarCounter - 1][1:]
+                    curLidarRanges = targetRobotLidarTimeLowDimRangesObss[targetRobotLidarCounter][1:]
                     diffLidarRanges = np.subtract(curLidarRanges, prvLidarRanges)
 
                     curLidarVel = lidarVelCo * diffLidarRanges / diffLidarTime
                     curLidarTimeRangesVels = np.hstack(np.array([curLidarTime, curLidarRanges, curLidarVel], dtype=object))
-                    targetRobotLidarTimeRangesVelsObss =np.vstack([targetRobotLidarTimeRangesVelsObss, curLidarTimeRangesVels])
+                    targetRobotLidarTimeLowDimRangesVelsObss =np.vstack([targetRobotLidarTimeLowDimRangesVelsObss, curLidarTimeRangesVels])
                 if targetRobotLidarCounter == 1:
-                    targetRobotLidarTimeRangesVelsObss = np.delete(targetRobotLidarTimeRangesVelsObss, 0, 0)
+                    targetRobotLidarTimeLowDimRangesVelsObss = np.delete(targetRobotLidarTimeLowDimRangesVelsObss, 0, 0)
                     liarRangesVelsToAdd = np.hstack(np.array([prvLidarTime, prvLidarRanges, curLidarVel], dtype=object))
-                    targetRobotLidarTimeRangesVelsObss= np.insert(targetRobotLidarTimeRangesVelsObss, 0, liarRangesVelsToAdd, axis=0)
+                    targetRobotLidarTimeLowDimRangesVelsObss= np.insert(targetRobotLidarTimeLowDimRangesVelsObss, 0, liarRangesVelsToAdd, axis=0)
 
-                targetRobotLidarTimeRangesVelsObss = np.array(targetRobotLidarTimeRangesVelsObss)
+                targetRobotLidarTimeLowDimRangesVelsObss = np.array(targetRobotLidarTimeLowDimRangesVelsObss)
 
                 # lidar abn computer
-                lidarCurObs = targetRobotLidarTimeRangesVelsObss[-1, 1:]
-                lidarPrvObs = targetRobotLidarTimeRangesVelsObss[-2, 1:]
+                lidarCurObs = targetRobotLidarTimeLowDimRangesVelsObss[-1, 1:]
+                lidarPrvObs = targetRobotLidarTimeLowDimRangesVelsObss[-2, 1:]
                 lidarPrvObsLabel = lidarOneAlphabetWordsTransitionMatrix.getClusteringStrgy().getPredictedLabelByPosVelObs(lidarPrvObs)
                 lidarPredictedNextLabel = lidarOneAlphabetWordsTransitionMatrix.getHighestPorobabelNextLabelBasedOnthePrvOne(
                     lidarPrvObsLabel)

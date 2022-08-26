@@ -3,7 +3,7 @@ class Topic:
         self._topic = topicRow
 
     @staticmethod
-    def getRobotIdAndSensorName(topicRow:dict):
+    def staticGetRobotIdAndSensorName(topicRow:dict):
         robotId,sensorName = topicRow["header"]["frame_id"].split("/")
         return robotId,sensorName
 
