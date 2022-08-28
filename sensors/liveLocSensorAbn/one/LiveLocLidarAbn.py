@@ -7,7 +7,6 @@ from MachineSettings import MachineSettings
 from ctumrs.OneAlphabetWordsTransitionMatrix import OneAlphabetWordsTransitionMatrix
 from ctumrs.TimePosVelsClusteringStrgy import TimePosVelsClusteringStrgy
 import yaml
-# To make yaml file load faster
 from yaml import CLoader
 
 from ctumrs.sensors.liveLocSensorAbn.one.PlotAll import PlotAll
@@ -17,6 +16,8 @@ from ctumrs.topic.Topic import Topic
 from mMath.calculus.derivative.TimePosRowsDerivativeComputer import TimePosRowsDerivativeComputer
 from tensorflow.keras.models import Model, Sequential,load_model
 from tensorflow.keras.layers import Dense
+
+from mMath.statistic.Distance import Distance
 
 if __name__ == "__main__":
     #the settings
@@ -36,9 +37,9 @@ if __name__ == "__main__":
 
     lidarAutoencoderLatentDim = 3
     lidarRangesDim = 720
-    lidarAutoencoderEpochs = 1000
+    lidarAutoencoderEpochs = 100
     lidarAutoencoderBatchSize = 32
-    targetRobotLidarTopicRowLimit = 82000
+    targetRobotLidarTopicRowLimit = 6000
     pathToTargetRobotLidarMindDir = pathToNormalScenario + "{}/{}_mind_training_{}_velco_{}_clusters_{}_autoencoder_latentdim_{}_epochs_{}/".format(
         targetRobotId
         , lidarSensorName
@@ -55,7 +56,7 @@ if __name__ == "__main__":
     gpsVelsDim = 6
     gpsClustersNum = 75
     gpsUpdateRate = 0.01
-    targetRobotGpsTopicRowLimit = 100000
+    targetRobotGpsTopicRowLimit = 200000
     pathToTargetRobotGpsMindDir = pathToNormalScenario + "{}/{}_mind_training_{}_velco_{}_clusters_{}/".format(
         targetRobotId
         , gpsSensorName
@@ -201,6 +202,16 @@ if __name__ == "__main__":
     targetRobotLidarTimeLowDimRangesObss = []
     targetRobotLidarTimeLowDimRangesVelsObss = np.empty([1, 2 * lidarAutoencoderLatentDim + 1])
     lidarTimeAbnormalityValues = []
+    covCompVal = 0.01
+    covMtx = np.array([
+        [covCompVal,0,0,0,0,0]
+      , [0,covCompVal,0,0,0,0]
+      , [0,0,covCompVal,0,0,0]
+      , [0,0,0,covCompVal,0,0]
+      , [0,0,0,0,covCompVal,0]
+      , [0,0,0,0,0,covCompVal]
+        ]
+                      )
 
     #GPS settings
     targetRobotGpsTimeRows = []
@@ -299,7 +310,8 @@ if __name__ == "__main__":
                     lidarPrvObsLabel)
                 lidarPredictedNextLabelCenter = lidarOneAlphabetWordsTransitionMatrix.getClusteringStrgy().getClusterCenterByLabel(
                     lidarPredictedNextLabel)
-                lidarAbnormalityValue = np.linalg.norm(np.array(lidarCurObs) - np.array(lidarPredictedNextLabelCenter))
+                # lidarAbnormalityValue = np.linalg.norm(np.array(lidarCurObs) - np.array(lidarPredictedNextLabelCenter))
+                lidarAbnormalityValue = Distance.getGaussianKullbackLieblerDistance(lidarCurObs,covMtx,lidarPredictedNextLabelCenter,covMtx)
                 print("Lidar abnormality value: " + str(lidarAbnormalityValue))
                 lidarTimeAbnormalityValues.append([time, lidarAbnormalityValue])
 
