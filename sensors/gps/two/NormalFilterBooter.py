@@ -1,6 +1,6 @@
 from ctumrs.ClusterLevelAbnormalVals import ClusterLevelAbnormalVals
 from ctumrs.TimePosVelObssUtility import TimePosVelObssUtility
-from ctumrs.TransitionMatrix import TransitionMatrix
+from ctumrs.TwoAlphabetWordsTransitionMatrix import TwoAlphabetWordsTransitionMatrix
 from ctumrs.TimePosVelObssPlottingUtility import TimePosVelObssPlottingUtility
 
 plottingUtility = TimePosVelObssPlottingUtility()
@@ -13,7 +13,7 @@ velocityCoefficient = 10000
 jointPathToLeaderAndFollowerNormalScenario= "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/normal-scenario/gps/"
 '''Lodaing the transition matrix'''
 jointfilePathToTransitionMatrix = jointPathToLeaderAndFollowerNormalScenario + "transtionMatrix-{}*{}.txt".format(leaderUavClustersNum, followerUavClustersNum)
-transitionMatrix = TransitionMatrix()
+transitionMatrix = TwoAlphabetWordsTransitionMatrix()
 transitionMatrix = transitionMatrix.load(jointfilePathToTransitionMatrix)
 
 ''''''

@@ -6,14 +6,14 @@ import os
 import numpy as np
 from matplotlib import pyplot as plt
 
-from ctumrs.TransitionMatrix import TransitionMatrix
+from ctumrs.TwoAlphabetWordsTransitionMatrix import TwoAlphabetWordsTransitionMatrix
 from scipy.spatial.distance import directed_hausdorff
 from multiprocessing import Pool
 
 class ClusterLevelAbnormalVals():
     def __init__(self
-                 , transitionMatrix:TransitionMatrix):
-        self.__transitionMatrix:TransitionMatrix = transitionMatrix
+                 , transitionMatrix:TwoAlphabetWordsTransitionMatrix):
+        self.__transitionMatrix:TwoAlphabetWordsTransitionMatrix = transitionMatrix
         self.__rangeLimit = 15000
 
     def getCurAbnormalValByPrvAndCurPosVelObs(self

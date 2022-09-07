@@ -5,7 +5,7 @@ import pickle
 from ctumrs.TimePosVelObssUtility import TimePosVelObssUtility
 
 
-class TransitionMatrix:
+class TwoAlphabetWordsTransitionMatrix:
     def __init__(self
                  , leaderTimePosVelClusters:TimePosVelsClusteringStrgy = None
                  , followerTimePosVelClusters:TimePosVelsClusteringStrgy = None
@@ -123,7 +123,8 @@ class TransitionMatrix:
         with open(filePath, 'wb') as file:
             pickle.dump(self, file)
 
-    def load(self,filePath)->pickle:
+    @staticmethod
+    def load(filePath)->pickle:
         with open(filePath, 'rb') as file:
             loadedPickle = pickle.load(file)
             return loadedPickle

@@ -1,7 +1,7 @@
 import pickle
 
 from ctumrs.TimePosVelsClusteringStrgy import TimePosVelsClusteringStrgy
-from ctumrs.TransitionMatrix import TransitionMatrix
+from ctumrs.TwoAlphabetWordsTransitionMatrix import TwoAlphabetWordsTransitionMatrix
 from ctumrs.sensors.lidar.two.rangeSumVel.TimeRangeSumVelObss import TimeRangeSumVelObss
 
 dataPathToLidarOfTwoDronesTopic = "/home/donkarlo/Dropbox/projs/research/data/self-aware-drones/ctumrs/two-drones/normal-scenario/lidar/rangeSumVel/"
@@ -35,10 +35,10 @@ followerTimePosVelClusteringStrgy = TimePosVelsClusteringStrgy(followerClustersN
                                                                , followerTimeRangeSumVelObss
                                                                , followerRangeSumVelObss)
 '''Build transition matrix'''
-transitionMatrix = TransitionMatrix(leaderTimeRangeSumVelClusteringStrgy
-                                    , followerTimePosVelClusteringStrgy
-                                    , leaderTimeRangeSumVelObss
-                                    , followerTimeRangeSumVelObss)
+transitionMatrix = TwoAlphabetWordsTransitionMatrix(leaderTimeRangeSumVelClusteringStrgy
+                                                    , followerTimePosVelClusteringStrgy
+                                                    , leaderTimeRangeSumVelObss
+                                                    , followerTimeRangeSumVelObss)
 transitionMatrix.save(dataPathToLidarOfTwoDronesTopic +"transtionMatrix-{}*{}.txt".format(leaderClustersNum, followerClustersNum))
 
 

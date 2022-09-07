@@ -3,7 +3,7 @@ import pickle
 import numpy as np
 
 from ctumrs.ClusterLevelAbnormalVals import ClusterLevelAbnormalVals
-from ctumrs.TransitionMatrix import TransitionMatrix
+from ctumrs.TwoAlphabetWordsTransitionMatrix import TwoAlphabetWordsTransitionMatrix
 from ctumrs.sensors.lidar.two.ranges.TimeRangesVelsObss import TimeRangesVelsObss
 from MachineSettings import MachineSettings
 
@@ -14,7 +14,7 @@ velCoefficient = 20
 sharedPathToLeaderAndFollowerNormalScenario= "{}projs/research/data/self-aware-drones/ctumrs/two-drones/normal-scenario/lidar/allRanges/".format(MachineSettings.MAIN_PATH)
 '''Lodaing the transition matrix'''
 jointfilePathToTransitionMatrix = sharedPathToLeaderAndFollowerNormalScenario + "transtionMatrix-clusters-{}-{}-velco-{}.txt".format(leaderClustersNum, followerClustersNum,velCoefficient)
-transitionMatrix = TransitionMatrix()
+transitionMatrix = TwoAlphabetWordsTransitionMatrix()
 transitionMatrix = transitionMatrix.load(jointfilePathToTransitionMatrix)
 
 ''''''

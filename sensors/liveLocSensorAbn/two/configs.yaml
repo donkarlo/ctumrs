@@ -1,19 +1,32 @@
----
-uav1:
-  gps_origin:
-    clustersNum: 75
-    velCo: 25
-    updateRate: 0.01
-    trainingRowsLimit: 200000
-  rplidar:
-    clustersNum: 75
-    velCo: 25
-    trainingRowsLimit: 6000
-    autoencoder:
-      epocs: 100
-      batchSize: 32
-      latentDim: 3
+rplidar:
+  covMtx:
+    - [ 0,0001, 0, 0, 0, 0, 0 ]
+    - [ 0, 0,0001, 0, 0, 0, 0 ]
+    - [ 0, 0, 0,0001, 0, 0, 0 ]
+    - [ 0, 0, 0, 0,0001, 0, 0 ]
+    - [ 0, 0, 0, 0, 0,0001, 0 ]
+    - [ 0, 0, 0, 0, 0, 0,0001 ]
+  clustersNum: 75
+  velCo: 25
+  trainingRowsNumLimit: 6000
+  autoencoder:
+    epocs: 100
+    batchSize: 32
+    latentDim: 3
 
----
-robot: "uav2"
-  sensors:
+gps_origin:
+  covMtx:
+    - [ 2.0e-4, 0, 0, 0, 0, 0 ]
+    - [ 0, 2.0e-4, 0, 0, 0, 0 ]
+    - [ 0, 0, 4.0e-4, 0, 0, 0 ]
+    - [ 0, 0, 0,  0.2  , 0, 0 ]
+    - [ 0, 0, 0, 0,  0.2  , 0 ]
+    - [ 0, 0, 0, 0, 0,  0.4   ]
+  updateRate: 0.01
+  clustersNum: 75
+  velCo: 25
+  trainingRowsNumLimit: 200000
+
+normalScenarioName: Normal
+testScenarioName: follow
+targetRobotIds: ["uav1","uav2"]

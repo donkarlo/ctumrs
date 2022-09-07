@@ -1,5 +1,3 @@
-import numpy as np
-
 from ctumrs.topic.Topic import Topic
 
 

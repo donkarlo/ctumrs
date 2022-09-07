@@ -1,7 +1,7 @@
 import pickle
 
 from ctumrs.TimePosVelsClusteringStrgy import TimePosVelsClusteringStrgy
-from ctumrs.TransitionMatrix import TransitionMatrix
+from ctumrs.TwoAlphabetWordsTransitionMatrix import TwoAlphabetWordsTransitionMatrix
 from ctumrs.sensors.lidar.two.fourRegionsMinRangesVel.TimeFourRegionsMinVelsObss import \
     TimeFourRegionsMinRangesVelsObss
 
@@ -36,10 +36,10 @@ followerTimePosVelClusteringStrgy = TimePosVelsClusteringStrgy(followerClustersN
                                                                , followerTimeRangeSumVelObss
                                                                , followerRangeSumVelObss)
 '''Build transition matrix'''
-transitionMatrix = TransitionMatrix(leaderTimeRangeSumVelClusteringStrgy
-                                    , followerTimePosVelClusteringStrgy
-                                    , leaderTimeRangeSumVelObss
-                                    , followerTimeRangeSumVelObss)
+transitionMatrix = TwoAlphabetWordsTransitionMatrix(leaderTimeRangeSumVelClusteringStrgy
+                                                    , followerTimePosVelClusteringStrgy
+                                                    , leaderTimeRangeSumVelObss
+                                                    , followerTimeRangeSumVelObss)
 # transitionMatrix.setLeaderFollowerObsMatchStrgy("ALREADY_INDEX_MATCHED")
 transitionMatrix.save(sharedPathToTwoLidarsNormalScenarioFourRangesVels + "transtionMatrix-{}*{}.txt".format(leaderClustersNum, followerClustersNum))
 

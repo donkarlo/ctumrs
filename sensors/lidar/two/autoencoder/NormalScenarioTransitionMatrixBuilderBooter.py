@@ -5,7 +5,7 @@ import numpy as np
 
 from MachineSettings import MachineSettings
 from ctumrs.TimePosVelsClusteringStrgy import TimePosVelsClusteringStrgy
-from ctumrs.TransitionMatrix import TransitionMatrix
+from ctumrs.TwoAlphabetWordsTransitionMatrix import TwoAlphabetWordsTransitionMatrix
 from keras.models import load_model
 from ctumrs.sensors.lidar.two.autoencoder.Plots import Plots
 from mMath.calculus.derivative.TimePosRowsDerivativeComputer import TimePosRowsDerivativeComputer
@@ -73,10 +73,10 @@ class NormalScenarioTransitionMatrixBuilderBooter:
         followerTimePosVelClusteringStrgy = TimePosVelsClusteringStrgy(followerClustersNum
                                                                        ,followerLowDimPosVelObss)
         '''Build transition matrix'''
-        transitionMatrix = TransitionMatrix(leaderTimePosVelClusteringStrgy
-                                            , followerTimePosVelClusteringStrgy
-                                            , leaderLowDimTimePosVelObss
-                                            , followerLowDimTimePosVelObss)
+        transitionMatrix = TwoAlphabetWordsTransitionMatrix(leaderTimePosVelClusteringStrgy
+                                                            , followerTimePosVelClusteringStrgy
+                                                            , leaderLowDimTimePosVelObss
+                                                            , followerLowDimTimePosVelObss)
         # transitionMatrix.setLeaderFollowerObsMatchStrgy("ALREADY_INDEX_MATCHED")
         transitionMatrix.save(sharedPathToTwoLidars + "autoencoders/transtionMatrix-{}*{}.txt".format(leaderClustersNum, followerClustersNum))
 

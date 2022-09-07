@@ -4,7 +4,7 @@ import numpy as np
 
 from ctumrs.ClusterLevelAbnormalVals import ClusterLevelAbnormalVals
 from MachineSettings import MachineSettings
-from ctumrs.TransitionMatrix import TransitionMatrix
+from ctumrs.TwoAlphabetWordsTransitionMatrix import TwoAlphabetWordsTransitionMatrix
 from mMath.calculus.derivative.TimePosRowsDerivativeComputer import TimePosRowsDerivativeComputer
 from mMath.data.preProcess.RowsNormalizer import RowsNormalizer
 from keras.models import load_model
@@ -23,7 +23,7 @@ class FollowScenarioAbnormalityBooter:
 
         '''Lodaing the transition matrix'''
         jointfilePathToTransitionMatrix = sharedPathToLeaderAndFollowerNormalScenario + "autoencoders/transtionMatrix-{}*{}.txt".format(leaderClustersNum, followerClustersNum)
-        transitionMatrix = TransitionMatrix()
+        transitionMatrix = TwoAlphabetWordsTransitionMatrix()
         transitionMatrix = transitionMatrix.load(jointfilePathToTransitionMatrix)
 
         '''Loading follow scenrio data'''

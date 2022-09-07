@@ -1,5 +1,5 @@
 from ctumrs.TimePosVelObssUtility import TimePosVelObssUtility
-from ctumrs.TransitionMatrix import TransitionMatrix
+from ctumrs.TwoAlphabetWordsTransitionMatrix import TwoAlphabetWordsTransitionMatrix
 from ctumrs.TimePosVelObssPlottingUtility import TimePosVelObssPlottingUtility
 from ctumrs.TimePosVelsClusteringStrgy import TimePosVelsClusteringStrgy
 
@@ -44,8 +44,8 @@ timePosVelObssPlottingUtility.plotLeaderFollowerUavPosWithCLusters(leaderTimePos
 '''
 Building the transition matrix
 '''
-transitionMatrix = TransitionMatrix(leaderTimePosVelClusteringStrgy
-                                    , followerTimePosVelClusteringStrgy
-                                    , leaderTimePosVels
-                                    , followerTimePosVels)
+transitionMatrix = TwoAlphabetWordsTransitionMatrix(leaderTimePosVelClusteringStrgy
+                                                    , followerTimePosVelClusteringStrgy
+                                                    , leaderTimePosVels
+                                                    , followerTimePosVels)
 transitionMatrix.save(jointPathToLeaderAndFollower +"transtionMatrix-{}*{}.txt".format(leaderClustersNum, followerClustersNum))
