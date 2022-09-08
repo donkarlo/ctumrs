@@ -5,7 +5,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 from ctumrs.OneAlphabetWordsTransitionMatrix import OneAlphabetWordsTransitionMatrix
-from ctumrs.TimePosVelsClusteringStrgy import TimePosVelsClusteringStrgy
+from ctumrs.PosVelsClusteringStrgy import PosVelsClusteringStrgy
 from ctumrs.sensors.lidar.two.ranges.TimeRangesVelsObss import TimeRangesVelsObss
 from mMath.statistic.Distance import Distance
 from MachineSettings import MachineSettings
@@ -35,7 +35,7 @@ if not os.path.exists("/home/donkarlo/Desktop/OneRobotFollowerLidarTranMtx.pkl")
                                                                             , velMulCo)
 
     # cluster data
-    posVelObssClusteringStrgy = TimePosVelsClusteringStrgy(clustersNum, robotTimeRangesVelsObss[:, 1:dataDim + 1])
+    posVelObssClusteringStrgy = PosVelsClusteringStrgy(clustersNum, robotTimeRangesVelsObss[:, 1:dataDim + 1])
     fittedClusters = posVelObssClusteringStrgy.getFittedClusters()
 
     # build one alphabet transition matrix

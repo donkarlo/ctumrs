@@ -2,7 +2,7 @@ import pickle
 
 import numpy as np
 
-from ctumrs.TimePosVelsClusteringStrgy import TimePosVelsClusteringStrgy
+from ctumrs.PosVelsClusteringStrgy import PosVelsClusteringStrgy
 from ctumrs.TwoAlphabetWordsTransitionMatrix import TwoAlphabetWordsTransitionMatrix
 from ctumrs.sensors.lidar.two.ranges.TimeRangesVelsObss import TimeRangesVelsObss
 from MachineSettings import MachineSettings
@@ -29,11 +29,11 @@ npFollowerRangesCoefVelsObss = npFollowerTimeRangesCoefVelsObss[:,1:]
 
 '''Cluster each'''
 
-leaderTimeRangeSumVelClusteringStrgy = TimePosVelsClusteringStrgy(leaderClustersNum
-                                                                  , npLeaderRangesCoefVelsObss)
+leaderTimeRangeSumVelClusteringStrgy = PosVelsClusteringStrgy(leaderClustersNum
+                                                              , npLeaderRangesCoefVelsObss)
 
-followerTimePosVelClusteringStrgy = TimePosVelsClusteringStrgy(followerClustersNum
-                                                               , npFollowerRangesCoefVelsObss)
+followerTimePosVelClusteringStrgy = PosVelsClusteringStrgy(followerClustersNum
+                                                           , npFollowerRangesCoefVelsObss)
 '''Build transition matrix'''
 transitionMatrix = TwoAlphabetWordsTransitionMatrix(leaderTimeRangeSumVelClusteringStrgy
                                                     , followerTimePosVelClusteringStrgy

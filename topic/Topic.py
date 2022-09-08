@@ -11,6 +11,7 @@ class Topic:
     def staticGetTimeByTopicDict(topicRow: dict) -> float:
         strSecs = str(topicRow["header"]["stamp"]["secs"])
         strNSecs = str(topicRow["header"]["stamp"]["nsecs"])
+        print(strNSecs)
         if len(strNSecs) == 8:
             strNSecs = "0" + strNSecs
         elif len(strNSecs) == 7:
@@ -19,4 +20,10 @@ class Topic:
             strNSecs = "000" + strNSecs
         elif len(strNSecs) == 5:
             strNSecs = "0000" + strNSecs
+        elif len(strNSecs) == 4:
+            strNSecs = "00000" + strNSecs
+        elif len(strNSecs) == 3:
+            strNSecs = "000000" + strNSecs
+        elif len(strNSecs) == 2:
+            strNSecs = "0000000" + strNSecs
         return float(strSecs + "." + strNSecs)

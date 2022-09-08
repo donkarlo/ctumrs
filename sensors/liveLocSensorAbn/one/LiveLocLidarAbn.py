@@ -5,7 +5,7 @@ import numpy as np
 
 from MachineSettings import MachineSettings
 from ctumrs.OneAlphabetWordsTransitionMatrix import OneAlphabetWordsTransitionMatrix
-from ctumrs.TimePosVelsClusteringStrgy import TimePosVelsClusteringStrgy
+from ctumrs.PosVelsClusteringStrgy import PosVelsClusteringStrgy
 import yaml
 from yaml import CLoader
 
@@ -123,8 +123,8 @@ if __name__ == "__main__":
             targetRobotTimeLidarRangesVelsObss = TimePosRowsDerivativeComputer.computer(lidarLowDimTimeObss, lidarVelCo)
 
             #clustering
-            lidarRangesVelsObssClusteringStrgy = TimePosVelsClusteringStrgy(lidarClustersNum
-                                                                            , targetRobotTimeLidarRangesVelsObss[:, 1:])
+            lidarRangesVelsObssClusteringStrgy = PosVelsClusteringStrgy(lidarClustersNum
+                                                                        , targetRobotTimeLidarRangesVelsObss[:, 1:])
             #Building Lidar transition matrix
             lidarOneAlphabetWordsTransitionMatrix = OneAlphabetWordsTransitionMatrix(lidarRangesVelsObssClusteringStrgy
                                                                                      , targetRobotTimeLidarRangesVelsObss[:, 1:])
@@ -143,10 +143,10 @@ if __name__ == "__main__":
                                                                                   gpsVelCo,gpsUpdateRate)
 
             # clustering gps data
-            gpsVelsObssClusteringStrgy = TimePosVelsClusteringStrgy(gpsClustersNum
-                                                                    , robotTimeGpsVelsObss[:,
+            gpsVelsObssClusteringStrgy = PosVelsClusteringStrgy(gpsClustersNum
+                                                                , robotTimeGpsVelsObss[:,
                                                                               1:gpsVelsDim + 1])
-            gpsVelsObssClusteringStrgyDict = gpsVelsObssClusteringStrgy.getLabeledTimePosVelsClustersDict(
+            gpsVelsObssClusteringStrgyDict = gpsVelsObssClusteringStrgy.getLabeledPosVelsClustersDict(
                 robotTimeGpsVelsObss[:, 1:gpsVelsDim + 1])
             # Building Gps transition matrix
             gpsOneAlphabetWordsTransitionMatrix = OneAlphabetWordsTransitionMatrix(gpsVelsObssClusteringStrgy

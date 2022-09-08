@@ -2,7 +2,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 from ctumrs.OneAlphabetWordsTransitionMatrix import OneAlphabetWordsTransitionMatrix
-from ctumrs.TimePosVelsClusteringStrgy import TimePosVelsClusteringStrgy
+from ctumrs.PosVelsClusteringStrgy import PosVelsClusteringStrgy
 from ctumrs.TimePosVelObssPlottingUtility import TimePosVelObssPlottingUtility
 from ctumrs.TimePosVelObssUtility import TimePosVelObssUtility
 from mMath.statistic.Distance import Distance
@@ -26,7 +26,7 @@ uav1TimePosVelObssDict = TimePosVelObssUtility.getTimePosVelsAndPosVels(pathToUa
 
 uav1PosVelObss = uav1TimePosVelObssDict["timePosVels"][:, 1:obsDim + 1]
 # cluster together vectors
-posVelObssClusteringStrgy = TimePosVelsClusteringStrgy(clustersNum, uav1PosVelObss)
+posVelObssClusteringStrgy = PosVelsClusteringStrgy(clustersNum, uav1PosVelObss)
 fittedClusters = posVelObssClusteringStrgy.getFittedClusters()
 # Make the transition matrix
 oneAlphabetWordsTransitionMatrix = OneAlphabetWordsTransitionMatrix(posVelObssClusteringStrgy,uav1PosVelObss)

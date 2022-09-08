@@ -4,7 +4,7 @@ import pickle
 import numpy as np
 
 from MachineSettings import MachineSettings
-from ctumrs.TimePosVelsClusteringStrgy import TimePosVelsClusteringStrgy
+from ctumrs.PosVelsClusteringStrgy import PosVelsClusteringStrgy
 from ctumrs.TwoAlphabetWordsTransitionMatrix import TwoAlphabetWordsTransitionMatrix
 from keras.models import load_model
 from ctumrs.sensors.lidar.two.autoencoder.Plots import Plots
@@ -67,11 +67,11 @@ class NormalScenarioTransitionMatrixBuilderBooter:
 
         '''Cluster each'''
 
-        leaderTimePosVelClusteringStrgy = TimePosVelsClusteringStrgy(leaderClustersNum
-                                                                     ,leaderLowDimPosVelObss)
+        leaderTimePosVelClusteringStrgy = PosVelsClusteringStrgy(leaderClustersNum
+                                                                 , leaderLowDimPosVelObss)
 
-        followerTimePosVelClusteringStrgy = TimePosVelsClusteringStrgy(followerClustersNum
-                                                                       ,followerLowDimPosVelObss)
+        followerTimePosVelClusteringStrgy = PosVelsClusteringStrgy(followerClustersNum
+                                                                   , followerLowDimPosVelObss)
         '''Build transition matrix'''
         transitionMatrix = TwoAlphabetWordsTransitionMatrix(leaderTimePosVelClusteringStrgy
                                                             , followerTimePosVelClusteringStrgy

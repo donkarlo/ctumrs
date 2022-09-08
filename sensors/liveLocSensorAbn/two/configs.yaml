@@ -25,9 +25,9 @@ gps_origin:
   updateRate: 0.01
   clustersNum: 75
   velCo: 25
-  trainingRowsNumLimit: 200000
+  trainingRowsNumLimit: 18000
 
-normalScenarioName: Normal
+normalScenarioName: normal
 testScenarioName: follow
 lidarTestScenarioCounterLimit: 6000
 targetRobotIds: ["uav1","uav2"]

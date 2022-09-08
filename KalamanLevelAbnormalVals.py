@@ -3,7 +3,7 @@ import numpy as np
 from matplotlib.animation import FuncAnimation
 
 from ctumrs.TimePosVelObssUtility import TimePosVelObssUtility
-from ctumrs.TimePosVelsClusteringStrgy import TimePosVelsClusteringStrgy
+from ctumrs.PosVelsClusteringStrgy import PosVelsClusteringStrgy
 
 class PosObsModel():
     def __init__(self):
@@ -69,7 +69,7 @@ if __name__ == "__main__":
     #add vels
 
     # cluster data
-    posVelClusteringStrgy:TimePosVelsClusteringStrgy = TimePosVelsClusteringStrgy(75,robotTimePosVelObss[:,1:])
+    posVelClusteringStrgy:PosVelsClusteringStrgy = PosVelsClusteringStrgy(75, robotTimePosVelObss[:, 1:])
 
     # loop therough obss data
     clusterLabelCounter = 0

@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.cluster import KMeans
 
 
-class TimePosVelsClusteringStrgy:
+class PosVelsClusteringStrgy:
     def __init__(self
                  , clustersNum: int
                  , posVels:np.ndarray):
@@ -39,7 +39,7 @@ class TimePosVelsClusteringStrgy:
         posVelArr = [posVel]
         return self.getFittedClusters().predict(posVelArr)[0]
 
-    def getLabeledTimePosVelsClustersDict(self,timePosVels) -> dict:
+    def getLabeledPosVelsClustersDict(self, timePosVels) -> dict:
         """
 
         Returns

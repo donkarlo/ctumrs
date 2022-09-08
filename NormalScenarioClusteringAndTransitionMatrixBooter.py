@@ -1,7 +1,7 @@
 from ctumrs.TimePosVelObssUtility import TimePosVelObssUtility
 from ctumrs.TwoAlphabetWordsTransitionMatrix import TwoAlphabetWordsTransitionMatrix
 from ctumrs.TimePosVelObssPlottingUtility import TimePosVelObssPlottingUtility
-from ctumrs.TimePosVelsClusteringStrgy import TimePosVelsClusteringStrgy
+from ctumrs.PosVelsClusteringStrgy import PosVelsClusteringStrgy
 
 timePosVelObssPlottingUtility = TimePosVelObssPlottingUtility()
 timePosVelObssUtility = TimePosVelObssUtility()
@@ -27,13 +27,13 @@ timePosVelObssPlottingUtility.plotPos(leaderPosVels)
 timePosVelObssPlottingUtility.plotPos(followerPosVels)
 
 ############CLUSTERING###########
-leaderTimePosVelClusteringStrgy = TimePosVelsClusteringStrgy(leaderClustersNum
-                                                             , leaderPosVels)
-leaderTimePosVelClustersDict = leaderTimePosVelClusteringStrgy.getLabeledTimePosVelsClustersDict(leaderTimePosVels)
+leaderTimePosVelClusteringStrgy = PosVelsClusteringStrgy(leaderClustersNum
+                                                         , leaderPosVels)
+leaderTimePosVelClustersDict = leaderTimePosVelClusteringStrgy.getLabeledPosVelsClustersDict(leaderTimePosVels)
 
-followerTimePosVelClusteringStrgy = TimePosVelsClusteringStrgy(followerClustersNum
-                                                               , followerPosVels)
-followerTimePosVelClustersDict = followerTimePosVelClusteringStrgy.getLabeledTimePosVelsClustersDict(followerTimePosVels)
+followerTimePosVelClusteringStrgy = PosVelsClusteringStrgy(followerClustersNum
+                                                           , followerPosVels)
+followerTimePosVelClustersDict = followerTimePosVelClusteringStrgy.getLabeledPosVelsClustersDict(followerTimePosVels)
 
 '''PLOTING THE CLUSTERS'''
 timePosVelObssPlottingUtility.plotPosWithCLusters(leaderTimePosVelClustersDict)

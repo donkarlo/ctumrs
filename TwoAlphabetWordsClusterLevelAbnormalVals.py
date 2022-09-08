@@ -25,8 +25,8 @@ class TwoAlphabetWordsClusterLevelAbnormalVals():
         """
 
         """
-        robot1Clusters = self.__twoAlphWordsTransMtx.getRobot1TimePosVelClusters()
-        robot2Clusters = self.__twoAlphWordsTransMtx.getRobot2TimePosVelClusters()
+        robot1Clusters = self.__twoAlphWordsTransMtx.getRobot1TimePosVelClusteringStrgy()
+        robot2Clusters = self.__twoAlphWordsTransMtx.getRobot2TimePosVelClusteringStrgy()
 
         prvRobot1Label = robot1Clusters.getPredictedLabelByPosVelObs(prvRobot1PosVelObs)
         prvRobot2Label = robot2Clusters.getPredictedLabelByPosVelObs(prvRobot2PosVelObs)
@@ -58,7 +58,7 @@ class TwoAlphabetWordsClusterLevelAbnormalVals():
         #                                                    , predictedLeaderCenter
         #                                                    , curFolowerPosVelObs
         #                                                    , predictedFollowerCenter)
-        print("Current novelty value is: " + distance)
+        # print("Current novelty value is: " + str(distance))
         return distance
 
     def getClusterLevelAbnormalValsByPosVelsObss(self
