@@ -277,6 +277,8 @@ if __name__ == "__main__":
                     if robot1GpsCounter >= 1:
                         robot1GpsTimeXyzVelsObss = np.vstack((robot1GpsTimeXyzVelsObss, [time, gpsX, gpsY, gpsZ, 0, 0, 0]))
                         robot1GpsTimeDiff = robot1GpsTimeXyzVelsObss[-1][0] - robot1GpsTimeXyzVelsObss[-2][0]
+                        if robot1GpsTimeDiff == 0:
+                            robot1GpsTimeDiff = 0.00001
                         robot1GpsDiff = np.subtract(robot1GpsTimeXyzVelsObss[-1][1:int(gpsVelsDim / 2)], robot1GpsTimeXyzVelsObss[-2][1:int(gpsVelsDim / 2)])
                         robot1GpsVels = gpsVelCo*robot1GpsDiff/robot1GpsTimeDiff
                         robot1GpsTimeXyzVelsObss[-1][int(gpsVelsDim / 2) + 1:gpsVelsDim]=robot1GpsVels
@@ -290,14 +292,16 @@ if __name__ == "__main__":
                     if robot2GpsCounter >= 1:
                         robot2GpsTimeXyzVelsObss = np.vstack((robot2GpsTimeXyzVelsObss, [time, gpsX, gpsY, gpsZ, 0, 0, 0]))
                         robot2GpsTimeDiff = robot2GpsTimeXyzVelsObss[-1][0] - robot2GpsTimeXyzVelsObss[-2][0]
+                        if robot1GpsTimeDiff == 0:
+                            robot1GpsTimeDiff = 0.00001
                         robot2GpsDiff = np.subtract(robot2GpsTimeXyzVelsObss[-1][1:int(gpsVelsDim / 2)], robot2GpsTimeXyzVelsObss[-2][1:int(gpsVelsDim / 2)])
                         robot2GpsVels = gpsVelCo*robot2GpsDiff/robot2GpsTimeDiff
                         robot2GpsTimeXyzVelsObss[-1][int(gpsVelsDim / 2) + 1:gpsVelsDim]=robot2GpsVels
                         robot2GpsCounter += 1
 
-                plotAll.updateGpsPlot(np.asarray(robot1GpsTimeXyzVelsObss))
+                plotAll.updateGpsPlot(np.asarray(robot1GpsTimeXyzVelsObss),np.asarray(robot2GpsTimeXyzVelsObss))
 
-                if not (robot1GpsCounter>=2 and robot2GpsCounter>=2):
+                if not (robot1GpsCounter>=1 and robot2GpsCounter>=1):
                     continue
 
 
@@ -335,7 +339,8 @@ if __name__ == "__main__":
                         prvRobot1LidarRanges = robot1LidarTimeLowDimRangesObss[robot1LidarTopicCounter - 1][1:]
                         curRobot1LidarRanges = robot1LidarTimeLowDimRangesObss[robot1LidarTopicCounter][1:]
                         diffRobot1LidarRanges = np.subtract(curRobot1LidarRanges, prvRobot1LidarRanges)
-
+                        if diffRobot1LidarTime == 0:
+                            diffRobot1LidarTime = 0.00001
                         curRobot1LidarVel = lidarVelCo * diffRobot1LidarRanges / diffRobot1LidarTime
                         curRobot1LidarTimeRangesVels = np.hstack(np.array([curRobot1LidarTime, curRobot1LidarRanges, curRobot1LidarVel], dtype=object))
                         robot1LidarTimeLowDimRangesVelsObss =np.vstack([robot1LidarTimeLowDimRangesVelsObss, curRobot1LidarTimeRangesVels])
@@ -357,22 +362,24 @@ if __name__ == "__main__":
                         robot2LidarTopicCounter += 1
                         continue
                     if robot2LidarTopicCounter >= 1:
-                        prvRobot1LidarTime = robot2LidarTimeLowDimRangesObss[robot2LidarTopicCounter - 1][0]
-                        curRobot1LidarTime = robot2LidarTimeLowDimRangesObss[robot2LidarTopicCounter][0]
-                        diffRobot1LidarTime = curRobot1LidarTime - prvRobot1LidarTime
+                        prvRobot2LidarTime = robot2LidarTimeLowDimRangesObss[robot2LidarTopicCounter - 1][0]
+                        curRobot2LidarTime = robot2LidarTimeLowDimRangesObss[robot2LidarTopicCounter][0]
+                        diffRobot2LidarTime = curRobot2LidarTime - prvRobot2LidarTime
 
-                        prvRobot1LidarRanges = robot2LidarTimeLowDimRangesObss[robot2LidarTopicCounter - 1][1:]
-                        curRobot1LidarRanges = robot2LidarTimeLowDimRangesObss[robot2LidarTopicCounter][1:]
-                        diffRobot1LidarRanges = np.subtract(curRobot1LidarRanges, prvRobot1LidarRanges)
+                        prvRobot2LidarRanges = robot2LidarTimeLowDimRangesObss[robot2LidarTopicCounter - 1][1:]
+                        curRobot2LidarRanges = robot2LidarTimeLowDimRangesObss[robot2LidarTopicCounter][1:]
+                        diffRobot2LidarRanges = np.subtract(curRobot2LidarRanges, prvRobot2LidarRanges)
 
-                        curRobot1LidarVel = lidarVelCo * diffRobot1LidarRanges / diffRobot1LidarTime
-                        curRobot1LidarTimeRangesVels = np.hstack(np.array([curRobot1LidarTime, curRobot1LidarRanges, curRobot1LidarVel], dtype=object))
-                        robot2LidarTimeLowDimRangesVelsObss =np.vstack([robot2LidarTimeLowDimRangesVelsObss, curRobot1LidarTimeRangesVels])
+                        if diffRobot2LidarTime == 0:
+                            diffRobot2LidarTime = 0.00001
+                        curRobot2LidarVel = lidarVelCo * diffRobot2LidarRanges / diffRobot2LidarTime
+                        curRobot2LidarTimeRangesVels = np.hstack(np.array([curRobot2LidarTime, curRobot2LidarRanges, curRobot2LidarVel], dtype=object))
+                        robot2LidarTimeLowDimRangesVelsObss =np.vstack([robot2LidarTimeLowDimRangesVelsObss, curRobot2LidarTimeRangesVels])
                     if robot2LidarTopicCounter == 1:
                         robot2LidarTimeLowDimRangesVelsObss = np.delete(robot2LidarTimeLowDimRangesVelsObss, 0, 0)
-                        robot2LiarRangesVelsToAdd = np.hstack(np.array([prvRobot1LidarTime
-                                                                           , prvRobot1LidarRanges
-                                                                           , curRobot1LidarVel]
+                        robot2LiarRangesVelsToAdd = np.hstack(np.array([prvRobot2LidarTime
+                                                                           , prvRobot2LidarRanges
+                                                                           , curRobot2LidarVel]
                                                                        , dtype=object))
                         robot2LidarTimeLowDimRangesVelsObss= np.insert(robot2LidarTimeLowDimRangesVelsObss, 0, robot2LiarRangesVelsToAdd, axis=0)
 
@@ -380,7 +387,7 @@ if __name__ == "__main__":
                     robot2LidarTopicCounter += 1
 
 
-                if not (robot1LidarTopicCounter>=2 and robot2LidarTopicCounter>=2):
+                if not (robot2LidarTopicCounter>=1 and robot2LidarTopicCounter>=1):
                     continue
 
                 # lidar abn computer
