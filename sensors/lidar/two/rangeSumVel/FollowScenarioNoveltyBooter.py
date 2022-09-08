@@ -1,6 +1,6 @@
 import pickle
 
-from ctumrs.ClusterLevelAbnormalVals import ClusterLevelAbnormalVals
+from ctumrs.TwoAlphabetWordsClusterLevelAbnormalVals import TwoAlphabetWordsClusterLevelAbnormalVals
 from ctumrs.TwoAlphabetWordsTransitionMatrix import TwoAlphabetWordsTransitionMatrix
 from ctumrs.sensors.lidar.two.rangeSumVel.TimeRangeSumVelObss import TimeRangeSumVelObss
 
@@ -22,7 +22,7 @@ leaderPosVelObss = TimeRangeSumVelObss.velMulInRangeSumVelObss(leaderFollowerTim
 followerPosVelObss = TimeRangeSumVelObss.velMulInRangeSumVelObss(leaderFollowerTimeRangeSumVelDict['followerRangeSumVelObss'], velCoefficient)
 
 
-leaderFollowerFilter = ClusterLevelAbnormalVals(transitionMatrix)
+leaderFollowerFilter = TwoAlphabetWordsClusterLevelAbnormalVals(transitionMatrix)
 noveltyValues = leaderFollowerFilter.getClusterLevelAbnormalValsByPosVelsObss(leaderPosVelObss
                                                                               , followerPosVelObss)
 leaderFollowerFilter.plotNovelties(noveltyValues)

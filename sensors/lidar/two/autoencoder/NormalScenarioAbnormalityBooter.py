@@ -2,7 +2,7 @@ import pickle
 
 import numpy as np
 
-from ctumrs.ClusterLevelAbnormalVals import ClusterLevelAbnormalVals
+from ctumrs.TwoAlphabetWordsClusterLevelAbnormalVals import TwoAlphabetWordsClusterLevelAbnormalVals
 from MachineSettings import MachineSettings
 from ctumrs.TwoAlphabetWordsTransitionMatrix import TwoAlphabetWordsTransitionMatrix
 from mMath.calculus.derivative.TimePosRowsDerivativeComputer import TimePosRowsDerivativeComputer
@@ -51,7 +51,7 @@ class FollowScenarioAbnormalityBooter:
         followerLowDimPosVelObss = followerLowDimTimePosVelObss[0:, 1:]
 
 
-        leaderFollowerFilter = ClusterLevelAbnormalVals(transitionMatrix)
+        leaderFollowerFilter = TwoAlphabetWordsClusterLevelAbnormalVals(transitionMatrix)
         noveltyValues = leaderFollowerFilter.getClusterLevelAbnormalValsByPosVelsObss(leaderLowDimPosVelObss, followerLowDimPosVelObss)
         leaderFollowerFilter.plotNovelties(noveltyValues)
 

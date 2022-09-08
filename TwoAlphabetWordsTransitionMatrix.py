@@ -13,25 +13,25 @@ class TwoAlphabetWordsTransitionMatrix:
                  , followerTimePosVels:list = None
                  ):
 
-        self.__leaderTimePosVelClusters: TimePosVelsClusteringStrgy = leaderTimePosVelClusters
-        self.__followerTimePosVelClusters: TimePosVelsClusteringStrgy = followerTimePosVelClusters
+        self.__robot1TimePosVelClusters: TimePosVelsClusteringStrgy = leaderTimePosVelClusters
+        self.__robot2TimePosVelClusters: TimePosVelsClusteringStrgy = followerTimePosVelClusters
 
-        self.__leaderUavTimePosVels = leaderTimePosVels
-        self.__followerUavTimePosVels = followerTimePosVels
+        self.__robot1TimePosVels = leaderTimePosVels
+        self.__robot2TimePosVels = followerTimePosVels
 
         self.__npTransitionMatrix = None
         self.__mappingRowOrColNumLabelMapDict = None
 
-        self.__leaderFollowerObsMatchStrgy = "FIND_BY_TIMESTAMP"
+        self.__robot1And2ObsMatchStrgy = "FIND_BY_TIMESTAMP"
 
     def setLeaderFollowerObsMatchStrgy(self,leaderFollowerObsMatchStrgy="ALREADY_INDEX_MATCHED"):
-        self.__leaderFollowerObsMatchStrgy = leaderFollowerObsMatchStrgy
+        self.__robot1And2ObsMatchStrgy = leaderFollowerObsMatchStrgy
 
-    def getLeaderTimePosVelClusters(self)->TimePosVelsClusteringStrgy:
-        return self.__leaderTimePosVelClusters
+    def getRobot1TimePosVelClusters(self)->TimePosVelsClusteringStrgy:
+        return self.__robot1TimePosVelClusters
 
-    def getFollowerTimePosVelClusters(self)->TimePosVelsClusteringStrgy:
-        return self.__followerTimePosVelClusters
+    def getRobot2TimePosVelClusters(self)->TimePosVelsClusteringStrgy:
+        return self.__robot2TimePosVelClusters
 
     def __getRowAndColByTwoLabelPairs(self, prvCurFollowerLeaderLabels: ((int, int)
                                                                          , (int, int)))->(int, int):
@@ -53,8 +53,8 @@ class TwoAlphabetWordsTransitionMatrix:
         if self.__mappingRowOrColNumLabelMapDict is None:
             counter = 0
             self.__mappingRowOrColNumLabelMapDict = {}
-            for i in range(0, self.__leaderTimePosVelClusters.getClustersNum()):
-                for j in range(0, self.__followerTimePosVelClusters.getClustersNum()):
+            for i in range(0, self.__robot1TimePosVelClusters.getClustersNum()):
+                for j in range(0, self.__robot2TimePosVelClusters.getClustersNum()):
                     self.__mappingRowOrColNumLabelMapDict[counter] = (i, j)
                     counter += 1
         return self.__mappingRowOrColNumLabelMapDict
@@ -73,33 +73,33 @@ class TwoAlphabetWordsTransitionMatrix:
     def getNpTransitionMatrix(self)->np.array:
         if self.__npTransitionMatrix is None:
             print ("Building two alphabet words transition matrix ...")
-            self.__npTransitionMatrix = np.zeros((self.__leaderTimePosVelClusters.getClustersNum() * self.__followerTimePosVelClusters.getClustersNum()
-             , self.__leaderTimePosVelClusters.getClustersNum() * self.__followerTimePosVelClusters.getClustersNum()))
+            self.__npTransitionMatrix = np.zeros((self.__robot1TimePosVelClusters.getClustersNum() * self.__robot2TimePosVelClusters.getClustersNum()
+             , self.__robot1TimePosVelClusters.getClustersNum() * self.__robot2TimePosVelClusters.getClustersNum()))
             foundFollowerLabels = []
             foundLeaderLabels = []
-            for leaderUavCurTimePosVelCounter, curLeaderUavTimePosVel in enumerate(self.__leaderUavTimePosVels):
+            for leaderUavCurTimePosVelCounter, curLeaderUavTimePosVel in enumerate(self.__robot1TimePosVels):
                 if leaderUavCurTimePosVelCounter < 100000:
                     if leaderUavCurTimePosVelCounter > 1:
                         curClosestFollowerTimePosVel = TimePosVelObssUtility.findClosestTimeWiseFollowerTimePosVelToLeaderTimePosVel(
                             curLeaderUavTimePosVel
-                        , self.__followerUavTimePosVels) if self.__leaderFollowerObsMatchStrgy != "ALREADY_INDEX_MATCHED" else self.__followerUavTimePosVels[leaderUavCurTimePosVelCounter]
+                        , self.__robot2TimePosVels) if self.__robot1And2ObsMatchStrgy != "ALREADY_INDEX_MATCHED" else self.__robot2TimePosVels[leaderUavCurTimePosVelCounter]
 
                         # find previous leader follower timewisely
-                        prvLeaderUavTimePosVel = self.__leaderUavTimePosVels[leaderUavCurTimePosVelCounter - 1]
+                        prvLeaderUavTimePosVel = self.__robot1TimePosVels[leaderUavCurTimePosVelCounter - 1]
                         prvClosestFollowerTimePosVel = TimePosVelObssUtility.findClosestTimeWiseFollowerTimePosVelToLeaderTimePosVel(
                             prvLeaderUavTimePosVel
-                            ,self.__followerUavTimePosVels)  if self.__leaderFollowerObsMatchStrgy != "ALREADY_INDEX_MATCHED" else self.__followerUavTimePosVels[leaderUavCurTimePosVelCounter - 1]
+                            ,self.__robot2TimePosVels)  if self.__robot1And2ObsMatchStrgy != "ALREADY_INDEX_MATCHED" else self.__robot2TimePosVels[leaderUavCurTimePosVelCounter - 1]
 
                         # Finding the label for previous leader follower  observation
                         prvLeaderUavLabel = \
-                        self.__leaderTimePosVelClusters.getFittedClusters().predict([TimePosVelObssUtility.getPosVelByTimePosVel(prvLeaderUavTimePosVel)])[0]
-                        prvFollowerUavLabel = self.__followerTimePosVelClusters.getFittedClusters().predict(
+                        self.__robot1TimePosVelClusters.getFittedClusters().predict([TimePosVelObssUtility.getPosVelByTimePosVel(prvLeaderUavTimePosVel)])[0]
+                        prvFollowerUavLabel = self.__robot2TimePosVelClusters.getFittedClusters().predict(
                             [TimePosVelObssUtility.getPosVelByTimePosVel(prvClosestFollowerTimePosVel)])[0]
 
                         # Finding the label for current leader follower  observation
                         curLeaderUavLabel = \
-                        self.__leaderTimePosVelClusters.getFittedClusters().predict([TimePosVelObssUtility.getPosVelByTimePosVel(curLeaderUavTimePosVel)])[0]
-                        curFollowerUavLabel = self.__followerTimePosVelClusters.getFittedClusters().predict(
+                        self.__robot1TimePosVelClusters.getFittedClusters().predict([TimePosVelObssUtility.getPosVelByTimePosVel(curLeaderUavTimePosVel)])[0]
+                        curFollowerUavLabel = self.__robot2TimePosVelClusters.getFittedClusters().predict(
                             [TimePosVelObssUtility.getPosVelByTimePosVel(curClosestFollowerTimePosVel)])[0]
 
                         if curFollowerUavLabel not in foundFollowerLabels:

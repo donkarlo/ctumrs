@@ -33,6 +33,15 @@ class PlotAll:
         self.__fig.canvas.update()
         self.__fig.canvas.flush_events()
 
+    def updateGpsAbnPlot(self, lidarTimeAbnVals):
+        #Order by time
+        self.__line2.set_xdata(lidarTimeAbnVals[:, 0])
+        self.__line2.set_ydata(lidarTimeAbnVals[:, 1])
+        self.__axes[2].relim()
+        self.__axes[2].autoscale_view()
+        self.__fig.canvas.update()
+        self.__fig.canvas.flush_events()
+
     def updateLidarAbnPlot(self, lidarTimeAbnVals):
         #Order by time
         self.__line1.set_xdata(lidarTimeAbnVals[:, 0])
@@ -43,11 +52,3 @@ class PlotAll:
         self.__fig.canvas.flush_events()
 
 
-    def updateGpsAbnPlot(self, lidarTimeAbnVals):
-        #Order by time
-        self.__line2.set_xdata(lidarTimeAbnVals[:, 0])
-        self.__line2.set_ydata(lidarTimeAbnVals[:, 1])
-        self.__axes[2].relim()
-        self.__axes[2].autoscale_view()
-        self.__fig.canvas.update()
-        self.__fig.canvas.flush_events()

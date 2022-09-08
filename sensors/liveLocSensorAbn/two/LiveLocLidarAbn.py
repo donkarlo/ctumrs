@@ -7,9 +7,10 @@ from ctumrs.TimePosVelsClusteringStrgy import TimePosVelsClusteringStrgy
 import yaml
 from yaml import CLoader
 
+from ctumrs.TwoAlphabetWordsClusterLevelAbnormalVals import TwoAlphabetWordsClusterLevelAbnormalVals
 from ctumrs.TwoAlphabetWordsTransitionMatrix import TwoAlphabetWordsTransitionMatrix
 from ctumrs.sensors.lidar.Autoencoder import Autoencoder
-from ctumrs.sensors.liveLocSensorAbn.one.PlotAll import PlotAll
+from ctumrs.sensors.liveLocSensorAbn.two.PlotAll import PlotAll
 from ctumrs.sensors.liveLocSensorAbn.two.TopicLoopingLogic import TopicLoopingLogic
 from ctumrs.topic.GpsOrigin import GpsOrigin
 from ctumrs.topic.RpLidar import RpLidar
@@ -24,7 +25,6 @@ if __name__ == "__main__":
 
     targetRobotIds = configs["targetRobotIds"]
     normalScenarioName = configs["normalScenarioName"]
-    testScenarioName = configs["testScenarioName"]
     basePath = MachineSettings.MAIN_PATH+"projs/research/data/self-aware-drones/ctumrs/two-drones/"
     pathToNormalScenario = basePath+"{}-scenario/".format(normalScenarioName)
     pathToNormalScenarioYamlFile = pathToNormalScenario+"uav1-gps-lidar-uav2-gps-lidar.yaml"
@@ -99,8 +99,8 @@ if __name__ == "__main__":
             targetRobotsGpsTopicRowCounter = 0
 
             for topicRowCounter, topicRow in enumerate(topicRows):
-                if (targetRobotLidarTopicRowCounter >= lidarTrainingRowsNumLimit or os.path.exists(pathToRobot1LidarMindDir)) \
-                        and (targetRobotsGpsTopicRowCounter >= gpsTrainingRowsNumLimit or os.path.exists(pathToTargetRobotGpsMindDir)):
+                if (targetRobotLidarTopicRowCounter >= lidarTrainingRowsNumLimit or os.path.exists(pathToLidarTwoAlphaTransMtxFile)) \
+                        and (targetRobotsGpsTopicRowCounter >= gpsTrainingRowsNumLimit or os.path.exists(pathToGpsTwoAlphTransMtxFile)):
                     break
                 robotId, sensorName = Topic.staticGetRobotIdAndSensorName(topicRow)
 
@@ -216,47 +216,35 @@ if __name__ == "__main__":
 
 
     # From here we gather data for gps location and  lidar abnormalities and gps abnormalities
+    testScenarioName = configs["testScenarioName"]
     pathToTestScenrio = basePath + "{}-scenario/".format(testScenarioName)
     pathToTestScenarioYamlFile = pathToTestScenrio + "uav1-gps-lidar-uav2-gps-lidar.yaml"
 
     #Lidar settings
-    targetRobotLidarCounterLimit = 6000
-    targetRobotLidarCounter = 0
-    targetRobotLidarTimeLowDimRangesObss = []
-    targetRobotLidarTimeLowDimRangesVelsObss = np.empty([1, 2 * lidarAutoencoderLatentDim + 1])
+    lidarTestScenarioCounterLimit = configs["lidarTestScenarioCounterLimit"]
+    robot1LidarTopicCounter = 0
+    robot2LidarTopicCounter = 0
+
+    robot1LidarTimeLowDimRangesObss = []
+    robot2LidarTimeLowDimRangesObss = []
+    robot1LidarTimeLowDimRangesVelsObss = np.empty([1, 2 * lidarAutoencoderLatentDim + 1])
+    robot2LidarTimeLowDimRangesVelsObss = np.empty([1, 2 * lidarAutoencoderLatentDim + 1])
     lidarTimeAbnormalityValues = []
-    lidarNoiseCovVal = 0.01**2
-    lidarNoiseCovMtx = np.array([
-        [lidarNoiseCovVal, 0, 0, 0, 0, 0]
-      , [0, lidarNoiseCovVal, 0, 0, 0, 0]
-      , [0, 0, lidarNoiseCovVal, 0, 0, 0]
-      , [0, 0, 0, lidarNoiseCovVal, 0, 0]
-      , [0, 0, 0, 0, lidarNoiseCovVal, 0]
-      , [0, 0, 0, 0, 0, lidarNoiseCovVal]
-        ])
+    lidarNoiseCovMtx = np.array(configs["rplidar"]["covMtx"])
+    lidarTwoALphWordsClusterLevelAbnVals = TwoAlphabetWordsClusterLevelAbnormalVals(lidarTwoAlphWordsTransMtx)
+
 
     #GPS settings
     targetRobotGpsTimeRows = []
-    targetRobotGpsCounter = 0
-    targetRobotGpsTimeVelsObss = []
-    targetRobotGpsTimeRangesVelsObss = np.empty([1, gpsVelsDim + 1])
+    robot1GpsCounter = 0
+    robot2GpsCounter = 0
+    robot1GpsTimeVelsObss = []
+    robot2GpsTimeRangesVelsObss = np.empty([1, gpsVelsDim + 1])
     gpsTimeAbnormalityValues = []
-    gpsCovValPosXy = 2.0e-4
-    gpsCovValPosZz = 4.0e-4
-    gpsCovValVelXy = 0.2
-    gpsCovValVelZz = 0.4
-    gpsCovMtx = np.array([
-        [gpsCovValPosXy, 0, 0, 0, 0, 0]
-      , [0, gpsCovValPosXy, 0, 0, 0, 0]
-      , [0, 0, gpsCovValPosZz, 0, 0, 0]
-      , [0, 0, 0, gpsCovValVelXy, 0, 0]
-      , [0, 0, 0, 0, gpsCovValVelXy, 0]
-      , [0, 0, 0, 0, 0, gpsCovValVelZz]
-        ])
+    gpsCovMtx = np.array(configs["gps_origin"]["covMtx"])
+    gpsTwoALphWordsClusterLevelAbnVals = TwoAlphabetWordsClusterLevelAbnormalVals(gpsTwoAlphWordsTransMtx)
 
-
-
-
+    #plotting
     plotAll = PlotAll()
 
     with open(pathToTestScenarioYamlFile, "r") as file:
@@ -264,92 +252,139 @@ if __name__ == "__main__":
         targetRobotLidarTopicRowCounter = 0
 
         # load encoder
-        encoder = Autoencoder.loadEncoder(pathToRobot1LidarMindDir + "encoder.h5")
+        robot1LidarEncoder = Autoencoder.loadEncoder(pathToRobot1LidarMindDir + "encoder.h5")
+        robot2LidarEncoder = Autoencoder.loadEncoder(pathToRobot2LidarMindDir + "encoder.h5")
+
+        #loop through topics
         for topicRowCounter, topicRow in enumerate(topicRows):
-            if targetRobotLidarCounter >= targetRobotLidarCounterLimit:
+            if robot1LidarTopicCounter >= lidarTestScenarioCounterLimit:
                 break
 
             robotId, sensorName = Topic.staticGetRobotIdAndSensorName(topicRow)
-            if robotId != targetRobotId:
-                continue
-
             time = Topic.staticGetTimeByTopicDict(topicRow)
+
 
             if sensorName == "gps_origin":
                 gpsX,gpsY,gpsZ = GpsOrigin.staticGetXyz(topicRow)
 
-                if targetRobotGpsCounter == 0:
-                    targetRobotGpsTimeXyzVelsObss = np.asarray([[time, gpsX, gpsY, gpsZ,0,0,0]])
-                    targetRobotGpsCounter += 1
-                    continue
-                if targetRobotGpsCounter >= 1:
-                    targetRobotGpsTimeXyzVelsObss = np.vstack((targetRobotGpsTimeXyzVelsObss, [time, gpsX, gpsY, gpsZ,0,0,0]))
-                    timeDiff = targetRobotGpsTimeXyzVelsObss[-1][0]-targetRobotGpsTimeXyzVelsObss[-2][0]
-                    diffGps = np.subtract(targetRobotGpsTimeXyzVelsObss[-1][1:int(gpsVelsDim/2)],targetRobotGpsTimeXyzVelsObss[-2][1:int(gpsVelsDim/2)])
-                    gpsVels = gpsVelCo*diffGps/timeDiff
-                    targetRobotGpsTimeXyzVelsObss[-1][int(gpsVelsDim/2)+1:gpsVelsDim]=gpsVels
+                if robotId == configs["targetRobotIds"]["uav1"]:
+                    if robot1GpsCounter == 0:
+                        robot1GpsTimeXyzVelsObss = np.asarray([[time, gpsX, gpsY, gpsZ, 0, 0, 0]])
+                        robot2GpsCounter += 1
+                        continue
+                    if robot1GpsCounter >= 1:
+                        robot1GpsTimeXyzVelsObss = np.vstack((robot1GpsTimeXyzVelsObss, [time, gpsX, gpsY, gpsZ, 0, 0, 0]))
+                        robot1GpsTimeDiff = robot1GpsTimeXyzVelsObss[-1][0] - robot1GpsTimeXyzVelsObss[-2][0]
+                        robot1GpsDiff = np.subtract(robot1GpsTimeXyzVelsObss[-1][1:int(gpsVelsDim / 2)], robot1GpsTimeXyzVelsObss[-2][1:int(gpsVelsDim / 2)])
+                        gpsVels = gpsVelCo*robot1GpsDiff/robot1GpsTimeDiff
+                        robot1GpsTimeXyzVelsObss[-1][int(gpsVelsDim / 2) + 1:gpsVelsDim]=gpsVels
+                    robot1GpsCounter += 1
+                        
+                if robotId == configs["targetRobotIds"]["uav2"]:
+                    if robot2GpsCounter == 0:
+                        robot2GpsTimeXyzVelsObss = np.asarray([[time, gpsX, gpsY, gpsZ, 0, 0, 0]])
+                        robot2GpsCounter += 1
+                        continue
+                    if robot2GpsCounter >= 1:
+                        robot2GpsTimeXyzVelsObss = np.vstack((robot2GpsTimeXyzVelsObss, [time, gpsX, gpsY, gpsZ, 0, 0, 0]))
+                        robot2GpsTimeDiff = robot2GpsTimeXyzVelsObss[-1][0] - robot2GpsTimeXyzVelsObss[-2][0]
+                        robot2GpsDiff = np.subtract(robot2GpsTimeXyzVelsObss[-1][1:int(gpsVelsDim / 2)], robot2GpsTimeXyzVelsObss[-2][1:int(gpsVelsDim / 2)])
+                        gpsVels = gpsVelCo*robot2GpsDiff/robot2GpsTimeDiff
+                        robot2GpsTimeXyzVelsObss[-1][int(gpsVelsDim / 2) + 1:gpsVelsDim]=gpsVels
+                    robot2GpsCounter += 1
+                plotAll.updateGpsPlot(np.asarray(robot1GpsTimeXyzVelsObss),np.asarray(robot2GpsTimeXyzVelsObss))
 
-                plotAll.updateGpsPlot(np.asarray(targetRobotGpsTimeXyzVelsObss))
-                targetRobotGpsCounter += 1
 
                 # gps abn computer
-                gpsCurObs = targetRobotGpsTimeXyzVelsObss[-1, 1:]
-                gpsPrvObs = targetRobotGpsTimeXyzVelsObss[-2, 1:]
-                gpsPrvObsLabel = gpsTwoAlphWordsTransMtx.getClusteringStrgy().getPredictedLabelByPosVelObs(
-                    gpsPrvObs)
-                gpsPredictedNextLabel = gpsTwoAlphWordsTransMtx.getHighestPorobabelNextLabelBasedOnthePrvOne(
-                    gpsPrvObsLabel)
-                gpsPredictedNextLabelCenter = gpsTwoAlphWordsTransMtx.getClusteringStrgy().getClusterCenterByLabel(
-                    gpsPredictedNextLabel)
-                # gpsAbnormalityValue = np.linalg.norm(np.array(gpsCurObs) - np.array(gpsPredictedNextLabelCenter))
-                gpsAbnormalityValue = Distance.getGaussianKullbackLieblerDistance(gpsCurObs
-                                                                                  ,gpsCovMtx
-                                                                                  ,gpsPredictedNextLabelCenter
-                                                                                  ,gpsCovMtx)
-                print("Gps abnormality value: " + str(gpsAbnormalityValue))
-                gpsTimeAbnormalityValues.append([time, gpsAbnormalityValue])
+                robot1GpsCurObs = robot1GpsTimeXyzVelsObss[-1, 1:]
+                robot1GpsPrvObs = robot1GpsTimeXyzVelsObss[-2, 1:]
 
+                robot2GpsCurObs = robot1GpsTimeXyzVelsObss[-1, 1:]
+                robot2GpsPrvObs = robot1GpsTimeXyzVelsObss[-2, 1:]
+
+                gpsAbnormalityValue = gpsTwoALphWordsClusterLevelAbnVals.getCurAbnormalValByPrvAndCurPosVelObs(
+                    robot1GpsPrvObs
+                     ,robot2GpsPrvObs
+                     ,robot1GpsCurObs
+                     ,robot2GpsCurObs
+                     )
+                gpsTimeAbnormalityValues.append([time, gpsAbnormalityValue])
                 plotAll.updateGpsAbnPlot(np.array(gpsTimeAbnormalityValues))
 
 
-            elif sensorName == "rplidar":
+            if sensorName == "rplidar":
                 npRanges = RpLidar.staticGetNpRanges(topicRow)
-                lowDimLidarObs = encoder(np.asarray([npRanges]))[0]
-                targetRobotLidarTimeLowDimRangesObss.append(np.insert(lowDimLidarObs, 0, time, axis=0))
-                if targetRobotLidarCounter == 0:
-                    targetRobotLidarCounter += 1
-                    continue
-                if targetRobotLidarCounter >= 1:
-                    prvLidarTime = targetRobotLidarTimeLowDimRangesObss[targetRobotLidarCounter - 1][0]
-                    curLidarTime = targetRobotLidarTimeLowDimRangesObss[targetRobotLidarCounter][0]
-                    diffLidarTime = curLidarTime - prvLidarTime
 
-                    prvLidarRanges = targetRobotLidarTimeLowDimRangesObss[targetRobotLidarCounter - 1][1:]
-                    curLidarRanges = targetRobotLidarTimeLowDimRangesObss[targetRobotLidarCounter][1:]
-                    diffLidarRanges = np.subtract(curLidarRanges, prvLidarRanges)
+                if robotId == configs["targetRobotIds"]["uav1"]:
+                    lowDimLidarObs = robot1LidarEncoder(np.asarray([npRanges]))[0]
+                    robot1LidarTimeLowDimRangesObss.append(np.insert(lowDimLidarObs, 0, time, axis=0))
+                    if robot1LidarTopicCounter == 0:
+                        robot1LidarTopicCounter += 1
+                        continue
+                    if robot1LidarTopicCounter >= 1:
+                        prvRobot1LidarTime = robot1LidarTimeLowDimRangesObss[robot1LidarTopicCounter - 1][0]
+                        curRobot1LidarTime = robot1LidarTimeLowDimRangesObss[robot1LidarTopicCounter][0]
+                        diffRobot1LidarTime = curRobot1LidarTime - prvRobot1LidarTime
 
-                    curLidarVel = lidarVelCo * diffLidarRanges / diffLidarTime
-                    curLidarTimeRangesVels = np.hstack(np.array([curLidarTime, curLidarRanges, curLidarVel], dtype=object))
-                    targetRobotLidarTimeLowDimRangesVelsObss =np.vstack([targetRobotLidarTimeLowDimRangesVelsObss, curLidarTimeRangesVels])
-                if targetRobotLidarCounter == 1:
-                    targetRobotLidarTimeLowDimRangesVelsObss = np.delete(targetRobotLidarTimeLowDimRangesVelsObss, 0, 0)
-                    liarRangesVelsToAdd = np.hstack(np.array([prvLidarTime, prvLidarRanges, curLidarVel], dtype=object))
-                    targetRobotLidarTimeLowDimRangesVelsObss= np.insert(targetRobotLidarTimeLowDimRangesVelsObss, 0, liarRangesVelsToAdd, axis=0)
+                        prvRobot1LidarRanges = robot1LidarTimeLowDimRangesObss[robot1LidarTopicCounter - 1][1:]
+                        curRobot1LidarRanges = robot1LidarTimeLowDimRangesObss[robot1LidarTopicCounter][1:]
+                        diffRobot1LidarRanges = np.subtract(curRobot1LidarRanges, prvRobot1LidarRanges)
 
-                targetRobotLidarTimeLowDimRangesVelsObss = np.array(targetRobotLidarTimeLowDimRangesVelsObss)
+                        curRobot1LidarVel = lidarVelCo * diffRobot1LidarRanges / diffRobot1LidarTime
+                        curRobot1LidarTimeRangesVels = np.hstack(np.array([curRobot1LidarTime, curRobot1LidarRanges, curRobot1LidarVel], dtype=object))
+                        robot1LidarTimeLowDimRangesVelsObss =np.vstack([robot1LidarTimeLowDimRangesVelsObss, curRobot1LidarTimeRangesVels])
+                    if robot1LidarTopicCounter == 1:
+                        robot1LidarTimeLowDimRangesVelsObss = np.delete(robot1LidarTimeLowDimRangesVelsObss, 0, 0)
+                        robot1LiarRangesVelsToAdd = np.hstack(np.array([prvRobot1LidarTime
+                                                                           , prvRobot1LidarRanges
+                                                                           , curRobot1LidarVel]
+                                                                       , dtype=object))
+                        robot1LidarTimeLowDimRangesVelsObss= np.insert(robot1LidarTimeLowDimRangesVelsObss, 0, robot1LiarRangesVelsToAdd, axis=0)
+
+                    robot1LidarTimeLowDimRangesVelsObss = np.array(robot1LidarTimeLowDimRangesVelsObss)
+                    robot1LidarTopicCounter += 1
+                    
+                if robotId == configs["targetRobotIds"]["uav2"]:
+                    lowDimLidarObs = robot2LidarEncoder(np.asarray([npRanges]))[0]
+                    robot2LidarTimeLowDimRangesObss.append(np.insert(lowDimLidarObs, 0, time, axis=0))
+                    if robot2LidarTopicCounter == 0:
+                        robot2LidarTopicCounter += 1
+                        continue
+                    if robot2LidarTopicCounter >= 1:
+                        prvRobot1LidarTime = robot2LidarTimeLowDimRangesObss[robot2LidarTopicCounter - 1][0]
+                        curRobot1LidarTime = robot2LidarTimeLowDimRangesObss[robot2LidarTopicCounter][0]
+                        diffRobot1LidarTime = curRobot1LidarTime - prvRobot1LidarTime
+
+                        prvRobot1LidarRanges = robot2LidarTimeLowDimRangesObss[robot2LidarTopicCounter - 1][1:]
+                        curRobot1LidarRanges = robot2LidarTimeLowDimRangesObss[robot2LidarTopicCounter][1:]
+                        diffRobot1LidarRanges = np.subtract(curRobot1LidarRanges, prvRobot1LidarRanges)
+
+                        curRobot1LidarVel = lidarVelCo * diffRobot1LidarRanges / diffRobot1LidarTime
+                        curRobot1LidarTimeRangesVels = np.hstack(np.array([curRobot1LidarTime, curRobot1LidarRanges, curRobot1LidarVel], dtype=object))
+                        robot2LidarTimeLowDimRangesVelsObss =np.vstack([robot2LidarTimeLowDimRangesVelsObss, curRobot1LidarTimeRangesVels])
+                    if robot2LidarTopicCounter == 1:
+                        robot2LidarTimeLowDimRangesVelsObss = np.delete(robot2LidarTimeLowDimRangesVelsObss, 0, 0)
+                        robot2LiarRangesVelsToAdd = np.hstack(np.array([prvRobot1LidarTime
+                                                                           , prvRobot1LidarRanges
+                                                                           , curRobot1LidarVel]
+                                                                       , dtype=object))
+                        robot2LidarTimeLowDimRangesVelsObss= np.insert(robot2LidarTimeLowDimRangesVelsObss, 0, robot2LiarRangesVelsToAdd, axis=0)
+
+                    robot2LidarTimeLowDimRangesVelsObss = np.array(robot2LidarTimeLowDimRangesVelsObss)
+                    robot2LidarTopicCounter += 1
 
                 # lidar abn computer
-                lidarCurObs = targetRobotLidarTimeLowDimRangesVelsObss[-1, 1:]
-                lidarPrvObs = targetRobotLidarTimeLowDimRangesVelsObss[-2, 1:]
-                lidarPrvObsLabel = lidarOneAlphabetWordsTransitionMatrix.getClusteringStrgy().getPredictedLabelByPosVelObs(lidarPrvObs)
-                lidarPredictedNextLabel = lidarOneAlphabetWordsTransitionMatrix.getHighestPorobabelNextLabelBasedOnthePrvOne(
-                    lidarPrvObsLabel)
-                lidarPredictedNextLabelCenter = lidarOneAlphabetWordsTransitionMatrix.getClusteringStrgy().getClusterCenterByLabel(
-                    lidarPredictedNextLabel)
-                # lidarAbnormalityValue = np.linalg.norm(np.array(lidarCurObs) - np.array(lidarPredictedNextLabelCenter))
-                lidarAbnormalityValue = Distance.getGaussianKullbackLieblerDistance(lidarCurObs, lidarNoiseCovMtx, lidarPredictedNextLabelCenter, lidarNoiseCovMtx)
-                print("Lidar abnormality value: " + str(lidarAbnormalityValue))
-                lidarTimeAbnormalityValues.append([time, lidarAbnormalityValue])
+                robot1LidarCurObs = robot1LidarTimeLowDimRangesVelsObss[-1, 1:]
+                robot1LidarPrvObs = robot1LidarTimeLowDimRangesVelsObss[-2, 1:]
 
+                robot2LidarCurObs = robot1LidarTimeLowDimRangesVelsObss[-1, 1:]
+                robot2LidarPrvObs = robot1LidarTimeLowDimRangesVelsObss[-2, 1:]
+
+                lidarAbnormalityValue = lidarTwoALphWordsClusterLevelAbnVals.getCurAbnormalValByPrvAndCurPosVelObs(
+                    robot1LidarPrvObs
+                    , robot2LidarPrvObs
+                    , robot1LidarCurObs
+                    , robot2LidarCurObs
+                )
+                lidarTimeAbnormalityValues.append([time, lidarAbnormalityValue])
                 plotAll.updateLidarAbnPlot(np.array(lidarTimeAbnormalityValues))
-                targetRobotLidarCounter += 1

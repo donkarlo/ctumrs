@@ -8,63 +8,87 @@ from matplotlib import pyplot as plt
 
 from ctumrs.TwoAlphabetWordsTransitionMatrix import TwoAlphabetWordsTransitionMatrix
 from scipy.spatial.distance import directed_hausdorff
-from multiprocessing import Pool
 
-class ClusterLevelAbnormalVals():
-    def __init__(self
-                 , transitionMatrix:TwoAlphabetWordsTransitionMatrix):
-        self.__transitionMatrix:TwoAlphabetWordsTransitionMatrix = transitionMatrix
+class TwoAlphabetWordsClusterLevelAbnormalVals():
+    def __init__(self, transitionMatrix:TwoAlphabetWordsTransitionMatrix):
+        self.__twoAlphWordsTransMtx:TwoAlphabetWordsTransitionMatrix = transitionMatrix
         self.__rangeLimit = 15000
 
     def getCurAbnormalValByPrvAndCurPosVelObs(self
-                                              , prvLeaderPosVelObs
-                                              , prvFollowerPosVelObs
-                                              , curLeaderPosVelObs
-                                              , curFolowerPosVelObs
+                                              , prvRobot1PosVelObs
+                                              , prvRobot2PosVelObs
+                                              , curRobot1PosVelObs
+                                              , curRobot2PosVelObs
                                               , covMtx = None
                                               )->float:
 
         """
 
         """
-        leaderClusters = self.__transitionMatrix.getLeaderTimePosVelClusters()
-        followerClusters = self.__transitionMatrix.getFollowerTimePosVelClusters()
+        robot1Clusters = self.__twoAlphWordsTransMtx.getRobot1TimePosVelClusters()
+        robot2Clusters = self.__twoAlphWordsTransMtx.getRobot2TimePosVelClusters()
 
-        prvLeaderLabel = leaderClusters.getPredictedLabelByPosVelObs(prvLeaderPosVelObs)
-        prvFollowerLabel = followerClusters.getPredictedLabelByPosVelObs(prvFollowerPosVelObs)
-        prvLeaderFollowerLabelPair = (prvLeaderLabel,prvFollowerLabel)
+        prvRobot1Label = robot1Clusters.getPredictedLabelByPosVelObs(prvRobot1PosVelObs)
+        prvRobot2Label = robot2Clusters.getPredictedLabelByPosVelObs(prvRobot2PosVelObs)
+        prvRobot1And2LabelPair = (prvRobot1Label,prvRobot2Label)
 
         # Get predicted label
-        predictedLabelPair = self.__transitionMatrix.getCurMostProbableLabelPairByPrvLabelPair(prvLeaderFollowerLabelPair)
+        predictedLabelPair = self.__twoAlphWordsTransMtx.getCurMostProbableLabelPairByPrvLabelPair(prvRobot1And2LabelPair)
 
         # Get predicted centers for predicted labels
-        predictedLeaderCenter = leaderClusters.getClusterCenterByLabel(predictedLabelPair[0])
-        predictedFollowerCenter = followerClusters.getClusterCenterByLabel(predictedLabelPair[1])
+        predictedRobot1Center = robot1Clusters.getClusterCenterByLabel(predictedLabelPair[0])
+        predictedRobot2Center = robot2Clusters.getClusterCenterByLabel(predictedLabelPair[1])
 
-        # distanceStatistical = self.__getHausedorfDistance(curLeaderPosVelObs
-        #                                        ,predictedLeaderCenter
-        #                                        ,curFolowerPosVelObs
-        #                                        ,curFolowerPosVelObs)
+        distance = self.__getHausedorfDistance(curRobot1PosVelObs
+                                               , predictedRobot1Center
+                                               , curRobot2PosVelObs
+                                               , predictedRobot2Center)
 
-        # distanceStatistical = self.__getGpsBhattacharyyaDistanceAbnormalityValue(curLeaderPosVelObs
+        # distance = self.__getGpsBhattacharyyaDistanceAbnormalityValue(curLeaderPosVelObs
         #                                                               , predictedLeaderCenter
         #                                                               , curFolowerPosVelObs
         #                                                               , predictedFollowerCenter)
 
-        klDistance = self.__getLidarKlDistanceAbnormalityValue(curLeaderPosVelObs
-                                                                      , predictedLeaderCenter
-                                                                      , curFolowerPosVelObs
-                                                                      , predictedFollowerCenter)
+        # distance = self.__getLidarKlDistanceAbnormalityValue(curLeaderPosVelObs
+        #                                                               , predictedLeaderCenter
+        #                                                               , curFolowerPosVelObs
+        #                                                               , predictedFollowerCenter)
 
-        # distanceStatistical = self.__getGpsHellingerDistanceAbnormalityValue(curLeaderPosVelObs
+        # distance = self.__getGpsHellingerDistanceAbnormalityValue(curLeaderPosVelObs
         #                                                    , predictedLeaderCenter
         #                                                    , curFolowerPosVelObs
         #                                                    , predictedFollowerCenter)
+        print("Current novelty value is: " + distance)
+        return distance
 
-        return klDistance
+    def getClusterLevelAbnormalValsByPosVelsObss(self
+                                                 , leaderPosVelObss:[tuple]
+                                                 , followerPosVelObss:[tuple]
+                                                 , covMtx = None
+                                                 )->np.ndarray:
+        print("Calculating cluster level abnormality values all together...")
 
-    def __getKalmanInnovation(self,curObs,curClusterLabel,)->float:
-        return 0
+        abnormalValues = []
+        leaderFollowerObssPreds = []
+        for leaderPosVelObsCounter,leaderPosVelObs in enumerate(leaderPosVelObss):
+            if leaderPosVelObsCounter>=1 and leaderPosVelObsCounter<=self.__rangeLimit:
+                prvLeaderObs = leaderPosVelObss[leaderPosVelObsCounter-1]
+                prvFolowerObs = followerPosVelObss[leaderPosVelObsCounter-1]
+                curLeaderObs = leaderPosVelObs
+                curFollowerObs = followerPosVelObss[leaderPosVelObsCounter]
+                leaderFollowerObssPreds.append((prvLeaderObs
+                                , prvFolowerObs
+                                , curLeaderObs
+                                , curFollowerObs))
+                curNoveltyValue = self.getCurAbnormalValByPrvAndCurPosVelObs(prvLeaderObs
+                                                                             , prvFolowerObs
+                                                                             , curLeaderObs
+                                                                             , curFollowerObs
+                                                                             , covMtx
+                                                                             )
+                abnormalValues.append(curNoveltyValue)
+        return abnormalValues
+
 
     def __getGpsBhattacharyyaDistanceAbnormalityValue(self
                                                       , leaderObs
@@ -189,38 +213,7 @@ class ClusterLevelAbnormalVals():
         distance  = max(hausdorfDistance1,hausdorfDistance2)
         return distance
 
-    def getClusterLevelAbnormalValsByPosVelsObss(self
-                                                 , leaderPosVelObss:[tuple]
-                                                 , followerPosVelObss:[tuple]
-                                                 , covMtx = None
-                                                 )->np.ndarray:
-        print("Calculating cluster level abnormality values ...")
 
-        abnormalValues = []
-        leaderFollowerObssPreds = []
-        for leaderPosVelObsCounter,leaderPosVelObs in enumerate(leaderPosVelObss):
-            if leaderPosVelObsCounter>=1 and leaderPosVelObsCounter<=self.__rangeLimit:
-                prvLeaderObs = leaderPosVelObss[leaderPosVelObsCounter-1]
-                prvFolowerObs = followerPosVelObss[leaderPosVelObsCounter-1]
-                curLeaderObs = leaderPosVelObs
-                curFollowerObs = followerPosVelObss[leaderPosVelObsCounter]
-                leaderFollowerObssPreds.append((prvLeaderObs
-                                , prvFolowerObs
-                                , curLeaderObs
-                                , curFollowerObs))
-                curNoveltyValue = self.getCurAbnormalValByPrvAndCurPosVelObs(prvLeaderObs
-                                                                             , prvFolowerObs
-                                                                             , curLeaderObs
-                                                                             , curFollowerObs
-                                                                             , covMtx
-                                                                             )
-                print(curNoveltyValue)
-                abnormalValues.append(curNoveltyValue)
-
-        # with Pool(os.cpu_count()) as p:
-        #     results = p.starmap(self.getCurNoveltyValueByPrvPosVelObs, leaderFollowerObssPreds)
-        # print(results)
-        return abnormalValues
 
     def plotNovelties(self, abnormalValuesScenario1,abnormalValuesScenario2=None):
         # Scale the plot

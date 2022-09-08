@@ -29,4 +29,5 @@ gps_origin:
 
 normalScenarioName: Normal
 testScenarioName: follow
+lidarTestScenarioCounterLimit: 6000
 targetRobotIds: ["uav1","uav2"]

@@ -1,4 +1,4 @@
-from ctumrs.ClusterLevelAbnormalVals import ClusterLevelAbnormalVals
+from ctumrs.TwoAlphabetWordsClusterLevelAbnormalVals import TwoAlphabetWordsClusterLevelAbnormalVals
 from ctumrs.TwoAlphabetWordsTransitionMatrix import TwoAlphabetWordsTransitionMatrix
 from ctumrs.TimePosVelObssPlottingUtility import TimePosVelObssPlottingUtility
 
@@ -26,7 +26,7 @@ followerUavPosVelsAndTimePosVels = utility.getTimePosVelsAndPosVels(pathToFollow
 followerPosVelObss = followerUavPosVelsAndTimePosVels['posVels']
 
 
-leaderFollowerFilter = ClusterLevelAbnormalVals(transitionMatrix)
+leaderFollowerFilter = TwoAlphabetWordsClusterLevelAbnormalVals(transitionMatrix)
 noveltyValues = leaderFollowerFilter.getClusterLevelAbnormalValsByPosVelsObss(leaderPosVelObss
                                                                               , followerPosVelObss)
 leaderFollowerFilter.plotNovelties(noveltyValues)
