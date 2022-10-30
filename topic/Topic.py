@@ -1,3 +1,6 @@
+import numpy as np
+
+
 class Topic:
     def __init__(self, topicRow:dict):
         self._topic = topicRow
@@ -11,7 +14,7 @@ class Topic:
     def staticGetTimeByTopicDict(topicRow: dict) -> float:
         strSecs = str(topicRow["header"]["stamp"]["secs"])
         strNSecs = str(topicRow["header"]["stamp"]["nsecs"])
-        print(strNSecs)
+
         if len(strNSecs) == 8:
             strNSecs = "0" + strNSecs
         elif len(strNSecs) == 7:
@@ -26,4 +29,8 @@ class Topic:
             strNSecs = "000000" + strNSecs
         elif len(strNSecs) == 2:
             strNSecs = "0000000" + strNSecs
-        return float(strSecs + "." + strNSecs)
+        elif len(strNSecs) == 1:
+            strNSecs = "00000000" + strNSecs
+
+        strTime = strSecs + "." + strNSecs
+        return np.float64(strTime)

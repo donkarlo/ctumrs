@@ -13,6 +13,7 @@ rplidar:
     epocs: 100
     batchSize: 32
     latentDim: 3
+  updateRate: 20
 
 gps_origin:
   covMtx:
@@ -22,7 +23,7 @@ gps_origin:
     - [ 0, 0, 0,  0.2  , 0, 0 ]
     - [ 0, 0, 0, 0,  0.2  , 0 ]
     - [ 0, 0, 0, 0, 0,  0.4   ]
-  updateRate: 0.01
+  updateRate: 10
   clustersNum: 75
   velCo: 25
   trainingRowsNumLimit: 18000
@@ -31,3 +32,4 @@ normalScenarioName: normal
 testScenarioName: follow
 lidarTestScenarioCounterLimit: 6000
 targetRobotIds: ["uav1","uav2"]
+plotUpdateRate: 1000
