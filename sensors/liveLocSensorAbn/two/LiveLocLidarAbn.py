@@ -9,6 +9,7 @@ from ctumrs.TwoAlphabetWordsTransitionMatrix import TwoAlphabetWordsTransitionMa
 from ctumrs.sensors.lidar.Autoencoder import Autoencoder
 from ctumrs.sensors.liveLocSensorAbn.two.PlotAll import PlotAll
 from ctumrs.sensors.liveLocSensorAbn.two.TopicLoopingLogic import TopicLoopingLogic
+from ctumrs.sensors.noise.Noise import Noise
 from ctumrs.topic.GpsOrigin import GpsOrigin
 from ctumrs.topic.RpLidar import RpLidar
 from ctumrs.topic.Topic import Topic
@@ -23,6 +24,8 @@ if __name__ == "__main__":
     normalScenarioName = configs["normalScenarioName"]
     basePath = MachineSettings.MAIN_PATH+"projs/research/data/self-aware-drones/ctumrs/two-drones/"
     pathToNormalScenario = basePath+"{}-scenario/".format(normalScenarioName)
+    sensorNoiseCo = configs["sensorNoiseCo"]
+
     pathToNormalScenarioYamlFile = pathToNormalScenario+"uav1-gps-lidar-uav2-gps-lidar.yaml"
 
 
@@ -34,15 +37,17 @@ if __name__ == "__main__":
     lidarAutoencoderLatentDim = configs["rplidar"]["autoencoder"]["latentDim"]
     lidarAutoencoderEpochs = configs["rplidar"]["autoencoder"]["epocs"]
     lidarAutoencoderBatchSize = configs["rplidar"]["autoencoder"]["batchSize"]
+    lidarGaussianNoiseVar = configs["rplidar"]["gaussianNoiseVarCo"]
 
     lidarRangesDim = 720
     lidarRangesVelsDim = lidarRangesDim*2
     pathToLidarTwoAlphaTransMtxDir = pathToNormalScenario + lidarSensorName + "/"
 
     #this path will be used to keep autoencodder.h5, encoder.h5 and decoder.h5 for uav1(the leader) if it does not exist
-    pathToRobot1LidarMindDir = pathToNormalScenario + "{}/{}_mind_training_{}_velco_{}_clusters_{}_autoencoder_latentdim_{}_epochs_{}/".format(
+    pathToRobot1LidarMindDir = pathToNormalScenario + "{}/{}_mind_gaussianNoiseVarCo_{}_training_{}_velco_{}_clusters_{}_autoencoder_latentdim_{}_epochs_{}/".format(
         targetRobotIds[0]#uav1
         , lidarSensorName
+        , lidarGaussianNoiseVar
         , lidarTrainingRowsNumLimit
         , lidarVelCo
         , lidarClustersNum
@@ -51,9 +56,10 @@ if __name__ == "__main__":
     )
 
     # this path will be used to keep autoencodder.h5, encoder.h5 and decoder.h5 for uav2 if it does not exist
-    pathToRobot2LidarMindDir = pathToNormalScenario + "{}/{}_mind_training_{}_velco_{}_clusters_{}_autoencoder_latentdim_{}_epochs_{}/".format(
+    pathToRobot2LidarMindDir = pathToNormalScenario + "{}/{}_mind_gaussianNoiseVarCo_{}_training_{}_velco_{}_clusters_{}_autoencoder_latentdim_{}_epochs_{}/".format(
         targetRobotIds[1]#uav2
         , lidarSensorName
+        , lidarGaussianNoiseVar
         , lidarTrainingRowsNumLimit
         , lidarVelCo
         , lidarClustersNum
@@ -61,8 +67,9 @@ if __name__ == "__main__":
         , lidarAutoencoderEpochs
     )
 
-    pathToLidarTwoAlphTransMtxFile = pathToLidarTwoAlphaTransMtxDir + "transMtx_training_{}_velco_{}_clusters_{}_autoencoder_latentdim_{}_epochs_{}.pkl".format(
-        lidarTrainingRowsNumLimit
+    pathToLidarTwoAlphTransMtxFile = pathToLidarTwoAlphaTransMtxDir + "transMtx_gaussianNoiseVarCo_{}_training_{}_velco_{}_clusters_{}_autoencoder_latentdim_{}_epochs_{}.pkl".format(
+        lidarGaussianNoiseVar
+        , lidarTrainingRowsNumLimit
         , lidarVelCo
         , lidarClustersNum
         , lidarAutoencoderLatentDim
@@ -74,10 +81,12 @@ if __name__ == "__main__":
     gpsVelCo = configs["gps_origin"]["velCo"]
     gpsClustersNum = configs["gps_origin"]["clustersNum"]
     gpsTrainingRowsNumLimit = configs["gps_origin"]["trainingRowsNumLimit"]
+    gpsGaussianNoiseVar = configs["gps_origin"]["gaussianNoiseVarCo"]
     gpsVelsDim = 6
     pathToGpsTwoAlphaTransMtxDir = pathToNormalScenario + gpsSensorName + "/"
-    pathToGpsTwoAlphTransMtxFile = pathToGpsTwoAlphaTransMtxDir + "transMtx_training_{}_velco_{}_clusters_{}.pkl".format(
-        gpsTrainingRowsNumLimit
+    pathToGpsTwoAlphTransMtxFile = pathToGpsTwoAlphaTransMtxDir + "transMtx_gaussianNoiseVarCo_{}_training_{}_velco_{}_clusters_{}.pkl".format(
+        gpsGaussianNoiseVar
+         , gpsTrainingRowsNumLimit
          , gpsVelCo
          , gpsClustersNum
          )
@@ -105,7 +114,7 @@ if __name__ == "__main__":
                 if targetRobotsGpsTopicRowCounter < gpsTrainingRowsNumLimit:
                     if not os.path.exists(pathToGpsTwoAlphTransMtxFile):
                         if sensorName==gpsSensorName:
-                            gpsX,gpsY,gpsZ = GpsOrigin.staticGetXyz(topicRow)
+                            gpsX,gpsY,gpsZ = Noise.addSymetricGaussianNoiseToAVec(np.array(GpsOrigin.staticGetGpsXyz(topicRow)),gpsGaussianNoiseVar)
 
                             if robotId == targetRobotIds[0]:
                                 robot1TimeGpsVelsObss.append([time, gpsX, gpsY, gpsZ])
@@ -264,9 +273,12 @@ if __name__ == "__main__":
             if prvTime == 0:
                 prvTime = time
 
+            if prvTime > time:
+                continue
+
 
             if sensorName == "gps_origin":
-                gpsX,gpsY,gpsZ = GpsOrigin.staticGetXyz(topicRow)
+                gpsX,gpsY,gpsZ = Noise.addSymetricGaussianNoiseToAVec(np.array(GpsOrigin.staticGetGpsXyz(topicRow)),gpsGaussianNoiseVar)
 
                 if robotId == configs["targetRobotIds"][0]:
                     if robot1GpsCounter == 0:
@@ -282,6 +294,7 @@ if __name__ == "__main__":
                         robot1GpsVels = gpsVelCo*robot1GpsDiff/robot1GpsTimeDiff
                         robot1GpsTimeXyzVelsObss[-1][int(gpsVelsDim / 2) + 1:gpsVelsDim]=robot1GpsVels
                         robot1GpsCounter += 1
+
                 elif robotId == configs["targetRobotIds"][1]:
                     if robot2GpsCounter == 0:
                         robot2GpsTimeXyzVelsObss = np.asarray([[time, gpsX, gpsY, gpsZ, 0, 0, 0]])

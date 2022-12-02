@@ -69,5 +69,5 @@ class Autoencoder:
         return self.__decoder
 
     def getPredictedLowDimObss(self,obss:np.ndarray)->np.ndarray:
-        print("Building the latent space of normal scenario ladar data ...")
+        print("Building the latent space of normal scenario LIDAR data ...")
         return self.getFittedEncoder().predict(obss)

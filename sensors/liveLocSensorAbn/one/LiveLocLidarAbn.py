@@ -99,7 +99,7 @@ if __name__ == "__main__":
                 if targetRobotGpsTopicRowCounter < targetRobotGpsTopicRowLimit:
                     if not os.path.exists(pathToTargetRobotGpsMindDir):
                         if sensorName==gpsSensorName:
-                            gpsX,gpsY,gpsZ = GpsOrigin.staticGetXyz(topicRow)
+                            gpsX,gpsY,gpsZ = GpsOrigin.staticGetGpsXyz(topicRow)
                             robotTimeGpsVelsObss.append([time, gpsX, gpsY, gpsZ])
                             targetRobotGpsTopicRowCounter += 1
                             print("robot: {}, Sensor: {}, count: {}".format(robotId
@@ -228,7 +228,7 @@ if __name__ == "__main__":
             time = Topic.staticGetTimeByTopicDict(topicRow)
 
             if sensorName == "gps_origin":
-                gpsX,gpsY,gpsZ = GpsOrigin.staticGetXyz(topicRow)
+                gpsX,gpsY,gpsZ = GpsOrigin.staticGetGpsXyz(topicRow)
 
                 if targetRobotGpsCounter == 0:
                     targetRobotGpsTimeXyzVelsObss = np.asarray([[time, gpsX, gpsY, gpsZ,0,0,0]])
