@@ -1,20 +1,9 @@
-rplidar:
-  covMtx:
-    - [ 0,0001, 0, 0, 0, 0, 0 ]
-    - [ 0, 0,0001, 0, 0, 0, 0 ]
-    - [ 0, 0, 0,0001, 0, 0, 0 ]
-    - [ 0, 0, 0, 0,0001, 0, 0 ]
-    - [ 0, 0, 0, 0, 0,0001, 0 ]
-    - [ 0, 0, 0, 0, 0, 0,0001 ]
-  clustersNum: 150
-  velCo: 25
-  trainingRowsNumLimit: 30000
-  autoencoder:
-    epocs: 200
-    batchSize: 32
-    latentDim: 3
-  updateRate: 20
-  gaussianNoiseVarCo: 0.025
+normalScenarioName: normal
+testScenarioName: follow
+lidarTestScenarioCounterLimit: 6000
+targetRobotIds: ["uav1","uav2"]
+plotUpdateRate: 200
+sensorNoiseCo: 10
 
 gps_origin:
   covMtx:
@@ -25,14 +14,28 @@ gps_origin:
     - [ 0, 0, 0, 0,  0.2  , 0 ]
     - [ 0, 0, 0, 0, 0,  0.4   ]
   updateRate: 10
-  clustersNum: 150
-  velCo: 25
-  trainingRowsNumLimit: 100000
-  gaussianNoiseVarCo: 0.0005
+  clustersNum: 75
+  velCo: 0
+  trainingRowsNumLimit: 50000
+  gaussianNoiseVarCo: 0.1
 
-normalScenarioName: normal
-testScenarioName: follow
-lidarTestScenarioCounterLimit: 6000
-targetRobotIds: ["uav1","uav2"]
-plotUpdateRate: 200
-sensorNoiseCo: 10
+rplidar:
+  covMtx:
+    - [ 0,0001, 0, 0, 0, 0, 0 ]
+    - [ 0, 0,0001, 0, 0, 0, 0 ]
+    - [ 0, 0, 0,0001, 0, 0, 0 ]
+    - [ 0, 0, 0, 0,0001, 0, 0 ]
+    - [ 0, 0, 0, 0, 0,0001, 0 ]
+    - [ 0, 0, 0, 0, 0, 0,0001 ]
+  clustersNum: 75
+  velCo: 0
+  trainingRowsNumLimit: 30000
+  autoencoder:
+    epocs: 200
+    batchSize: 32
+    latentDim: 3
+  updateRate: 20
+  gaussianNoiseVarCo: 0.1
+
+
+

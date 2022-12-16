@@ -41,36 +41,42 @@ class TimePosVelObssPlottingUtility():
         plt.show()
 
     @staticmethod
-    def plotLeaderFollowerUavPosWithCLusters(leaderUavTimePosVelClusters: dict
-                                             , followerUavTimePosVelClusters: dict) -> None:
+    def plotRobot1And2PosWithLabeledDictClusters(robot1PosVelsLabeledDictClusters: dict
+                                                 , robot2PosVelsLabeledDictClusters: dict) -> None:
         fig = plt.figure()
         ax = Axes3D(fig)
 
-        for leaderUavPosVelLabel in leaderUavTimePosVelClusters:
-            leaderUavTimePosXs = []
-            leaderUavTimePosYs = []
-            leaderUavTimePosZs = []
-            for uavTimePosVel in leaderUavTimePosVelClusters[leaderUavPosVelLabel]:
-                leaderUavTimePosXs.append(uavTimePosVel[1])
-                leaderUavTimePosYs.append(uavTimePosVel[2])
-                leaderUavTimePosZs.append(uavTimePosVel[3])
-            ax.scatter(leaderUavTimePosXs, leaderUavTimePosYs, leaderUavTimePosZs, color=TimePosVelObssPlottingUtility.getRandomColor(), marker='.',
+        for robot1PosVelLabel in robot1PosVelsLabeledDictClusters:
+            robot1PosXs = []
+            robot1PosYs = []
+            robot1PosZs = []
+            for robotPosVel in robot1PosVelsLabeledDictClusters[robot1PosVelLabel]:
+                robot1PosXs.append(robotPosVel[0])
+                robot1PosYs.append(robotPosVel[1])
+                robot1PosZs.append(robotPosVel[2])
+            ax.scatter(robot1PosXs
+                       , robot1PosYs
+                       , robot1PosZs
+                       , color=TimePosVelObssPlottingUtility.getRandomColor(), marker='.',
                        alpha=0.04,
                        linewidth=1)
 
-        for followerUavPosVelLabel in followerUavTimePosVelClusters:
-            followerUavTimePosXs = []
-            followerUavTimePosYs = []
-            followerUavTimePosZs = []
-            for uavTimePosVel in followerUavTimePosVelClusters[followerUavPosVelLabel]:
-                followerUavTimePosXs.append(uavTimePosVel[1])
-                followerUavTimePosYs.append(uavTimePosVel[2])
-                followerUavTimePosZs.append(uavTimePosVel[3])
-            ax.scatter(followerUavTimePosXs, followerUavTimePosYs, followerUavTimePosZs, color=TimePosVelObssPlottingUtility.getRandomColor(),
+        for robot2PosVelLabel in robot2PosVelsLabeledDictClusters:
+            robot2PosXs = []
+            robot2PosYs = []
+            robot2PosZs = []
+            for robotPosVel in robot2PosVelsLabeledDictClusters[robot2PosVelLabel]:
+                robot2PosXs.append(robotPosVel[0])
+                robot2PosYs.append(robotPosVel[1])
+                robot2PosZs.append(robotPosVel[2])
+            ax.scatter(robot2PosXs
+                       , robot2PosYs
+                       , robot2PosZs
+                       , color=TimePosVelObssPlottingUtility.getRandomColor(),
                        marker='.', alpha=0.04,
                        linewidth=1)
 
-        ax.set_zlim3d(-15, 15)
+        # ax.set_zlim3d(-15, 15)
         ax.set_xlabel("X")
         ax.set_ylabel("Y")
         ax.set_zlabel("Z")

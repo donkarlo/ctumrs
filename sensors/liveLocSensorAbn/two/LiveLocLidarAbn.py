@@ -4,6 +4,8 @@ from MachineSettings import MachineSettings
 from ctumrs.PosVelsClusteringStrgy import PosVelsClusteringStrgy
 import yaml
 from yaml import CLoader
+
+from ctumrs.TimePosVelObssPlottingUtility import TimePosVelObssPlottingUtility
 from ctumrs.TwoAlphabetWordsClusterLevelAbnormalVals import TwoAlphabetWordsClusterLevelAbnormalVals
 from ctumrs.TwoAlphabetWordsTransitionMatrix import TwoAlphabetWordsTransitionMatrix
 from ctumrs.sensors.lidar.Autoencoder import Autoencoder
@@ -129,7 +131,7 @@ if __name__ == "__main__":
                 if targetRobotLidarTopicRowCounter < lidarTrainingRowsNumLimit:
                     if not os.path.exists(pathToLidarTwoAlphTransMtxFile):
                         if sensorName==lidarSensorName:
-                            npRanges = RpLidar.staticGetNpRanges(topicRow)
+                            npRanges = Noise.addSymetricGaussianNoiseToAVec(RpLidar.staticGetNpRanges(topicRow),lidarGaussianNoiseVar)
 
                             if robotId == targetRobotIds[0]:
                                 robot1TimeLowDimLidarRangesVelsObss.append(np.insert(npRanges, 0, time, axis=0))
@@ -141,18 +143,21 @@ if __name__ == "__main__":
                                                                             ,sensorName
                                                                          ,targetRobotLidarTopicRowCounter))
 
-        ########### calculating transMtx for GPS
+        ########### Calculating transMtx for GPS
         if not os.path.exists(pathToGpsTwoAlphTransMtxFile):
 
             robot1TimeGpsVelsObss = np.asarray(robot1TimeGpsVelsObss)
             robot1TimeGpsVelsObss = TimePosRowsDerivativeComputer.computer(robot1TimeGpsVelsObss,gpsVelCo)
             robot1GpsVelsObssClusteringStrgy = PosVelsClusteringStrgy(gpsClustersNum
-                                                                      , robot1TimeGpsVelsObss[:, 1:gpsVelsDim + 1])
+                                                                      , robot1TimeGpsVelsObss[:, 1:])
 
             robot2TimeGpsVelsObss = np.asarray(robot2TimeGpsVelsObss)
             robot2TimeGpsVelsObss = TimePosRowsDerivativeComputer.computer(robot2TimeGpsVelsObss,gpsVelCo)
             robot2GpsVelsObssClusteringStrgy = PosVelsClusteringStrgy(gpsClustersNum
-                                                                      , robot2TimeGpsVelsObss[:,1:gpsVelsDim + 1])
+                                                                      , robot2TimeGpsVelsObss[:,1:])
+
+            TimePosVelObssPlottingUtility.plotRobot1And2PosWithLabeledDictClusters(robot1GpsVelsObssClusteringStrgy.getLabeledPosVelsClustersDict(),
+                                                                                   robot2GpsVelsObssClusteringStrgy.getLabeledPosVelsClustersDict())
 
             gpsTwoAlphWordsTransMtx = TwoAlphabetWordsTransitionMatrix(robot1GpsVelsObssClusteringStrgy
                                                                          , robot2GpsVelsObssClusteringStrgy
@@ -181,8 +186,9 @@ if __name__ == "__main__":
             robot1LidarLowDimTimeObss = np.hstack((robot1TimeLowDimLidarRangesVelsObss[0:, 0:1]
                                                    , robot1LidarLowDimObss))
             #compute velocities
-            robot1TimeLowDimLidarRangesVelsObss = np.asarray(TimePosRowsDerivativeComputer.computer(robot1LidarLowDimTimeObss
-                                                                                         , lidarVelCo))
+            robot1LidarLowDimTimeObss =  np.asarray(TimePosRowsDerivativeComputer.computer(robot1LidarLowDimTimeObss
+                                                                                           , lidarVelCo))
+            robot1TimeLowDimLidarRangesVelsObss = robot1LidarLowDimTimeObss
 
         #encoding and saving robot 2 lidar data
         if not os.path.exists(pathToRobot2LidarMindDir):
@@ -199,14 +205,22 @@ if __name__ == "__main__":
             robot2LidarLowDimTimeObss = np.hstack((robot2TimeLowDimLidarRangesVelsObss[0:, 0:1]
                                                    , robot2LidarLowDimObss))
             # compute velocities
-            robot2TimeLowDimLidarRangesVelsObss = np.asarray(TimePosRowsDerivativeComputer.computer(robot2LidarLowDimTimeObss,
-                                                                                         lidarVelCo))
+            robot2LidarLowDimTimeObss =  np.asarray(TimePosRowsDerivativeComputer.computer(robot2LidarLowDimTimeObss
+                                                                                           , lidarVelCo))
+            robot2TimeLowDimLidarRangesVelsObss = robot2LidarLowDimTimeObss
+
         if not os.path.exists(pathToLidarTwoAlphTransMtxFile):
             #cluster each
             robot1LidarClusteringStrgy =  PosVelsClusteringStrgy(lidarClustersNum
                                                                  , robot1TimeLowDimLidarRangesVelsObss[:, 1:])
             robot2LidarClusteringStrgy =  PosVelsClusteringStrgy(lidarClustersNum
                                                                  , robot2TimeLowDimLidarRangesVelsObss[:, 1:])
+
+            #plotting with clusters
+            TimePosVelObssPlottingUtility.plotRobot1And2PosWithLabeledDictClusters(
+                robot1LidarClusteringStrgy.getLabeledPosVelsClustersDict(),
+                robot2LidarClusteringStrgy.getLabeledPosVelsClustersDict())
+
             #two alphabet trans matrix building
             lidarTwoAlphWordsTransMtx = TwoAlphabetWordsTransitionMatrix(robot1LidarClusteringStrgy
                                                                          ,robot2LidarClusteringStrgy
@@ -334,8 +348,9 @@ if __name__ == "__main__":
                 gpsTimeAbnormalityValues.append([time, gpsAbnormalityValue])
                 if topicRowCounter % configs["plotUpdateRate"] == 0:
                     plotAll.updateGpsAbnPlot(np.array(gpsTimeAbnormalityValues))
+
             elif sensorName == "rplidar":
-                npRanges = RpLidar.staticGetNpRanges(topicRow)
+                npRanges = Noise.addSymetricGaussianNoiseToAVec(RpLidar.staticGetNpRanges(topicRow),lidarGaussianNoiseVar)
 
                 if robotId == configs["targetRobotIds"][0]:
                     robot1LowDimLidarObs = robot1LidarEncoder(np.asarray([npRanges]))[0]

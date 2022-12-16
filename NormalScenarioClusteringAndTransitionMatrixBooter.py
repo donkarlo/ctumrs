@@ -38,8 +38,8 @@ followerTimePosVelClustersDict = followerTimePosVelClusteringStrgy.getLabeledPos
 '''PLOTING THE CLUSTERS'''
 timePosVelObssPlottingUtility.plotPosWithCLusters(leaderTimePosVelClustersDict)
 timePosVelObssPlottingUtility.plotPosWithCLusters(followerTimePosVelClustersDict)
-timePosVelObssPlottingUtility.plotLeaderFollowerUavPosWithCLusters(leaderTimePosVelClustersDict
-                                                                   , followerTimePosVelClustersDict)
+timePosVelObssPlottingUtility.plotRobot1And2PosWithLabeledDictClusters(leaderTimePosVelClustersDict
+                                                                       , followerTimePosVelClustersDict)
 
 '''
 Building the transition matrix

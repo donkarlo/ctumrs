@@ -26,6 +26,7 @@ class PosVelsClusteringStrgy:
         like this, Kmeans.labels_ and .cluster_centers_[label] etc are getting values
         '''
         if self.__fittedPosVelsClusters is None:
+            print("Fitting the clusters ...")
             self.__fittedPosVelsClusters = self.__getClusteringStrgy().fit(self.__posVels)
         return self.__fittedPosVelsClusters
 
@@ -39,21 +40,21 @@ class PosVelsClusteringStrgy:
         posVelArr = [posVel]
         return self.getFittedClusters().predict(posVelArr)[0]
 
-    def getLabeledPosVelsClustersDict(self, timePosVels) -> dict:
+    def getLabeledPosVelsClustersDict(self) -> dict:
         """
 
         Returns
         -------
         object
         """
-        self.__fittedPosVelsClusters = self.getFittedClusters()
 
         if self.__labeledTimePosVelClustersDict is None:
             self.__labeledTimePosVelClustersDict = {}
-            for labelCounter, posVelLabel in enumerate(self.__fittedPosVelsClusters.labels_):
-                if posVelLabel not in self.__labeledTimePosVelClustersDict.keys():
-                    self.__labeledTimePosVelClustersDict[posVelLabel] = []
-                self.__labeledTimePosVelClustersDict[posVelLabel].append(timePosVels[labelCounter])
+            for curPosVel in self.__posVels:
+                curPosVelLabel = self.getPredictedLabelByPosVelObs(curPosVel)
+                if curPosVelLabel not in self.__labeledTimePosVelClustersDict.keys():
+                    self.__labeledTimePosVelClustersDict[curPosVelLabel] = []
+                self.__labeledTimePosVelClustersDict[curPosVelLabel].append(curPosVel)
 
         return self.__labeledTimePosVelClustersDict
 
