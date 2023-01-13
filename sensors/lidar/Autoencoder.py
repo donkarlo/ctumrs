@@ -1,4 +1,5 @@
 import numpy as np
+from matplotlib import pyplot as plt
 from tensorflow.keras.models import Model, Sequential,load_model
 from tensorflow.keras.layers import Dense
 
@@ -15,6 +16,7 @@ class Autoencoder:
         self.__batchSize = 32
         self.__rangesDim = 720
         self.__autoencoder = None
+        self.__modelHistory = None
 
     def __getFittedAutoencoder(self)->Model:
         if self.__autoencoder is None:
@@ -40,16 +42,29 @@ class Autoencoder:
             self.__autoencoder.compile(loss='mse', optimizer='adam')
 
             print("Fitting the auto encoder ...")
-            modelHistory = self.__autoencoder.fit(self.__obss
+            self.__modelHistory = self.__autoencoder.fit(self.__obss
                                            , self.__obss
                                            , epochs=self.__epochs
                                            , batch_size=self.__batchSize
                                            , verbose=0)
 
+            #plot
+
+
         return self.__autoencoder
 
 
 
+
+    def plotLossVsEpoch(self):
+        if self.__modelHistory == None:
+            self.__getFittedAutoencoder()
+        plt.plot(self.__modelHistory.history["loss"])
+        plt.title("Loss vs. Epoch")
+        plt.ylabel("Loss")
+        plt.xlabel("Epoch")
+        plt.grid(True)
+        plt.show()
 
     def saveFittedAutoencoder(self, pathToAutoencoder:str):
         self.__getFittedAutoencoder().save(filepath=pathToAutoencoder)

@@ -4,12 +4,12 @@ from MachineSettings import MachineSettings
 from ctumrs.PosVelsClusteringStrgy import PosVelsClusteringStrgy
 import yaml
 from yaml import CLoader
-
 from ctumrs.TimePosVelObssPlottingUtility import TimePosVelObssPlottingUtility
 from ctumrs.TwoAlphabetWordsClusterLevelAbnormalVals import TwoAlphabetWordsClusterLevelAbnormalVals
 from ctumrs.TwoAlphabetWordsTransitionMatrix import TwoAlphabetWordsTransitionMatrix
 from ctumrs.sensors.lidar.Autoencoder import Autoencoder
-from ctumrs.sensors.liveLocSensorAbn.two.PlotAll import PlotAll
+from ctumrs.sensors.liveLocSensorAbn.two.Abnormality import Abnormality
+from ctumrs.sensors.liveLocSensorAbn.two.PlotPosGpsLidarLive import PlotPosGpsLidarLive
 from ctumrs.sensors.liveLocSensorAbn.two.TopicLoopingLogic import TopicLoopingLogic
 from ctumrs.sensors.noise.Noise import Noise
 from ctumrs.topic.GpsOrigin import GpsOrigin
@@ -24,9 +24,9 @@ if __name__ == "__main__":
 
     targetRobotIds = configs["targetRobotIds"]
     normalScenarioName = configs["normalScenarioName"]
+    normalScenarioStartTime = configs["normalScenarioStartTime"]
     basePath = MachineSettings.MAIN_PATH+"projs/research/data/self-aware-drones/ctumrs/two-drones/"
     pathToNormalScenario = basePath+"{}-scenario/".format(normalScenarioName)
-    sensorNoiseCo = configs["sensorNoiseCo"]
 
     pathToNormalScenarioYamlFile = pathToNormalScenario+"uav1-gps-lidar-uav2-gps-lidar.yaml"
 
@@ -45,31 +45,7 @@ if __name__ == "__main__":
     lidarRangesVelsDim = lidarRangesDim*2
     pathToLidarTwoAlphaTransMtxDir = pathToNormalScenario + lidarSensorName + "/"
 
-    #this path will be used to keep autoencodder.h5, encoder.h5 and decoder.h5 for uav1(the leader) if it does not exist
-    pathToRobot1LidarMindDir = pathToNormalScenario + "{}/{}_mind_gaussianNoiseVarCo_{}_training_{}_velco_{}_clusters_{}_autoencoder_latentdim_{}_epochs_{}/".format(
-        targetRobotIds[0]#uav1
-        , lidarSensorName
-        , lidarGaussianNoiseVar
-        , lidarTrainingRowsNumLimit
-        , lidarVelCo
-        , lidarClustersNum
-        , lidarAutoencoderLatentDim
-        , lidarAutoencoderEpochs
-    )
-
-    # this path will be used to keep autoencodder.h5, encoder.h5 and decoder.h5 for uav2 if it does not exist
-    pathToRobot2LidarMindDir = pathToNormalScenario + "{}/{}_mind_gaussianNoiseVarCo_{}_training_{}_velco_{}_clusters_{}_autoencoder_latentdim_{}_epochs_{}/".format(
-        targetRobotIds[1]#uav2
-        , lidarSensorName
-        , lidarGaussianNoiseVar
-        , lidarTrainingRowsNumLimit
-        , lidarVelCo
-        , lidarClustersNum
-        , lidarAutoencoderLatentDim
-        , lidarAutoencoderEpochs
-    )
-
-    pathToLidarTwoAlphTransMtxFile = pathToLidarTwoAlphaTransMtxDir + "transMtx_gaussianNoiseVarCo_{}_training_{}_velco_{}_clusters_{}_autoencoder_latentdim_{}_epochs_{}.pkl".format(
+    twoRobotsLidarTrainingSettingsString = "gaussianNoiseVarCo_{}_training_{}_velco_{}_clusters_{}_autoencoder_latentdim_{}_epochs_{}".format(
         lidarGaussianNoiseVar
         , lidarTrainingRowsNumLimit
         , lidarVelCo
@@ -77,6 +53,15 @@ if __name__ == "__main__":
         , lidarAutoencoderLatentDim
         , lidarAutoencoderEpochs
     )
+    #this path will be used to keep autoencodder.h5, encoder.h5 and decoder.h5 for uav1(the leader) if it does not exist
+    pathToRobot1LidarMindDir = pathToNormalScenario + "{}/{}_mind_".format(targetRobotIds[0],lidarSensorName)+twoRobotsLidarTrainingSettingsString+"/"
+
+    # this path will be used to keep autoencodder.h5, encoder.h5 and decoder.h5 for uav2 if it does not exist
+    pathToRobot2LidarMindDir = pathToNormalScenario + "{}/{}_mind_".format(targetRobotIds[1],lidarSensorName)+twoRobotsLidarTrainingSettingsString+"/"
+
+
+
+    pathToLidarTwoAlphTransMtxFile = pathToLidarTwoAlphaTransMtxDir + "transMtx_"+twoRobotsLidarTrainingSettingsString+".pkl"
 
     #Gps settings
     gpsSensorName = "gps_origin"
@@ -86,12 +71,13 @@ if __name__ == "__main__":
     gpsGaussianNoiseVar = configs["gps_origin"]["gaussianNoiseVarCo"]
     gpsVelsDim = 6
     pathToGpsTwoAlphaTransMtxDir = pathToNormalScenario + gpsSensorName + "/"
-    pathToGpsTwoAlphTransMtxFile = pathToGpsTwoAlphaTransMtxDir + "transMtx_gaussianNoiseVarCo_{}_training_{}_velco_{}_clusters_{}.pkl".format(
+    twoRobotsGpsTrainingSettingsString = "gaussianNoiseVarCo_{}_training_{}_velco_{}_clusters_{}".format(
         gpsGaussianNoiseVar
          , gpsTrainingRowsNumLimit
          , gpsVelCo
          , gpsClustersNum
          )
+    pathToGpsTwoAlphTransMtxFile = pathToGpsTwoAlphaTransMtxDir + "transMtx_"+twoRobotsGpsTrainingSettingsString+".pkl"
 
     # normal scenrio lidar and gps trans matrix builder if not exist
     if TopicLoopingLogic.getShouldLoopThroughTopics(pathToGpsTwoAlphTransMtxFile, pathToLidarTwoAlphTransMtxFile):
@@ -180,6 +166,7 @@ if __name__ == "__main__":
                                       , lidarAutoencoderLatentDim
                                       , lidarAutoencoderEpochs)
             autoencoder.saveFittedAutoencoder(pathToRobot1LidarMindDir + "encoder-decoder.h5")
+            autoencoder.plotLossVsEpoch()
             autoencoder.saveFittedEncoder(pathToRobot1LidarMindDir + "encoder.h5")
             autoencoder.saveFittedDecoder(pathToRobot1LidarMindDir + "decoder.h5")
             robot1LidarLowDimObss = autoencoder.getPredictedLowDimObss(robot1TimeLowDimLidarRangesVelsObss[:, 1:])
@@ -199,6 +186,7 @@ if __name__ == "__main__":
                                       , lidarAutoencoderLatentDim
                                       , lidarAutoencoderEpochs)
             autoencoder.saveFittedAutoencoder(pathToRobot2LidarMindDir + "encoder-decoder.h5")
+            autoencoder.plotLossVsEpoch()
             autoencoder.saveFittedEncoder(pathToRobot2LidarMindDir + "encoder.h5")
             autoencoder.saveFittedDecoder(pathToRobot2LidarMindDir + "decoder.h5")
             robot2LidarLowDimObss = autoencoder.getPredictedLowDimObss(robot2TimeLowDimLidarRangesVelsObss[:, 1:])
@@ -266,7 +254,7 @@ if __name__ == "__main__":
     gpsTwoALphWordsClusterLevelAbnVals = TwoAlphabetWordsClusterLevelAbnormalVals(gpsTwoAlphWordsTransMtx)
 
     #plotting
-    plotAll = PlotAll()
+    plotAll = PlotPosGpsLidarLive()
 
     with open(pathToTestScenarioYamlFile, "r") as file:
         topicRows = yaml.load_all(file, Loader=CLoader)
@@ -280,10 +268,14 @@ if __name__ == "__main__":
         #loop through topics
         for topicRowCounter, topicRow in enumerate(topicRows):
             if robot1LidarTopicCounter >= lidarTestScenarioCounterLimit:
+                gpsFilePathName = pathToTestScenrio+"{}/{}-scenario-trained/abnormality-values/".format(gpsSensorName,normalScenarioName)+twoRobotsGpsTrainingSettingsString+".pkl"
+                lidarFilePathName = pathToTestScenrio+"{}/{}-scenario-trained/abnormality-values/".format(lidarSensorName,normalScenarioName)+twoRobotsLidarTrainingSettingsString+".pkl"
+                Abnormality.staticSaveGps(gpsFilePathName,gpsTimeAbnormalityValues)
+                Abnormality.staticSaveLidar(lidarFilePathName,lidarTimeAbnormalityValues)
                 break
 
             robotId, sensorName = Topic.staticGetRobotIdAndSensorName(topicRow)
-            time = Topic.staticGetTimeByTopicDict(topicRow)
+            time = Topic.staticGetTimeByTopicDict(topicRow) - normalScenarioStartTime
             if prvTime == 0:
                 prvTime = time
 

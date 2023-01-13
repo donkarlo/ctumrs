@@ -5,7 +5,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 import PyQt5
 
-class PlotAll:
+class PlotPosGpsLidarLive:
 
     def __init__(self):
         matplotlib.use("Qt5Agg")
@@ -13,13 +13,16 @@ class PlotAll:
         self.__fig, self.__axes = plt.subplots(3, 1)
         self.__lineRobot1Pos, = self.__axes[0].plot(np.random.randn(100), np.random.randn(100))
         self.__lineRobot2Pos, = self.__axes[0].plot(np.random.randn(100), np.random.randn(100))
+        self.__axes[0].grid(True)
         self.__axes[0].set_title("Position")
 
 
         self.__lineLidar, = self.__axes[1].plot(np.random.randn(100))
+        self.__axes[1].grid(True)
         self.__axes[1].set_title("Lidar abnormality")
 
         self.__lineGps, = self.__axes[2].plot(np.random.randn(100))
+        self.__axes[2].grid(True)
         self.__axes[2].set_title("GPS abnormality")
 
         plt.show(block=False)
