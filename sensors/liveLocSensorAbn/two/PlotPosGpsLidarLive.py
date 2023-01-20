@@ -1,6 +1,5 @@
 import matplotlib
 
-# test scenario abn compute
 import numpy as np
 from matplotlib import pyplot as plt
 import PyQt5

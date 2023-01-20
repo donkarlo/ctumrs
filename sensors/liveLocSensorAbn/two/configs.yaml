@@ -1,6 +1,6 @@
 normalScenarioName: normal
 testScenarioName: follow
-lidarTestScenarioCounterLimit: 5000
+lidarTestScenarioCounterLimit: 5300
 targetRobotIds: ["uav1","uav2"]
 plotUpdateRate: 200
 normalScenarioStartTime: 6565
@@ -14,7 +14,7 @@ gps_origin:
     - [ 0, 0, 0, 0,  0.2  , 0 ]
     - [ 0, 0, 0, 0, 0,  0.4   ]
   updateRate: 10
-  clustersNum: 75
+  clustersNum: 32
   velCo: 1.05
   trainingRowsNumLimit: 360000
   gaussianNoiseVarCo: 0
