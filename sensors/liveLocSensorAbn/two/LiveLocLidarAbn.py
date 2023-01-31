@@ -265,8 +265,12 @@ if __name__ == "__main__":
         robot2LidarEncoder = Autoencoder.loadEncoder(pathToRobot2LidarMindDir + "encoder.h5")
 
         prvTime = 0
+        beginningSkipCounter = 0
         #loop through topics
         for topicRowCounter, topicRow in enumerate(topicRows):
+            if beginningSkipCounter<=configs["beginningSkip"]:
+                beginningSkipCounter +=1
+                continue
             if robot1LidarTopicCounter >= lidarTestScenarioCounterLimit:
                 gpsFilePathName = pathToTestScenrio+"{}/{}-scenario-trained/abnormality-values/".format(gpsSensorName,normalScenarioName)+twoRobotsGpsTrainingSettingsString+".pkl"
                 lidarFilePathName = pathToTestScenrio+"{}/{}-scenario-trained/abnormality-values/".format(lidarSensorName,normalScenarioName)+twoRobotsLidarTrainingSettingsString+".pkl"

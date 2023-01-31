@@ -73,7 +73,7 @@ if __name__ == "__main__":
     lidarNormalTimeAbnValsNoise0_32 = np.asarray(Abnormality.loadTimeAbnVals(lidarSharedPathToNormalScenarioAbnVals + "gaussianNoiseVarCo_0.32_training_120000_velco_0.5_clusters_32_autoencoder_latentdim_3_epochs_200.pkl"))
     lidarFollowTimeAbnValsNoise0_32 = np.asarray(Abnormality.loadTimeAbnVals(lidarSharedPathToFollowScenarioAbnVals + "gaussianNoiseVarCo_0.32_training_120000_velco_0.5_clusters_32_autoencoder_latentdim_3_epochs_200.pkl"))
 
-    Abnormality.plotNew(
+    Abnormality.plotAbnValsTolerenceLines(
         [
               (gpsNormalTimeAbnValsNoise0, gpsFollowTimeAbnValsNoise0, "noise=0.0002")
             , (gpsNormalTimeAbnValsNoise0_00125, gpsFollowTimeAbnValsNoise0_00125, "noise=0.00125")

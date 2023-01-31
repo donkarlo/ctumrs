@@ -26,7 +26,7 @@ class Abnormality:
             return loadedPickle
 
     @staticmethod
-    def plotNormalConfidenceLineAbnormalVals(normalTestTimeAbnValsList:list):
+    def plotNormalConfidenceLineAbnormalValsAllTogether(normalTestTimeAbnValsList:list):
         matplotlib.use("Qt5Agg")
         # plt.gca().set_aspect('equal')
         for normalTimeTestAbnVals in reversed(normalTestTimeAbnValsList):
@@ -43,7 +43,7 @@ class Abnormality:
         plt.show()
 
     @staticmethod
-    def plotNew(gpsNormalTestTimeAbnValsList:list,lidarNormalTestTimeAbnValsList:list):
+    def plotAbnValsTolerenceLines(gpsNormalTestTimeAbnValsList:list, lidarNormalTestTimeAbnValsList:list):
         matplotlib.use("Qt5Agg")
         plotColsNum = max (len(gpsNormalTestTimeAbnValsList),len(lidarNormalTestTimeAbnValsList))
         fig, axes = plt.subplots(plotColsNum, 2)
@@ -54,11 +54,13 @@ class Abnormality:
             axes[plotRowCounter][0].plot(gpsNormalTestTimeAbnValsList[plotRowCounter][1][:,0]
                                          ,gpsNormalTestTimeAbnValsList[plotRowCounter][1][:,1]
                                          ,label = gpsNormalTestTimeAbnValsList[plotRowCounter][2]
+                                         ,linewidth='1'
                                          )
-            # axes[plotRowCounter][0].plot([gpsNormalTestTimeAbnValsList[plotRowCounter][1][0,0], gpsNormalTestTimeAbnValsList[plotRowCounter][1][-1,0]]
-            #                              ,[gpsNormalAbnMeanMulSigma,gpsNormalAbnMeanMulSigma]
-            #                              )
-            axes[plotRowCounter][0].legend()
+            axes[plotRowCounter][0].plot([gpsNormalTestTimeAbnValsList[plotRowCounter][1][0,0], gpsNormalTestTimeAbnValsList[plotRowCounter][1][-1,0]]
+                                         ,[gpsNormalAbnMeanMulSigma,gpsNormalAbnMeanMulSigma]
+                                         )
+            axes[plotRowCounter][0].tick_params(axis='both', labelsize=8)
+            axes[plotRowCounter][0].legend(fontsize=8)
 
 
             #LIDAR
@@ -66,13 +68,14 @@ class Abnormality:
             axes[plotRowCounter][1].plot(lidarNormalTestTimeAbnValsList[plotRowCounter][1][:,0]
                                          ,lidarNormalTestTimeAbnValsList[plotRowCounter][1][:,1]
                                          , label=lidarNormalTestTimeAbnValsList[plotRowCounter][2]
+                                         , linewidth='1'
                                          )
-            # axes[plotRowCounter][1].plot([lidarNormalTestTimeAbnValsList[plotRowCounter][1][0, 0], lidarNormalTestTimeAbnValsList[plotRowCounter][1][-1, 0]]
-            #                              , [lidarNormalAbnMeanMulSigma, lidarNormalAbnMeanMulSigma]
-            #                              )
-            axes[plotRowCounter][1].legend()
+            axes[plotRowCounter][1].plot([lidarNormalTestTimeAbnValsList[plotRowCounter][1][0, 0], lidarNormalTestTimeAbnValsList[plotRowCounter][1][-1, 0]]
+                                         , [lidarNormalAbnMeanMulSigma, lidarNormalAbnMeanMulSigma]
+                                         )
 
-        # plt.legend()
+            axes[plotRowCounter][1].tick_params(axis='both', labelsize=8)
+            axes[plotRowCounter][1].legend(fontsize=8)
         plt.show()
 
 
