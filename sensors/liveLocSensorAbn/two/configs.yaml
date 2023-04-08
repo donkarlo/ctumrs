@@ -1,10 +1,10 @@
-normalScenarioName: follow
-testScenarioName: normal
-lidarTestScenarioCounterLimit: 4900
+normalScenarioName: normal
+testScenarioName: follow
+lidarTestScenarioCounterLimit: 5300
 targetRobotIds: ["uav1","uav2"]
 plotUpdateRate: 50
-normalScenarioStartTime: 7078
-beginningSkip: 47000
+normalScenarioStartTime: 6565
+beginningSkip: 0
 
 gps_origin:
   covMtx:
@@ -28,7 +28,7 @@ rplidar:
     - [ 0, 0, 0, 0,0001, 0, 0 ]
     - [ 0, 0, 0, 0, 0,0001, 0 ]
     - [ 0, 0, 0, 0, 0, 0,0001 ]
-  clustersNum: 16
+  clustersNum: 32
   velCo: 0.5
   trainingRowsNumLimit: 120000
   autoencoder:

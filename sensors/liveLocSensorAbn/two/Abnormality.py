@@ -59,6 +59,7 @@ class Abnormality:
             axes[plotRowCounter][0].plot([gpsNormalTestTimeAbnValsList[plotRowCounter][1][0,0], gpsNormalTestTimeAbnValsList[plotRowCounter][1][-1,0]]
                                          ,[gpsNormalAbnMeanMulSigma,gpsNormalAbnMeanMulSigma]
                                          )
+            # axes[plotRowCounter][0].grid(True)
             axes[plotRowCounter][0].tick_params(axis='both', labelsize=8)
             axes[plotRowCounter][0].legend(fontsize=8)
 
@@ -73,7 +74,7 @@ class Abnormality:
             axes[plotRowCounter][1].plot([lidarNormalTestTimeAbnValsList[plotRowCounter][1][0, 0], lidarNormalTestTimeAbnValsList[plotRowCounter][1][-1, 0]]
                                          , [lidarNormalAbnMeanMulSigma, lidarNormalAbnMeanMulSigma]
                                          )
-
+            # axes[plotRowCounter][1].grid(True)
             axes[plotRowCounter][1].tick_params(axis='both', labelsize=8)
             axes[plotRowCounter][1].legend(fontsize=8)
         plt.show()

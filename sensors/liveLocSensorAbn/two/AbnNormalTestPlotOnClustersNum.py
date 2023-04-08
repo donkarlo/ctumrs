@@ -15,6 +15,7 @@ if __name__ == "__main__":
     gpsNormalTimeAbnValsCLusters75 = np.asarray(Abnormality.loadTimeAbnVals(gpsSharedPathToNormalScenarioAbnVals + "gaussianNoiseVarCo_0_training_360000_velco_1.05_clusters_75.pkl"))
     gpsFollowTimeAbnValsClusters75 = np.asarray(Abnormality.loadTimeAbnVals(gpsSharedPathToFollowScenarioAbnVals + "gaussianNoiseVarCo_0_training_360000_velco_1.05_clusters_75.pkl"))
 
+
     gpsNormalTimeAbnValsCLusters64 = np.asarray(Abnormality.loadTimeAbnVals(gpsSharedPathToNormalScenarioAbnVals + "gaussianNoiseVarCo_0_training_360000_velco_1.05_clusters_64.pkl"))
     gpsFollowTimeAbnValsClusters64 = np.asarray(Abnormality.loadTimeAbnVals(gpsSharedPathToFollowScenarioAbnVals + "gaussianNoiseVarCo_0_training_360000_velco_1.05_clusters_64.pkl"))
 

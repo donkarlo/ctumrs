@@ -12,17 +12,18 @@ class PlotPosGpsLidarLive:
         self.__fig, self.__axes = plt.subplots(3, 1)
         self.__lineRobot1Pos, = self.__axes[0].plot(np.random.randn(100), np.random.randn(100))
         self.__lineRobot2Pos, = self.__axes[0].plot(np.random.randn(100), np.random.randn(100))
-        self.__axes[0].grid(True)
+        # self.__axes[0].grid(True)
         self.__axes[0].set_title("Position")
 
 
         self.__lineLidar, = self.__axes[1].plot(np.random.randn(100))
-        self.__axes[1].grid(True)
-        self.__axes[1].set_title("Lidar abnormality")
+        # self.__lineTolLidar, = self.__axes[1].plot([0,0],[0,0])
+        # self.__axes[1].grid(True)
+        self.__axes[1].set_title("LIDAR anomalies")
 
         self.__lineGps, = self.__axes[2].plot(np.random.randn(100))
-        self.__axes[2].grid(True)
-        self.__axes[2].set_title("GPS abnormality")
+        # self.__axes[2].grid(True)
+        self.__axes[2].set_title("GPS anomalies")
 
         plt.show(block=False)
 
@@ -49,6 +50,10 @@ class PlotPosGpsLidarLive:
     def updateLidarAbnPlot(self, lidarTimeAbnVals):
         self.__lineLidar.set_xdata(lidarTimeAbnVals[:, 0])
         self.__lineLidar.set_ydata(lidarTimeAbnVals[:, 1])
+
+        # self.__lineTolLidar.set_xdata([0,len(lidarTimeAbnVals[:, 0])])
+        # self.__lineTolLidar.set_ydata([20,20])
+
         self.__axes[1].relim()
         self.__axes[1].autoscale_view()
         self.__fig.canvas.update()

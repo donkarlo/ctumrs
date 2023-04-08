@@ -17,6 +17,78 @@ from ctumrs.topic.RpLidar import RpLidar
 from ctumrs.topic.Topic import Topic
 from mMath.calculus.derivative.TimePosRowsDerivativeComputer import TimePosRowsDerivativeComputer
 
+
+class Robot:
+    def __init__(self,robotId:int):
+        pass
+
+class Sensor:
+    def __init__(self,sensorId:int,robotId:int,memLen:int):
+        self.__vals = []
+        self.__abnVals = []
+        pass
+
+    def getLastVal(self):
+        pass
+
+    def addVal(self,val):
+        '''
+        - remove the first val and push the new val to keep the len of sensor value
+        - compute val
+
+        Parameters
+        ----------
+        val
+
+        Returns
+        -------
+
+        '''
+        pass
+
+
+class PrdMdl:
+    '''
+    TransMtx and LSTM are PrdModels
+    '''
+    def __init__(self, tolVal:float):
+        pass
+
+class CSA:
+    '''
+    Class Collective Self-awareness
+    '''
+    def __init__(self ,robots ,publicMemLen:float ):
+        '''
+        Parameters
+        ----------
+        robots
+        publicMemLen: public mem value between
+        '''
+        pass
+
+    def choosePrdGpsMdl(self):
+        pass
+
+    def choosePrdLidarMdl(self):
+        pass
+
+    def updatePrdMdl(self):
+        pass
+
+    def createPrdModel(self):
+        pass
+
+    def addSensorVal(self, sensorId, sensorVal):
+        '''
+         - Either update or create a prd model
+         - compute abnormality
+         - Am I being controlled?
+        '''
+        pass
+
+
+
 if __name__ == "__main__":
     #configs
     with open("configs.yaml", "r") as file:
@@ -224,7 +296,7 @@ if __name__ == "__main__":
 
 
 
-    # From here we gather data for gps location and  lidar abnormalities and gps abnormalities
+    ############## From here we gather data for gps location and  lidar abnormalities and gps abnormalities
     testScenarioName = configs["testScenarioName"]
     pathToTestScenrio = basePath + "{}-scenario/".format(testScenarioName)
     pathToTestScenarioYamlFile = pathToTestScenrio + "uav1-gps-lidar-uav2-gps-lidar.yaml"
@@ -268,7 +340,7 @@ if __name__ == "__main__":
         beginningSkipCounter = 0
         #loop through topics
         for topicRowCounter, topicRow in enumerate(topicRows):
-            if beginningSkipCounter<=configs["beginningSkip"]:
+            if beginningSkipCounter<configs["beginningSkip"]:
                 beginningSkipCounter +=1
                 continue
             if robot1LidarTopicCounter >= lidarTestScenarioCounterLimit:
