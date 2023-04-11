@@ -19,19 +19,18 @@ from mMath.calculus.derivative.TimePosRowsDerivativeComputer import TimePosRowsD
 
 
 class Robot:
-    def __init__(self,robotId:int):
+    def __init__(self,robotId:int,sensorIds:list):
         pass
 
 class Sensor:
     def __init__(self,sensorId:int,robotId:int,memLen:int):
         self.__vals = []
-        self.__abnVals = []
         pass
 
     def getLastVal(self):
         pass
 
-    def addVal(self,val):
+    def pushVal(self,val):
         '''
         - remove the first val and push the new val to keep the len of sensor value
         - compute val
@@ -44,6 +43,10 @@ class Sensor:
         -------
 
         '''
+        self.__removeFirstVal()
+        pass
+
+    def __removeFirstVal(self):
         pass
 
 
@@ -67,19 +70,19 @@ class CSA:
         '''
         pass
 
-    def choosePrdGpsMdl(self):
+    def choosePrdCoupledGpsMdl(self):
         pass
 
-    def choosePrdLidarMdl(self):
+    def choosePrdCoupledLidarMdl(self):
         pass
 
-    def updatePrdMdl(self):
+    def updatePrdCoupledMdl(self):
         pass
 
-    def createPrdModel(self):
+    def createPrdCoupledMdl(self):
         pass
 
-    def addSensorVal(self, sensorId, sensorVal):
+    def pushSensorVal(self, sensor:Sensor, sensorVal):
         '''
          - Either update or create a prd model
          - compute abnormality
