@@ -18,10 +18,6 @@ from ctumrs.topic.Topic import Topic
 from mMath.calculus.derivative.TimePosRowsDerivativeComputer import TimePosRowsDerivativeComputer
 
 
-class Robot:
-    def __init__(self,robotId:int,sensorIds:list):
-        pass
-
 class Sensor:
     def __init__(self,sensorId:int,robotId:int,memLen:int):
         self.__vals = []
@@ -48,6 +44,14 @@ class Sensor:
 
     def __removeFirstVal(self):
         pass
+
+class Robot:
+    def __init__(self,robotId:int,sensorIds:list):
+        pass
+    def addSensor(self,sensor:Sensor):
+        pass
+
+
 
 
 class PrdMdl:
@@ -82,7 +86,7 @@ class CSA:
     def createPrdCoupledMdl(self):
         pass
 
-    def pushSensorVal(self, sensor:Sensor, sensorVal):
+    def pushSensorVal(self, robot:Robot, sensor:Sensor, sensorVal):
         '''
          - Either update or create a prd model
          - compute abnormality
