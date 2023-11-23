@@ -7,22 +7,26 @@ import PyQt5
 class PlotPosGpsLidarLive:
 
     def __init__(self):
+        tickNumbersFontSize = 12
         matplotlib.use("Qt5Agg")
         plt.ion()
         self.__fig, self.__axes = plt.subplots(3, 1)
         self.__lineRobot1Pos, = self.__axes[0].plot(np.random.randn(100), np.random.randn(100))
         self.__lineRobot2Pos, = self.__axes[0].plot(np.random.randn(100), np.random.randn(100))
         # self.__axes[0].grid(True)
+        self.__axes[0].tick_params(axis='both', labelsize=tickNumbersFontSize)
         self.__axes[0].set_title("Position")
 
 
         self.__lineLidar, = self.__axes[1].plot(np.random.randn(100))
         # self.__lineTolLidar, = self.__axes[1].plot([0,0],[0,0])
         # self.__axes[1].grid(True)
+        self.__axes[1].tick_params(axis='both', labelsize=tickNumbersFontSize)
         self.__axes[1].set_title("LIDAR anomalies")
 
         self.__lineGps, = self.__axes[2].plot(np.random.randn(100))
         # self.__axes[2].grid(True)
+        self.__axes[2].tick_params(axis='both', labelsize=tickNumbersFontSize)
         self.__axes[2].set_title("GPS anomalies")
 
         plt.show(block=False)
@@ -58,3 +62,14 @@ class PlotPosGpsLidarLive:
         self.__axes[1].autoscale_view()
         self.__fig.canvas.update()
         self.__fig.canvas.flush_events()
+
+    @staticmethod
+    def showPlot(timAbnVals,sensorName):
+        matplotlib.use("Qt5Agg")
+        time = timAbnVals[:, 0]
+        abnVal = timAbnVals[:, 1]
+        plt.plot(time,abnVal)
+        plt.xlabel("time")
+        plt.ylabel(sensorName)
+        plt.grid(True)
+        plt.show()

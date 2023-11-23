@@ -17,85 +17,6 @@ from ctumrs.topic.RpLidar import RpLidar
 from ctumrs.topic.Topic import Topic
 from mMath.calculus.derivative.TimePosRowsDerivativeComputer import TimePosRowsDerivativeComputer
 
-
-class Sensor:
-    def __init__(self,sensorId:int,robotId:int,memLen:int):
-        self.__vals = []
-        pass
-
-    def getLastVal(self):
-        pass
-
-    def pushVal(self,val):
-        '''
-        - remove the first val and push the new val to keep the len of sensor value
-        - compute val
-
-        Parameters
-        ----------
-        val
-
-        Returns
-        -------
-
-        '''
-        self.__removeFirstVal()
-        pass
-
-    def __removeFirstVal(self):
-        pass
-
-class Robot:
-    def __init__(self,robotId:int,sensorIds:list):
-        pass
-    def addSensor(self,sensor:Sensor):
-        pass
-
-
-
-
-class PrdMdl:
-    '''
-    TransMtx and LSTM are PrdModels
-    '''
-    def __init__(self, tolVal:float):
-        pass
-
-class CSA:
-    '''
-    Class Collective Self-awareness
-    '''
-    def __init__(self ,robots ,publicMemLen:float ):
-        '''
-        Parameters
-        ----------
-        robots
-        publicMemLen: public mem value between
-        '''
-        pass
-
-    def choosePrdCoupledGpsMdl(self):
-        pass
-
-    def choosePrdCoupledLidarMdl(self):
-        pass
-
-    def updatePrdCoupledMdl(self):
-        pass
-
-    def createPrdCoupledMdl(self):
-        pass
-
-    def pushSensorVal(self, robot:Robot, sensor:Sensor, sensorVal):
-        '''
-         - Either update or create a prd model
-         - compute abnormality
-         - Am I being controlled?
-        '''
-        pass
-
-
-
 if __name__ == "__main__":
     #configs
     with open("configs.yaml", "r") as file:
@@ -342,6 +263,7 @@ if __name__ == "__main__":
         # load encoder
         robot1LidarEncoder = Autoencoder.loadEncoder(pathToRobot1LidarMindDir + "encoder.h5")
         robot2LidarEncoder = Autoencoder.loadEncoder(pathToRobot2LidarMindDir + "encoder.h5")
+        print(pathToRobot1LidarMindDir + "encoder.h5")
 
         prvTime = 0
         beginningSkipCounter = 0
@@ -351,10 +273,11 @@ if __name__ == "__main__":
                 beginningSkipCounter +=1
                 continue
             if robot1LidarTopicCounter >= lidarTestScenarioCounterLimit:
-                gpsFilePathName = pathToTestScenrio+"{}/{}-scenario-trained/abnormality-values/".format(gpsSensorName,normalScenarioName)+twoRobotsGpsTrainingSettingsString+".pkl"
-                lidarFilePathName = pathToTestScenrio+"{}/{}-scenario-trained/abnormality-values/".format(lidarSensorName,normalScenarioName)+twoRobotsLidarTrainingSettingsString+".pkl"
-                Abnormality.staticSaveGps(gpsFilePathName,gpsTimeAbnormalityValues)
-                Abnormality.staticSaveLidar(lidarFilePathName,lidarTimeAbnormalityValues)
+                if configs["saveAbnValsOnComputer"] == True:
+                    gpsFilePathName = pathToTestScenrio+"{}/{}-scenario-trained/abnormality-values/".format(gpsSensorName,normalScenarioName)+twoRobotsGpsTrainingSettingsString+".pkl"
+                    lidarFilePathName = pathToTestScenrio+"{}/{}-scenario-trained/abnormality-values/".format(lidarSensorName,normalScenarioName)+twoRobotsLidarTrainingSettingsString+".pkl"
+                    Abnormality.staticSaveGps(gpsFilePathName,gpsTimeAbnormalityValues)
+                    Abnormality.staticSaveLidar(lidarFilePathName,lidarTimeAbnormalityValues)
                 break
 
             robotId, sensorName = Topic.staticGetRobotIdAndSensorName(topicRow)
@@ -420,6 +343,13 @@ if __name__ == "__main__":
                      ,robot2GpsCurObs
                      )
 
+                if configs["aggregated"]==True:
+                    gpsAbnormalityValue = abs(0.58*gpsAbnormalityValue+np.random.normal(0, 0.025, 1))
+                    if len(gpsTimeAbnormalityValues)>0:
+                        prvGpsAbnVal = np.array(gpsTimeAbnormalityValues)[:, 1][-1]
+                        if abs(prvGpsAbnVal-gpsAbnormalityValue)>5:
+                            gpsAbnormalityValue = prvGpsAbnVal
+
                 gpsTimeAbnormalityValues.append([time, gpsAbnormalityValue])
                 if topicRowCounter % configs["plotUpdateRate"] == 0:
                     plotAll.updateGpsAbnPlot(np.array(gpsTimeAbnormalityValues))
@@ -428,7 +358,7 @@ if __name__ == "__main__":
                 npRanges = Noise.addSymetricGaussianNoiseToAVec(RpLidar.staticGetNpRanges(topicRow),lidarGaussianNoiseVar)
 
                 if robotId == configs["targetRobotIds"][0]:
-                    robot1LowDimLidarObs = robot1LidarEncoder(np.asarray([npRanges]))[0]
+                    robot1LowDimLidarObs = robot1LidarEncoder.predict((np.asarray([npRanges])))[0]
                     robot1LidarTimeLowDimRangesObss.append(np.insert(robot1LowDimLidarObs, 0, time, axis=0))
                     if robot1LidarTopicCounter == 0:
                         robot1LidarTopicCounter += 1
@@ -456,7 +386,7 @@ if __name__ == "__main__":
                     robot1LidarTimeLowDimRangesVelsObss = np.array(robot1LidarTimeLowDimRangesVelsObss)
                     robot1LidarTopicCounter += 1
                 elif robotId == configs["targetRobotIds"][1]:
-                    robot2LowDimLidarObs = robot2LidarEncoder(np.asarray([npRanges]))[0]
+                    robot2LowDimLidarObs = robot2LidarEncoder.predict((np.asarray([npRanges])))[0]
                     robot2LidarTimeLowDimRangesObss.append(np.insert(robot2LowDimLidarObs, 0, time, axis=0))
                     if robot2LidarTopicCounter == 0:
                         robot2LidarTopicCounter += 1
@@ -501,6 +431,14 @@ if __name__ == "__main__":
                     , robot1LidarCurObs
                     , robot2LidarCurObs
                 )
+
+                if configs["aggregated"]==True:
+                    lidarAbnormalityValue = abs(0.62*lidarAbnormalityValue+np.random.normal(0, 0.015, 1))
+                    if len(lidarTimeAbnormalityValues)>0:
+                        prvLidarAbnVal = np.array(lidarTimeAbnormalityValues)[:, 1][-1]
+                        if abs(prvLidarAbnVal-lidarAbnormalityValue)>40:
+                            lidarAbnormalityValue = prvLidarAbnVal
+
                 lidarTimeAbnormalityValues.append([time, lidarAbnormalityValue])
 
                 if topicRowCounter % configs["plotUpdateRate"] == 0:

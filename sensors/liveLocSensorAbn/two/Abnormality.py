@@ -47,6 +47,8 @@ class Abnormality:
         matplotlib.use("Qt5Agg")
         plotColsNum = max (len(gpsNormalTestTimeAbnValsList),len(lidarNormalTestTimeAbnValsList))
         fig, axes = plt.subplots(plotColsNum, 2)
+        tickNumbersFontSize = 12
+        legendFontSize = 12
 
         for plotRowCounter in range(plotColsNum):
             #GPS
@@ -58,10 +60,14 @@ class Abnormality:
                                          )
             axes[plotRowCounter][0].plot([gpsNormalTestTimeAbnValsList[plotRowCounter][1][0,0], gpsNormalTestTimeAbnValsList[plotRowCounter][1][-1,0]]
                                          ,[gpsNormalAbnMeanMulSigma,gpsNormalAbnMeanMulSigma]
+                                         ,linewidth='0.75'
+                                         ,linestyle='dashed'
+                                         , color='red'
+                                         , label='threshold'
                                          )
             # axes[plotRowCounter][0].grid(True)
-            axes[plotRowCounter][0].tick_params(axis='both', labelsize=8)
-            axes[plotRowCounter][0].legend(fontsize=8)
+            axes[plotRowCounter][0].tick_params(axis='both', labelsize=tickNumbersFontSize)
+            axes[plotRowCounter][0].legend(fontsize=legendFontSize, loc='upper right')
 
 
             #LIDAR
@@ -73,10 +79,14 @@ class Abnormality:
                                          )
             axes[plotRowCounter][1].plot([lidarNormalTestTimeAbnValsList[plotRowCounter][1][0, 0], lidarNormalTestTimeAbnValsList[plotRowCounter][1][-1, 0]]
                                          , [lidarNormalAbnMeanMulSigma, lidarNormalAbnMeanMulSigma]
+                                         , linewidth='0.75'
+                                         , linestyle='dashed'
+                                         , color='red'
+                                         , label='threshold'
                                          )
             # axes[plotRowCounter][1].grid(True)
-            axes[plotRowCounter][1].tick_params(axis='both', labelsize=8)
-            axes[plotRowCounter][1].legend(fontsize=8)
+            axes[plotRowCounter][1].tick_params(axis='both',  labelsize=tickNumbersFontSize)
+            axes[plotRowCounter][1].legend(fontsize=legendFontSize, loc='upper right')
         plt.show()
 
 

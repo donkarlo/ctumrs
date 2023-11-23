@@ -11,5 +11,4 @@ class RpLidar(Topic):
         npRanges = np.array(topicRow["ranges"]).astype(float)
         # replace infs with 15 in np.range
         npRanges[npRanges == np.inf] = infReplacement
-
         return npRanges
