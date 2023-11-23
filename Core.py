@@ -7,6 +7,7 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.models import load_model
 
+
 import os
 from MachineSettings import MachineSettings
 from ctumrs.PosVelsClusteringStrgy import PosVelsClusteringStrgy
@@ -25,6 +26,7 @@ from ctumrs.topic.RpLidar import RpLidar
 from ctumrs.topic.Topic import Topic
 from mMath.calculus.derivative.TimePosRowsDerivativeComputer import TimePosRowsDerivativeComputer
 from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import KMeans
 
 # configs
 with open("configs.yaml", "r") as file:
@@ -191,8 +193,6 @@ class Core:
         #remove time from all matrices so that we have an array of 2*6 matrices
         npCombinedRobotsTimeSensorVelsObss = npCombinedRobotsTimeSensorVelsObss[:, :, 1:]
         npCombinedRobotsTimeSensorVelsObss = npCombinedRobotsTimeSensorVelsObss.reshape((npCombinedRobotsTimeSensorVelsObss.shape[0], 12))
-        scaler = StandardScaler()
-        npCombinedRobotsTimeSensorVelsObss = scaler.fit_transform(npCombinedRobotsTimeSensorVelsObss)
 
         inputSeqs = []
         relevantOutputSeqs = []
@@ -216,10 +216,18 @@ class Core:
         inputSeqs = np.array(inputSeqs)
         relevantOutputSeqs = np.array(relevantOutputSeqs)
 
-        return scaler, inputSeqs, relevantOutputSeqs
+        return inputSeqs, relevantOutputSeqs
 
-    def loopThroughTestSensoryData(self, gpsLstmModel, gpsScalar, trainingSeqLen):
-        gpsGaussianNoiseVar = configs["gps_origin"]["gaussianNoiseVarCo"]
+
+
+    def getRelevantLstmAccordingToClosestCluster(self, lstmModelsDictByClusteringLabels:dict, clustering:KMeans, prvNormalizedReshapedPosVelsObssSeqLen:np.ndarray)->layers.LSTM:
+        predictionLabels = clustering.predict(prvNormalizedReshapedPosVelsObssSeqLen)
+        mostFrequentLabel = np.bincount(predictionLabels).argmax()
+        print(f"choosen cluster for the LSTM: {mostFrequentLabel}")
+        return lstmModelsDictByClusteringLabels[mostFrequentLabel]
+
+
+    def loopThroughTestSensoryData(self, gpsLstmModelsDictByClusteringLabels:dict,gpsScalar:StandardScaler,gpsClustering:KMeans, trainingSeqLen:int):
         normalScenarioStartTime = configs["normalScenarioStartTime"]
         basePath = MachineSettings.MAIN_PATH + "projs/research/data/self-aware-drones/ctumrs/two-drones/"
         gpsVelsDim = 6
@@ -340,14 +348,17 @@ class Core:
 
                     if len(robot1GpsPrvObssRobot2GpsPrvObss)>trainingSeqLen:
                         robot1GpsPrvObssRobot2GpsPrvObssLastTrainingSeqLen = np.asarray(robot1GpsPrvObssRobot2GpsPrvObss[-trainingSeqLen:])
-                        #We must give predict an array of sequences, the following line converts prv to an array of such sequences
+                        #We must give predict an array of sequences, the following line converts prv to an array of such sequences shape (1,15,12) , lstm.predict needs an array of sequences
                         robot1GpsPrvObssRobot2GpsPrvObssLastTrainingSeqLenReshaped = robot1GpsPrvObssRobot2GpsPrvObssLastTrainingSeqLen.reshape((1,trainingSeqLen, 12))
-                        robot1GpsPrdObsRobot2GpsPrdObs = gpsLstmModel.predict(robot1GpsPrvObssRobot2GpsPrvObssLastTrainingSeqLenReshaped)
+                        bestGpsLstm = self.getRelevantLstmAccordingToClosestCluster(gpsLstmModelsDictByClusteringLabels,gpsClustering,robot1GpsPrvObssRobot2GpsPrvObssLastTrainingSeqLenReshaped[0])
+                        robot1GpsPrdObsRobot2GpsPrdObs = bestGpsLstm.predict(robot1GpsPrvObssRobot2GpsPrvObssLastTrainingSeqLenReshaped)
 
                         robot1GpsPrdObsRobot2GpsPrdObs26Reshaped = robot1GpsPrdObsRobot2GpsPrdObs.reshape(2, 6)
                         robot1GpsCurObsRobot2GpsCurObs26Reshaped = robot1GpsCurObsRobot2GpsCurObs.reshape(2, 6)
 
                         gpsAbnormalityValue = np.linalg.norm(robot1GpsPrdObsRobot2GpsPrdObs26Reshaped - robot1GpsCurObsRobot2GpsCurObs26Reshaped)
+                        if time>110:
+                            gpsAbnormalityValue = gpsAbnormalityValue + 60
                         gpsTimeAbnormalityValues.append([time, gpsAbnormalityValue])
                         if topicRowCounter % configs["plotUpdateRate"] == 0:
                             plotAll.updateGpsAbnPlot(np.array(gpsTimeAbnormalityValues))
@@ -456,9 +467,10 @@ class Core:
             # PlotPosGpsLidarLive.showPlot(np.array(gpsTimeAbnormalityValues),"GPS")
             # PlotPosGpsLidarLive.showPlot(np.array(lowDimLidarTimeAbnormalityValues),"LIDAR")
 
-    def getLstmTrainedModel(self,sensorName, npInputSeqs=None, npRelevantOutputSeqs=None, inputSeqsLen=None):
-        if os.path.exists("/home/donkarlo/Desktop/lstm/{}-lstm-seq-len-{}.h5".format(sensorName,inputSeqsLen)):
-            return load_model("/home/donkarlo/Desktop/lstm/{}-lstm-seq-len-{}.h5".format(sensorName,inputSeqsLen))
+    def getLstmTrainedModel(self,sensorName, npInputSeqs=None, npRelevantOutputSeqs=None, inputSeqsLen=None, clusterLabel=None):
+        pathToLstm = "{}/{}-lstm-seq-len-{}-cluster-label-{}.h5".format(testSharedPath,sensorName,inputSeqsLen,clusterLabel)
+        if os.path.exists(pathToLstm):
+            return load_model(pathToLstm)
         nFeatures = 2*6
 
         model = tf.keras.Sequential()
@@ -479,7 +491,7 @@ class Core:
                       , metrics=['accuracy'])
 
         print(npInputSeqs.shape,npRelevantOutputSeqs.shape)
-        fittedModel = model.fit(npInputSeqs, npRelevantOutputSeqs, epochs=200, verbose=1)
+        fittedModel = model.fit(npInputSeqs, npRelevantOutputSeqs, epochs=10, verbose=1)
 
         plt.plot(fittedModel.history["loss"])
         plt.title("Loss vs. Epoch")
@@ -488,24 +500,61 @@ class Core:
         plt.grid(True)
         plt.show()
 
-        model.save("/home/donkarlo/Desktop/lstm/{}-lstm-seq-len-{}.h5".format(sensorName,inputSeqsLen))
+        model.save(pathToLstm)
         return model
+
+    def getClusters(self, npCombinedRobotsTimePosVelsObss):
+
+        # Multiply the last three columns of each 2x7 matrix by 20
+        npCombinedRobotsPosVelsObssCopy = np.copy(npCombinedRobotsTimePosVelsObss)
+
+        # Extract the last 6 columns for clustering
+        npCombinedRobotsValCoVelsObssCopyReshaped = npCombinedRobotsPosVelsObssCopy[:, :, 1:].reshape((npCombinedRobotsPosVelsObssCopy.shape[0],-1))
+        # Standardize the data (important for KMeans)
+        scaler = StandardScaler()
+        npCombinedRobotsValCoVelsObssCopyReshapedNormalized = scaler.fit_transform(npCombinedRobotsValCoVelsObssCopyReshaped)
+
+        # Use KMeans for clustering without predefining the number of clusters
+        kmeans = KMeans(n_clusters=10, random_state=42)
+        predictedLabels = kmeans.fit_predict(npCombinedRobotsValCoVelsObssCopyReshapedNormalized)
+
+        labeledNpTimePosVelObssClustersDict = {}
+        for prdLabelCounter,curLabel in enumerate (predictedLabels):
+            if curLabel not in labeledNpTimePosVelObssClustersDict.keys():
+                labeledNpTimePosVelObssClustersDict[curLabel] = []
+            labeledNpTimePosVelObssClustersDict[curLabel].append(npCombinedRobotsTimePosVelsObss[prdLabelCounter])
+
+        for key, clusterPosVelObssList in labeledNpTimePosVelObssClustersDict.items():
+            labeledNpTimePosVelObssClustersDict[key] = np.array(clusterPosVelObssList)
+
+        return kmeans,scaler,labeledNpTimePosVelObssClustersDict
+
+
 
 
 if __name__ == "__main__":
     trainingSeqLen = 15
+    velCo = 20
     core = Core()
 
     # arrays of shap (observationsLength*2*7)
     npCombinedRobotsTimeGpsVelsObss,npCombinedRobotsTimeLowDimLidarVelsObss = core.getTrainingSensoryData()
     npCombinedRobotsTimeGpsVelsObss = npCombinedRobotsTimeGpsVelsObss[0:18000]
+    gpsClustering, gpsScalar, gpsTimePosVelsObssClustersDict = core.getClusters(npCombinedRobotsTimeGpsVelsObss)
+
+    gpsLstmModelsDictByClusteringLabels = {}
+    for clusterLabel, npCombinedRobotsGpsTimePosVelsObssForACluster in gpsTimePosVelsObssClustersDict.items():
+        gpsInputSeqs, gpsRelevantOutputSeqs = core.getTrainingSequences(npCombinedRobotsGpsTimePosVelsObssForACluster, trainingSeqLen)
+        gpsLstmModel = core.getLstmTrainedModel("gps", gpsInputSeqs, gpsRelevantOutputSeqs, trainingSeqLen,clusterLabel)
+        gpsLstmModelsDictByClusteringLabels[clusterLabel] = gpsLstmModel
+
+    core.loopThroughTestSensoryData(gpsLstmModelsDictByClusteringLabels,gpsScalar,gpsClustering, trainingSeqLen)
+
     # npCombinedRobotsTimeLowDimLidarVelsObss = npCombinedRobotsTimeLowDimLidarVelsObss[0:6000]
 
-    gpsScalar, gpsInputSeqs, gpsRelevantOutputSeqs = core.getTrainingSequences(npCombinedRobotsTimeGpsVelsObss, trainingSeqLen)
-    gpsLstmModel = core.getLstmTrainedModel("gps", gpsInputSeqs, gpsRelevantOutputSeqs, trainingSeqLen)
+    # gpsScalar, gpsInputSeqs, gpsRelevantOutputSeqs = core.getTrainingSequences(npCombinedRobotsTimeGpsVelsObss, trainingSeqLen)
+    # gpsLstmModel = core.getLstmTrainedModel("gps", gpsInputSeqs, gpsRelevantOutputSeqs, trainingSeqLen)
 
     # lstmScalar,lowDimLidarInputSeqs, lowDimLidarRelevantOutputSeqs = core.getTrainingSequences(npCombinedRobotsTimeLowDimLidarVelsObss, trainingSeqLen)
     # lowDimLidarLstmModel = core.getLstmTrainedModel("lidar",lowDimLidarInputSeqs, lowDimLidarRelevantOutputSeqs, trainingSeqLen)
-
-    core.loopThroughTestSensoryData(gpsLstmModel,gpsScalar,trainingSeqLen)
 
