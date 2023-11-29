@@ -8,6 +8,7 @@ from sklearn.metrics import silhouette_score
 from tensorflow import keras
 from tensorflow.keras.models import Model, Sequential,load_model
 from tensorflow.keras.layers import Dense,LSTM
+from tensorflow.keras import layers, models
 
 
 import os
@@ -17,13 +18,13 @@ import yaml
 from yaml import CLoader
 from ctumrs.TimePosVelObssPlottingUtility import TimePosVelObssPlottingUtility
 from ctumrs.sensors.liveLocSensorAbn.two.PlotPosGpsLidarLive import PlotPosGpsLidarLive
-from ctumrs.sensors.noise.Noise import Noise
 from ctumrs.topic.GpsOrigin import GpsOrigin
 from ctumrs.topic.RpLidar import RpLidar
 from ctumrs.topic.Topic import Topic
 from mMath.calculus.derivative.TimePosRowsDerivativeComputer import TimePosRowsDerivativeComputer
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
+
 
 # configs
 with open("configs.yaml", "r") as file:
@@ -35,7 +36,7 @@ gpsValVelDim = 6
 lidarValVelDim = 1440
 encodersLatentDim = 3
 trainingSeqLen = 15
-numOfCLusters = 15
+numOfCLusters = 20
 
 class Core:
     def __init__(self):
@@ -215,11 +216,56 @@ class Core:
 
 
 
-    def getRelevantLstmAccordingToClosestCluster(self, lstmModelsDictByClusteringLabels:dict, clustering:KMeans, prvNormalizedReshapedPosVelsObssSeqLen:np.ndarray)->LSTM:
+    def getRelevantLstmAccordingToClosestCluster(self
+                                                 , lstmModelsDictByClusteringLabels:dict
+                                                 , clustering:KMeans
+                                                 , prvNormalizedReshapedPosVelsObssSeqLen:np.ndarray)->LSTM:
         predictionLabels = clustering.predict(prvNormalizedReshapedPosVelsObssSeqLen)
         mostFrequentLabel = np.bincount(predictionLabels).argmax()
-        print(f"choosen cluster for the LSTM: {mostFrequentLabel}")
         return lstmModelsDictByClusteringLabels[mostFrequentLabel]
+
+
+    def getTimeValVelObssFromNewValObs(self, time:int, npTimeValVelObss:np.ndarray, npNewValObs:np.ndarray):
+        valObsDim = npNewValObs.shape[0]
+        valVelObsDim = 2 * valObsDim
+        npNewTimeValVelObss = np.vstack((npTimeValVelObss, np.concatenate(([time], npNewValObs, np.zeros(valObsDim)), axis=0)))
+        robot1GpsTimeDiff = npNewTimeValVelObss[-1][0] - npNewTimeValVelObss[-2][0]
+        if robot1GpsTimeDiff == 0:
+            return None
+        robot1GpsDiff = np.subtract(npNewTimeValVelObss[-1][1:valObsDim],
+                                    npNewTimeValVelObss[-2][1:valObsDim])
+        robot1GpsVels = robot1GpsDiff / robot1GpsTimeDiff
+        npNewTimeValVelObss[-1][valObsDim + 1:valVelObsDim] = robot1GpsVels
+        return npNewTimeValVelObss
+
+    def getEncodedObs(self, npRobot1SensorValVelObs, npRobot2SensorValVelObs, sensorEncoder, sensorScaler):
+        robotsFlattedObs = np.array([np.concatenate((npRobot1SensorValVelObs, npRobot2SensorValVelObs), axis=0)])
+        robotsFlattedScaledObs = sensorScaler.transform(robotsFlattedObs)
+        robotsEncodedObs = sensorEncoder.predict(robotsFlattedScaledObs)
+        return robotsEncodedObs
+
+    def getAbnVal(self
+                  , npRobotsSensorsEncodedObssLastTraningSeqLenPlusOne:np.ndarray
+                  , sensorLstmModelsDictByClusteringLabels:dict
+                  , sensorClustering:KMeans
+                  ):
+
+        if len(npRobotsSensorsEncodedObssLastTraningSeqLenPlusOne) > trainingSeqLen:
+            # Take the last training seq len
+            robotsEncodedObssLastTrainingSeqLen = np.asarray(npRobotsSensorsEncodedObssLastTraningSeqLenPlusOne[-trainingSeqLen:])
+            # We must give predict an array of sequences, the following line converts prv to an array of such sequences shape (1,15,12) , lstm.predict needs an array of sequences
+            robotsEncodedObssLastTrainingSeqLenReshaped = robotsEncodedObssLastTrainingSeqLen.reshape(
+                (1, trainingSeqLen, encodersLatentDim))
+            bestGpsLstm = self.getRelevantLstmAccordingToClosestCluster(sensorLstmModelsDictByClusteringLabels,
+                                                                        sensorClustering,
+                                                                        robotsEncodedObssLastTrainingSeqLenReshaped[
+                                                                            0])
+            robotsEncodedPrd = bestGpsLstm.predict(robotsEncodedObssLastTrainingSeqLenReshaped)
+
+            abnVal = np.linalg.norm(robotsEncodedPrd - npRobotsSensorsEncodedObssLastTraningSeqLenPlusOne[-1])
+            return abnVal
+        else:
+            return None
 
 
     def loopThroughTestSensoryData(self, gpsLstmModelsDictByClusteringLabels:dict,gpsClustering:KMeans,gpsEncoder,gpsScaler:StandardScaler
@@ -229,14 +275,14 @@ class Core:
         robot1GpsCounter = 0
         robot2GpsCounter = 0
         gpsTimeAbnormalityValues = []
-        robotsGpsEncodedPrvObss = []
+        robotsGpsEncodedObss = []
 
         # Lidar settings
         lidarTestScenarioCounterLimit = configs["lidarTestScenarioCounterLimit"]
         robot1LidarCounter = 0
         robot2LidarCounter = 0
         lidarTimeAbnormalityValues = []
-        robotsLidarEncodedPrvObss = []
+        robotsLidarEncodedObss = []
 
         # plotting
         plotAll = PlotPosGpsLidarLive()
@@ -250,11 +296,15 @@ class Core:
                 if beginningSkipCounter < configs["beginningSkip"]:
                     beginningSkipCounter += 1
                     continue
+                # How far should I go?
                 if robot1LidarCounter >= lidarTestScenarioCounterLimit:
                     break
 
                 robotId, sensorName = topicRow["robotId"],topicRow["sensorName"]
                 time = topicRow["time"] - normalScenarioStartTime
+                npValObs = topicRow["npValue"]
+                valObsDim = npValObs.shape[0]
+
                 if prvTime == 0:
                     prvTime = time
 
@@ -262,40 +312,29 @@ class Core:
                     continue
 
                 if sensorName == "gps_origin":
-                    npGpsVal = topicRow["npValue"]
-
                     if robotId == configs["targetRobotIds"][0]:
                         if robot1GpsCounter == 0:
-                            robot1TimeGpsValVelObss = np.concatenate(([time], npGpsVal, [0, 0, 0]),axis=0)
+                            robot1TimeGpsValVelObss = np.concatenate(([time], npValObs, np.zeros(valObsDim)),axis=0)
                             robot1GpsCounter += 1
                             continue
-                        if robot1GpsCounter >= 1:
-                            robot1TimeGpsValVelObss = np.vstack(
-                                (robot1TimeGpsValVelObss, np.concatenate(([time], npGpsVal, [0, 0, 0]),axis=0)))
-                            robot1GpsTimeDiff = robot1TimeGpsValVelObss[-1][0] - robot1TimeGpsValVelObss[-2][0]
-                            if robot1GpsTimeDiff == 0:
+                        elif robot1GpsCounter >= 1:
+                            newNpTimeValVelObss = self.getTimeValVelObssFromNewValObs(time, robot1TimeGpsValVelObss, npValObs)
+                            if newNpTimeValVelObss is not None:
+                                robot1TimeGpsValVelObss = newNpTimeValVelObss
+                            else:
                                 continue
-                            robot1GpsDiff = np.subtract(robot1TimeGpsValVelObss[-1][1:int(gpsValVelDim / 2)],
-                                                        robot1TimeGpsValVelObss[-2][1:int(gpsValVelDim / 2)])
-                            robot1GpsVels = robot1GpsDiff / robot1GpsTimeDiff
-                            robot1TimeGpsValVelObss[-1][int(gpsValVelDim / 2) + 1:gpsValVelDim] = robot1GpsVels
                             robot1GpsCounter += 1
-
                     elif robotId == configs["targetRobotIds"][1]:
                         if robot2GpsCounter == 0:
-                            robot2TimeGpsValVelObss = np.concatenate(([time], npGpsVal, np.zeros(int(gpsValVelDim / 2))),axis=0)
+                            robot2TimeGpsValVelObss = np.concatenate(([time], npValObs, np.zeros(valObsDim)),axis=0)
                             robot2GpsCounter += 1
                             continue
-                        if robot2GpsCounter >= 1:
-                            robot2TimeGpsValVelObss = np.vstack(
-                                (robot2TimeGpsValVelObss, np.concatenate(([time], npGpsVal, np.zeros(int(gpsValVelDim / 2))),axis=0)))
-                            robot2GpsTimeDiff = robot2TimeGpsValVelObss[-1][0] - robot2TimeGpsValVelObss[-2][0]
-                            if robot2GpsTimeDiff == 0:
+                        elif robot2GpsCounter >= 1:
+                            newNpTimeValVelObss = self.getTimeValVelObssFromNewValObs(time, robot2TimeGpsValVelObss, npValObs)
+                            if newNpTimeValVelObss is not None:
+                                robot2TimeGpsValVelObss = newNpTimeValVelObss
+                            else:
                                 continue
-                            robot2GpsDiff = np.subtract(robot2TimeGpsValVelObss[-1][1:int(gpsValVelDim / 2)],
-                                                        robot2TimeGpsValVelObss[-2][1:int(gpsValVelDim / 2)])
-                            robot2GpsVels = robot2GpsDiff / robot2GpsTimeDiff
-                            robot2TimeGpsValVelObss[-1][int(gpsValVelDim / 2) + 1:gpsValVelDim] = robot2GpsVels
                             robot2GpsCounter += 1
 
                     if topicRowCounter % configs["plotUpdateRate"] == 0:
@@ -305,110 +344,79 @@ class Core:
                     if robot1GpsCounter <= 1 or robot2GpsCounter <= 1:
                         continue
 
+                    curRobotsEncodedObs = self.getEncodedObs(robot1TimeGpsValVelObss[-1, 1:]
+                                                             ,robot2TimeGpsValVelObss[-1, 1:]
+                                                             ,gpsEncoder
+                                                             ,gpsScaler
+                                                             )
+                    robotsGpsEncodedObss.append(curRobotsEncodedObs)
                     # gps abn computer
-                    robot1GpsCurObs = robot1TimeGpsValVelObss[-1, 1:]
-                    robot2GpsCurObs = robot2TimeGpsValVelObss[-1, 1:]
-                    #convert to 1*12 array
-                    robotsCurGpsFlattedObs = np.array([np.concatenate((robot1GpsCurObs, robot2GpsCurObs), axis=0)])
-                    robotsGpsCurFlattedScaledObs = gpsScaler.transform(robotsCurGpsFlattedObs)
-                    robotsGpsCurEncodedObs =  gpsEncoder.predict(robotsGpsCurFlattedScaledObs)
-
-
-                    robot1GpsPrvObs = robot1TimeGpsValVelObss[-2, 1:]
-                    robot2GpsPrvObs = robot2TimeGpsValVelObss[-2, 1:]
-                    # convert to 1*encoder latent dim  array
-                    robotsPrvGpsFlattedObs = np.array([np.concatenate((robot1GpsPrvObs, robot2GpsPrvObs), axis=0)])
-                    robotsGpsPrvEncodedObs = gpsScaler.transform(robotsPrvGpsFlattedObs)
-                    robotsGpsPrvEncodedObs = gpsEncoder.predict(robotsGpsPrvEncodedObs)
-                    robotsGpsEncodedPrvObss.append(robotsGpsPrvEncodedObs)
-
-
-                    if len(robotsGpsEncodedPrvObss)>trainingSeqLen:
-                        #Take the last training seq len
-                        robotsGpsEncodedObssLastTrainingSeqLen = np.asarray(robotsGpsEncodedPrvObss[-trainingSeqLen:])
-                        #We must give predict an array of sequences, the following line converts prv to an array of such sequences shape (1,15,12) , lstm.predict needs an array of sequences
-                        robotsGpsEncodedObssLastTrainingSeqLenReshaped = robotsGpsEncodedObssLastTrainingSeqLen.reshape((1,trainingSeqLen, encodersLatentDim))
-                        bestGpsLstm = self.getRelevantLstmAccordingToClosestCluster(gpsLstmModelsDictByClusteringLabels,gpsClustering,robotsGpsEncodedObssLastTrainingSeqLenReshaped[0])
-                        robotsGpsEncodedPrd = bestGpsLstm.predict(robotsGpsEncodedObssLastTrainingSeqLenReshaped)
-
-                        gpsAbnormalityValue = np.linalg.norm(robotsGpsEncodedPrd - robotsGpsCurEncodedObs)
-                        gpsTimeAbnormalityValues.append([time, gpsAbnormalityValue])
+                    abnVal= self.getAbnVal(np.asarray(robotsGpsEncodedObss[-(trainingSeqLen+1):])
+                                            ,gpsLstmModelsDictByClusteringLabels
+                                            ,gpsClustering)
+                    if abnVal is not None:
+                        gpsTimeAbnormalityValues.append([time,abnVal])
                         if topicRowCounter % configs["plotUpdateRate"] == 0:
                             plotAll.updateGpsAbnPlot(np.array(gpsTimeAbnormalityValues))
+
+                    # cut length for performance
+                    # if robot1TimeGpsValVelObss.shape[0] > 2 * trainingSeqLen:
+                    #     robot1TimeGpsValVelObss = robot1TimeGpsValVelObss[-(trainingSeqLen + 2):]
+                    #     robot2TimeGpsValVelObss = robot2TimeGpsValVelObss[-(trainingSeqLen + 2):]
+                    #     robotsGpsEncodedPrvObss = robotsGpsEncodedPrvObss[-(trainingSeqLen + 2):]
                 elif sensorName == "rplidar":
-                    npLidarVal = topicRow["npValue"]
+                    npValObs = topicRow["npValue"]
 
                     if robotId == configs["targetRobotIds"][0]:
                         if robot1LidarCounter == 0:
-                            robot1TimeLidarValVelObss = np.concatenate(([time], npLidarVal, np.zeros(int(lidarValVelDim / 2))), axis=0)
+                            robot1TimeLidarValVelObss = np.concatenate(([time], npValObs, np.zeros(valObsDim)), axis=0)
                             robot1LidarCounter += 1
                             continue
-                        if robot1LidarCounter >= 1:
-                            robot1TimeLidarValVelObss = np.vstack(
-                                (robot1TimeLidarValVelObss, np.concatenate(([time], npLidarVal, np.zeros(int(lidarValVelDim / 2))), axis=0)))
-                            robot1LidarTimeDiff = robot1TimeLidarValVelObss[-1][0] - robot1TimeLidarValVelObss[-2][0]
-                            if robot1LidarTimeDiff == 0:
+                        elif robot1LidarCounter >= 1:
+                            newNpTimeValVelObss = self.getTimeValVelObssFromNewValObs(time, robot1TimeLidarValVelObss, npValObs)
+                            if newNpTimeValVelObss is not None:
+                                robot1TimeLidarValVelObss = newNpTimeValVelObss
+                            else:
                                 continue
-                            robot1LidarDiff = np.subtract(robot1TimeLidarValVelObss[-1][1:int(lidarValVelDim / 2)],
-                                                        robot1TimeLidarValVelObss[-2][1:int(lidarValVelDim / 2)])
-                            robot1LidarVels = robot1LidarDiff / robot1LidarTimeDiff
-                            # print(robot1LidarVels.shape)
-                            # print(robot1TimeLidarValVelObss.shape)
-                            robot1TimeLidarValVelObss[-1][int(lidarValVelDim / 2) + 1:lidarValVelDim] = robot1LidarVels
                             robot1LidarCounter += 1
 
                     elif robotId == configs["targetRobotIds"][1]:
                         if robot2LidarCounter == 0:
-                            robot2TimeLidarValVelObss = np.concatenate(([time], npLidarVal, np.zeros(int(lidarValVelDim / 2))), axis=0)
+                            robot2TimeLidarValVelObss = np.concatenate(([time], npValObs, np.zeros(valObsDim)), axis=0)
                             robot2LidarCounter += 1
                             continue
-                        if robot2LidarCounter >= 1:
-                            robot2TimeLidarValVelObss = np.vstack(
-                                (robot2TimeLidarValVelObss, np.concatenate(([time], npLidarVal, np.zeros(int(lidarValVelDim / 2))), axis=0)))
-                            robot2LidarTimeDiff = robot2TimeLidarValVelObss[-1][0] - robot2TimeLidarValVelObss[-2][0]
-                            if robot2LidarTimeDiff == 0:
+                        elif robot2LidarCounter >= 1:
+                            newNpTimeValVelObss = self.getTimeValVelObssFromNewValObs(time, robot2TimeLidarValVelObss, npValObs)
+                            if newNpTimeValVelObss is not None:
+                                robot2TimeLidarValVelObss = newNpTimeValVelObss
+                            else:
                                 continue
-                            robot2LidarDiff = np.subtract(robot2TimeLidarValVelObss[-1][1:int(lidarValVelDim / 2)],
-                                                        robot2TimeLidarValVelObss[-2][1:int(lidarValVelDim / 2)])
-                            robot2LidarVels = robot2LidarDiff / robot2LidarTimeDiff
-                            robot2TimeLidarValVelObss[-1][int(lidarValVelDim / 2) + 1:lidarValVelDim] = robot2LidarVels
                             robot2LidarCounter += 1
 
                     if robot1LidarCounter <= 1 or robot2LidarCounter <= 1:
                         continue
 
                     # lidar abn computer
-                    robot1LidarCurObs = robot1TimeLidarValVelObss[-1, 1:]
-                    robot2LidarCurObs = robot2TimeLidarValVelObss[-1, 1:]
-                    # convert to 1*2880 array
-                    robotsCurLidarFlattedObs = np.array([np.concatenate((robot1LidarCurObs, robot2LidarCurObs), axis=0)])
-                    robotsLidarCurFlattedScaledObs = lidarScaler.transform(robotsCurLidarFlattedObs)
-                    robotsLidarCurEncodedObs = lidarEncoder.predict(robotsLidarCurFlattedScaledObs)
-
-                    robot1LidarPrvObs = robot1TimeLidarValVelObss[-2, 1:]
-                    robot2LidarPrvObs = robot2TimeLidarValVelObss[-2, 1:]
-                    # convert to 1*encoder latent dim  array
-                    robotsPrvLidarFlattedObs = np.array([np.concatenate((robot1LidarPrvObs, robot2LidarPrvObs), axis=0)])
-                    robotsLidarPrvEncodedObs = lidarScaler.transform(robotsPrvLidarFlattedObs)
-                    robotsLidarPrvEncodedObs = lidarEncoder.predict(robotsLidarPrvEncodedObs)
-                    robotsLidarEncodedPrvObss.append(robotsLidarPrvEncodedObs)
-
-                    if len(robotsLidarEncodedPrvObss) > trainingSeqLen:
-                        # Take the last training seq len
-                        robotsLidarEncodedObssLastTrainingSeqLen = np.asarray(robotsLidarEncodedPrvObss[-trainingSeqLen:])
-                        # We must give predict an array of sequences, the following line converts prv to an array of such sequences shape (1,15,12) , lstm.predict needs an array of sequences
-                        robotsLidarEncodedObssLastTrainingSeqLenReshaped = robotsLidarEncodedObssLastTrainingSeqLen.reshape(
-                            (1, trainingSeqLen, encodersLatentDim))
-                        bestLidarLstm = self.getRelevantLstmAccordingToClosestCluster(lidarLstmModelsDictByClusteringLabels,
-                                                                                    lidarClustering,
-                                                                                    robotsLidarEncodedObssLastTrainingSeqLenReshaped[
-                                                                                        0])
-                        robotsLidarEncodedPrd = bestLidarLstm.predict(robotsLidarEncodedObssLastTrainingSeqLenReshaped)
-
-                        lidarAbnormalityValue = np.linalg.norm(robotsLidarEncodedPrd - robotsLidarCurEncodedObs)
-                        lidarTimeAbnormalityValues.append([time, lidarAbnormalityValue])
+                    curRobotsEncodedObs = self.getEncodedObs(robot1TimeLidarValVelObss[-1, 1:]
+                                                             , robot2TimeLidarValVelObss[-1, 1:]
+                                                             , lidarEncoder
+                                                             , lidarScaler
+                                                             )
+                    robotsLidarEncodedObss.append(curRobotsEncodedObs)
+                    # lidar abn computer
+                    abnVal = self.getAbnVal(np.asarray(robotsLidarEncodedObss[-(trainingSeqLen + 1):])
+                                            , lidarLstmModelsDictByClusteringLabels
+                                            , lidarClustering)
+                    if abnVal is not None:
+                        lidarTimeAbnormalityValues.append([time, abnVal])
                         if topicRowCounter % configs["plotUpdateRate"] == 0:
                             plotAll.updateLidarAbnPlot(np.array(lidarTimeAbnormalityValues))
+
+                    # cut length for performance
+                    # if robot1TimeLidarValVelObss.shape[0] > 2 * trainingSeqLen:
+                    #     robot1TimeLidarValVelObss = robot1TimeLidarValVelObss[-(trainingSeqLen + 2):]
+                    #     robot2TimeLidarValVelObss = robot2TimeLidarValVelObss[-(trainingSeqLen + 2):]
+                    #     robotsLidarEncodedPrvObss = robotsLidarEncodedPrvObss[-(trainingSeqLen + 2):]
                 prvTime = time
             # PlotPosGpsLidarLive.showPlot(np.array(gpsTimeAbnormalityValues),"GPS")
             # PlotPosGpsLidarLive.showPlot(np.array(lowDimLidarTimeAbnormalityValues),"LIDAR")
@@ -435,7 +443,7 @@ class Core:
         model.compile(optimizer=tf.keras.optimizers.Adam(0.01)
                       , loss=tf.keras.losses.MeanSquaredError()
                       , metrics=['accuracy'])
-        fittedModel = model.fit(npInputSeqs, npRelevantOutputSeqs, epochs=10, verbose=1)
+        fittedModel = model.fit(npInputSeqs, npRelevantOutputSeqs, epochs=30, verbose=1)
 
         plt.plot(fittedModel.history["loss"])
         plt.title(f"{sensorName} Loss vs. Epoch for LSTM, cluster label: {clusterLabel}")
@@ -502,7 +510,7 @@ class Core:
 
         return bestClusterNum
 
-    def plotClusterRobotEncodedObss(self,labeledNpRobotsEncodedObssClustersDict):
+    def plotClusterRobotEncodedObss(self,sensorName,labeledNpRobotsEncodedObssClustersDict):
         # plot clusters
         fig = plt.figure()
         ax = Axes3D(fig)
@@ -512,17 +520,17 @@ class Core:
             ax.scatter(npRobotEncodedObss[:, 0]
                        , npRobotEncodedObss[:, 1]
                        , npRobotEncodedObss[:, 2]
-                       , color=TimePosVelObssPlottingUtility.getRandomColor(), marker='.',
-                       alpha=0.04,
-                       linewidth=1)
-
-        # ax.set_zlim3d(-15, 15)
+                       , color=TimePosVelObssPlottingUtility.getRandomColor()
+                       , marker='.'
+                       , alpha=0.04
+                       , linewidth=1)
+        ax.set_title(f"{sensorName} clusters after encoding.")
         ax.set_xlabel("X")
         ax.set_ylabel("Y")
         ax.set_zlabel("Z")
         plt.show()
 
-    def getClusters(self, npRobotsEncodedObss:np.ndarray):
+    def getClusters(self, sensorName,npRobotsEncodedObss:np.ndarray):
         # self.getBestClustersNumElbow(npRobotsEncodedObss)
         # clusterNum = self.getSilhouetteBestClusterNum(npRobotsEncodedObss)
 
@@ -537,17 +545,16 @@ class Core:
             labeledNpRobotsEncodedObssClustersDict[curLabel].append(npRobotsEncodedObss[prdLabelCounter])
         
 
-        self.plotClusterRobotEncodedObss(labeledNpRobotsEncodedObssClustersDict)
+        self.plotClusterRobotEncodedObss(sensorName,labeledNpRobotsEncodedObssClustersDict)
         return kmeans,labeledNpRobotsEncodedObssClustersDict
 
 
     def getRobotsAutoEncoder(self, sensorName, npCombinedRobotsTimeValVelObss:np.ndarray):
-        #two robots, 6 val,vel dims, remove time dimension
+        #num of robots, valvel dims, remove time dimension
         inputShape = npCombinedRobotsTimeValVelObss.shape[1] * (npCombinedRobotsTimeValVelObss.shape[2]-1)
         npValVelObssLen = npCombinedRobotsTimeValVelObss.shape[0]
         #remove time
         npValVelFlatObss = npCombinedRobotsTimeValVelObss[:, :, 1:].reshape((npValVelObssLen, inputShape))
-        print(npValVelFlatObss.shape)
         scalerBeforeEncoding = StandardScaler()
         npValVelFlatObss = scalerBeforeEncoding.fit_transform(npValVelFlatObss)
 
@@ -567,7 +574,7 @@ class Core:
             autoencoder = Model(inputs=encoder.input, outputs=decoder(encoder.output))
             autoencoder.compile(loss='mse', optimizer='adam')
 
-            print("Fitting the auto encoder ...")
+            print(f"Fitting the auto encoder for {sensorName} ...")
             modelHistory = autoencoder.fit(npValVelFlatObss
                                            , npValVelFlatObss
                                            , epochs=100
@@ -575,6 +582,13 @@ class Core:
                                            , verbose=0)
             encoder.save(testSharedPath+f"{sensorName}Encoder.h5")
             decoder.save(testSharedPath+f"{sensorName}Decoder.h5")
+
+            plt.plot(modelHistory.history["loss"])
+            plt.title(f"{sensorName} Loss vs. Epoch for auto encoder")
+            plt.ylabel("Loss")
+            plt.xlabel("Epoch")
+            plt.grid(True)
+            plt.show()
         else:
             encoder = load_model(testSharedPath+f"{sensorName}Encoder.h5")
             decoder = load_model(testSharedPath+f"{sensorName}Decoder.h5")
@@ -582,6 +596,126 @@ class Core:
         npEncodedObss = encoder.predict(npValVelFlatObss)
 
         return encoder,decoder,npEncodedObss,scalerBeforeEncoding
+
+    def getRobotsLidarAutoEncoder(self, sensorName, npCombinedRobotsTimeValVelObss:np.ndarray):
+        #num of robots, valvel dims, remove time dimension
+        inputShape = npCombinedRobotsTimeValVelObss.shape[1] * (npCombinedRobotsTimeValVelObss.shape[2]-1)
+        npValVelObssLen = npCombinedRobotsTimeValVelObss.shape[0]
+        #remove time
+        npValVelFlatObss = npCombinedRobotsTimeValVelObss[:, :, 1:].reshape((npValVelObssLen, inputShape))
+        scalerBeforeEncoding = StandardScaler()
+        npValVelFlatObss = scalerBeforeEncoding.fit_transform(npValVelFlatObss)
+
+        if not os.path.exists(testSharedPath+f"{sensorName}Encoder.h5") or not os.path.exists(testSharedPath+f"{sensorName}Decoder.h5"):
+            encoder = Sequential([
+                Dense(1024, activation='relu', input_shape=(inputShape ,)),
+                Dense(512, activation='relu'),
+                Dense(256, activation='relu'),
+                Dense(128, activation='relu'),
+                Dense(64, activation='relu'),
+                Dense(32, activation='relu'),
+                Dense(encodersLatentDim, activation='relu')
+            ])
+
+            decoder = Sequential([
+                Dense(32, activation='relu', input_shape=(encodersLatentDim,)),
+                Dense(64, activation='relu'),
+                Dense(128, activation='relu'),
+                Dense(256, activation='relu'),
+                Dense(512, activation='relu'),
+                Dense(1024, activation='relu'),
+                Dense(inputShape , activation=None)
+            ])
+
+            autoencoder = Model(inputs=encoder.input, outputs=decoder(encoder.output))
+            autoencoder.compile(loss='mse', optimizer='adam')
+
+            print(f"Fitting the auto encoder for {sensorName} ...")
+            modelHistory = autoencoder.fit(npValVelFlatObss
+                                           , npValVelFlatObss
+                                           , epochs=100
+                                           , batch_size=32
+                                           , verbose=0)
+            encoder.save(testSharedPath+f"{sensorName}Encoder.h5")
+            decoder.save(testSharedPath+f"{sensorName}Decoder.h5")
+
+            plt.plot(modelHistory.history["loss"])
+            plt.title(f"{sensorName} Loss vs. Epoch for auto encoder")
+            plt.ylabel("Loss")
+            plt.xlabel("Epoch")
+            plt.grid(True)
+            plt.show()
+        else:
+            encoder = load_model(testSharedPath+f"{sensorName}Encoder.h5")
+            decoder = load_model(testSharedPath+f"{sensorName}Decoder.h5")
+
+        npEncodedObss = encoder.predict(npValVelFlatObss)
+
+        return encoder,decoder,npEncodedObss,scalerBeforeEncoding
+
+    def getRobotsVAEAutoEncoder(self, sensorName, npCombinedRobotsTimeValVelObss:np.ndarray):
+        # num of robots, valvel dims, remove time dimension
+        inputShape = npCombinedRobotsTimeValVelObss.shape[1] * (npCombinedRobotsTimeValVelObss.shape[2] - 1)
+        npValVelObssLen = npCombinedRobotsTimeValVelObss.shape[0]
+        # remove time
+        npValVelFlatObss = npCombinedRobotsTimeValVelObss[:, :, 1:].reshape((npValVelObssLen, inputShape))
+        scalerBeforeEncoding = StandardScaler()
+        npValVelFlatObss = scalerBeforeEncoding.fit_transform(npValVelFlatObss)
+
+        # Generate some random data for demonstration purposes
+        num_samples = 1000
+        input_dim = 720
+        data = np.random.rand(num_samples, input_dim)
+
+        # Define the VAE architecture
+        latent_dim = 3  # Set the desired latent dimensionality
+
+        # Encoder
+        encoder_inputs = layers.Input(shape=(input_dim,))
+        x = layers.Dense(256, activation='relu')(encoder_inputs)
+        z_mean = layers.Dense(latent_dim, name='z_mean')(x)
+        z_log_var = layers.Dense(latent_dim, name='z_log_var')(x)
+
+        # Reparameterization trick to sample from the learned distribution
+        def sampling(args):
+            z_mean, z_log_var = args
+            batch = tf.shape(z_mean)[0]
+            dim = tf.shape(z_mean)[1]
+            epsilon = tf.keras.backend.random_normal(shape=(batch, dim))
+            return z_mean + tf.exp(0.5 * z_log_var) * epsilon
+
+        z = layers.Lambda(sampling, output_shape=(latent_dim,), name='z')([z_mean, z_log_var])
+
+        # Instantiate encoder model
+        encoder = models.Model(encoder_inputs, [z_mean, z_log_var, z], name='encoder')
+
+        # Decoder
+        decoder_inputs = layers.Input(shape=(latent_dim,))
+        x = layers.Dense(256, activation='relu')(decoder_inputs)
+        outputs = layers.Dense(input_dim, activation='sigmoid')(x)
+
+        # Instantiate decoder model
+        decoder = models.Model(decoder_inputs, outputs, name='decoder')
+
+        # VAE model
+        outputs = decoder(encoder(encoder_inputs)[2])
+        vae = models.Model(encoder_inputs, outputs, name='vae')
+
+        # Loss function using KL divergence and binary cross-entropy
+        kl_loss = -0.5 * tf.reduce_sum(1 + z_log_var - tf.square(z_mean) - tf.exp(z_log_var), axis=-1)
+        vae.add_loss(tf.reduce_mean(kl_loss))
+        vae.compile(optimizer='adam', loss='binary_crossentropy')
+
+        # Train the VAE on your data
+        vae.fit(data, data, epochs=10, batch_size=32)
+
+        # Now, you can use the trained encoder to get mean and log variance for new data
+        unseen_input = np.random.rand(1, input_dim)
+        mean_val, log_var_val, z_val = encoder.predict(unseen_input)
+
+        print("Mean:", mean_val)
+        print("Log Variance:", log_var_val)
+        print("Latent Vector:", z_val)
 
 
 
@@ -593,9 +727,9 @@ if __name__ == "__main__":
 
     npCombinedRobotsTimeGpsValVelObss, npCombinedRobotsTimeLidarValVelObss = core.getTrainingSensoryData()
     # gps
-    npCombinedRobotsTimeGpsValVelObss = npCombinedRobotsTimeGpsValVelObss[0:18000]
-    gpsEncoder, gpsDecoder, gpsRobotsEncodedObss, gpsScaler = core.getRobotsAutoEncoder("gps",npCombinedRobotsTimeGpsValVelObss)
-    gpsClustering, gpsRobotsEncodedObssClustersDict = core.getClusters(gpsRobotsEncodedObss)
+    npCombinedRobotsTimeGpsValVelObss = npCombinedRobotsTimeGpsValVelObss[0:72000]
+    gpsEncoder, gpsDecoder, gpsRobotsEncodedObss, gpsScaler = core.getRobotsAutoEncoder("gps", npCombinedRobotsTimeGpsValVelObss)
+    gpsClustering, gpsRobotsEncodedObssClustersDict = core.getClusters("gps",gpsRobotsEncodedObss)
 
     gpsLstmModelsDictByClusteringLabels = {}
     for clusterLabel, npCombinedRobotsGpsObssForACluster in gpsRobotsEncodedObssClustersDict.items():
@@ -604,10 +738,10 @@ if __name__ == "__main__":
         gpsLstmModelsDictByClusteringLabels[clusterLabel] = gpsLstmModel
 
     # LIDAR
-    npCombinedRobotsTimeLidarValVelObss = npCombinedRobotsTimeLidarValVelObss[0:6000]
-    lidarEncoder, lidarDecoder, lidarRobotsEncodedObss, lidarScaler = core.getRobotsAutoEncoder("lidar",
-                                                                                        npCombinedRobotsTimeLidarValVelObss)
-    lidarClustering, lidarRobotsEncodedObssClustersDict = core.getClusters(lidarRobotsEncodedObss)
+    npCombinedRobotsTimeLidarValVelObss = npCombinedRobotsTimeLidarValVelObss[0:72000]
+    lidarEncoder, lidarDecoder, lidarRobotsEncodedObss, lidarScaler = core.getRobotsLidarAutoEncoder("lidar",
+                                                                                                   npCombinedRobotsTimeLidarValVelObss)
+    lidarClustering, lidarRobotsEncodedObssClustersDict = core.getClusters("lidar",lidarRobotsEncodedObss)
 
     lidarLstmModelsDictByClusteringLabels = {}
     for clusterLabel, npCombinedRobotsLidarObssForACluster in lidarRobotsEncodedObssClustersDict.items():
