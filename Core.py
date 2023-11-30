@@ -274,14 +274,14 @@ class Core:
         # GPS settings
         robot1GpsCounter = 0
         robot2GpsCounter = 0
-        gpsTimeAbnormalityValues = []
+        gpsTimeAbnVals = []
         robotsGpsEncodedObss = []
 
         # Lidar settings
         lidarTestScenarioCounterLimit = configs["lidarTestScenarioCounterLimit"]
         robot1LidarCounter = 0
         robot2LidarCounter = 0
-        lidarTimeAbnormalityValues = []
+        lidarTimeAbnVals = []
         robotsLidarEncodedObss = []
 
         # plotting
@@ -355,9 +355,9 @@ class Core:
                                             ,gpsLstmModelsDictByClusteringLabels
                                             ,gpsClustering)
                     if abnVal is not None:
-                        gpsTimeAbnormalityValues.append([time,abnVal])
+                        gpsTimeAbnVals.append([time,abnVal])
                         if topicRowCounter % configs["plotUpdateRate"] == 0:
-                            plotAll.updateGpsAbnPlot(np.array(gpsTimeAbnormalityValues))
+                            plotAll.updateGpsAbnPlot(np.array(gpsTimeAbnVals))
 
                     # cut length for performance
                     # if robot1TimeGpsValVelObss.shape[0] > 2 * trainingSeqLen:
@@ -408,15 +408,25 @@ class Core:
                                             , lidarLstmModelsDictByClusteringLabels
                                             , lidarClustering)
                     if abnVal is not None:
-                        lidarTimeAbnormalityValues.append([time, abnVal])
+                        lidarTimeAbnVals.append([time, abnVal])
                         if topicRowCounter % configs["plotUpdateRate"] == 0:
-                            plotAll.updateLidarAbnPlot(np.array(lidarTimeAbnormalityValues))
+                            plotAll.updateLidarAbnPlot(np.array(lidarTimeAbnVals))
 
                     # cut length for performance
                     # if robot1TimeLidarValVelObss.shape[0] > 2 * trainingSeqLen:
                     #     robot1TimeLidarValVelObss = robot1TimeLidarValVelObss[-(trainingSeqLen + 2):]
                     #     robot2TimeLidarValVelObss = robot2TimeLidarValVelObss[-(trainingSeqLen + 2):]
                     #     robotsLidarEncodedPrvObss = robotsLidarEncodedPrvObss[-(trainingSeqLen + 2):]
+                if(robot1TimeGpsValVelObss[-1][0]-robot1TimeGpsValVelObss[0][0]>50):
+                    if(np.linalg.norm(robot1TimeGpsValVelObss[-1][1:3] - robot1TimeGpsValVelObss[0][1:3])<0.01):
+                        with open('{}/followScenarioGpsTimeAbnVals.pkl'.format(testSharedPath),
+                                  'wb') as file:
+                            pickle.dump(gpsTimeAbnVals, file)
+                        with open('{}/followScenarioLidarTimeAbnVals.pkl'.format(testSharedPath),
+                                  'wb') as file:
+                            pickle.dump(lidarTimeAbnVals, file)
+                        break
+
                 prvTime = time
             # PlotPosGpsLidarLive.showPlot(np.array(gpsTimeAbnormalityValues),"GPS")
             # PlotPosGpsLidarLive.showPlot(np.array(lowDimLidarTimeAbnormalityValues),"LIDAR")
