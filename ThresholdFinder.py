@@ -5,7 +5,7 @@ from matplotlib import pyplot as plt
 
 testSharedPath = "/home/donkarlo/Desktop/lstm/"
 
-class TolerenceFinder:
+class ThresholdFinder:
     def __init__(self,sensorName,npTimeAbnVals:np.ndarray,highAbnTimeInterval:tuple,minMaxThresholdDivNum:int):
         self.__sensorName = sensorName
         self._npTimeAbnVals = npTimeAbnVals
@@ -85,11 +85,11 @@ class TolerenceFinder:
 if __name__=="__main__":
     with open('{}/followScenarioGpsTimeAbnVals.pkl'.format(testSharedPath), 'rb') as file:
         npTimeAbnVals = np.array(pickle.load(file))
-    gpsTrFinder = TolerenceFinder("GPS",npTimeAbnVals, (110, 160), 1000)
+    gpsTrFinder = ThresholdFinder("GPS", npTimeAbnVals, (110, 160), 1000)
     print(f"Best Gps threshold value: {gpsTrFinder.getBestMLParams()}")
 
 
     with open('{}/followScenarioLidarTimeAbnVals.pkl'.format(testSharedPath), 'rb') as file:
         npTimeAbnVals = np.array(pickle.load(file))
-    lidarTrFinder = TolerenceFinder("LIDAR",npTimeAbnVals, (75, 200), 1000)
+    lidarTrFinder = ThresholdFinder("LIDAR", npTimeAbnVals, (75, 200), 1000)
     print(f"Best Lidar threshold value: {lidarTrFinder.getBestMLParams()}")
