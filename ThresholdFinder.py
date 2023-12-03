@@ -85,11 +85,11 @@ class ThresholdFinder:
 if __name__=="__main__":
     with open('{}/followScenarioGpsTimeAbnVals.pkl'.format(testSharedPath), 'rb') as file:
         npTimeAbnVals = np.array(pickle.load(file))
-    gpsTrFinder = ThresholdFinder("GPS", npTimeAbnVals, (110, 160), 1000)
+    gpsTrFinder = ThresholdFinder("GPS", npTimeAbnVals, (110, 160), 10000)
     print(f"Best Gps threshold value: {gpsTrFinder.getBestMLParams()}")
 
 
-    with open('{}/followScenarioLidarTimeAbnVals.pkl'.format(testSharedPath), 'rb') as file:
-        npTimeAbnVals = np.array(pickle.load(file))
-    lidarTrFinder = ThresholdFinder("LIDAR", npTimeAbnVals, (75, 200), 1000)
-    print(f"Best Lidar threshold value: {lidarTrFinder.getBestMLParams()}")
+    # with open('{}/followScenarioLidarTimeAbnVals.pkl'.format(testSharedPath), 'rb') as file:
+    #     npTimeAbnVals = np.array(pickle.load(file))
+    # lidarTrFinder = ThresholdFinder("LIDAR", npTimeAbnVals, (75, 200), 1000)
+    # print(f"Best Lidar threshold value: {lidarTrFinder.getBestMLParams()}")

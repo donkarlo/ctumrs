@@ -22,8 +22,6 @@ from ctumrs.topic.GpsOrigin import GpsOrigin
 from ctumrs.topic.RpLidar import RpLidar
 from ctumrs.topic.Topic import Topic
 from mMath.calculus.derivative.TimePosRowsDerivativeComputer import TimePosRowsDerivativeComputer
-from sklearn.preprocessing import StandardScaler
-from sklearn.preprocessing import MinMaxScaler
 from sklearn.cluster import KMeans
 
 
@@ -283,6 +281,9 @@ class Core:
                                    ,gpsEncoder
                                    # ,gpsScalerB4Encoding:StandardScaler
                                    # ,gpsEncodedVelCoScaler:StandardScaler
+                                   , lidarLstmModelsDictByClusteringLabels: dict
+                                   , lidarClustering: KMeans
+                                   , lidarEncoder
                                    ):
         normalScenarioStartTime = configs["normalScenarioStartTime"]
         # GPS settings
@@ -296,7 +297,7 @@ class Core:
         robot1LidarCounter = 0
         robot2LidarCounter = 0
         lidarTimeAbnVals = []
-        robotsLidarEncodedObss = []
+        robotsLidarTimeValEncodedVelObss = []
 
         # plotting
         plotAll = PlotPosGpsLidarLive()
@@ -379,62 +380,64 @@ class Core:
                             if topicRowCounter % configs["plotUpdateRate"] == 0:
                                 plotAll.updateGpsAbnPlot(np.array(gpsTimeAbnVals))
 
-                # elif sensorName == "rplidar":
-                #     npValObs = topicRow["npValue"]
-                #
-                #     if robotId == configs["targetRobotIds"][0]:
-                #         if robot1LidarCounter == 0:
-                #             robot1TimeLidarValVelObss = np.concatenate(([time], npValObs, np.zeros(valObsDim)), axis=0)
-                #             robot1LidarCounter += 1
-                #             continue
-                #         elif robot1LidarCounter >= 1:
-                #             newNpTimeValVelObss = self.getTimeValVelObssFromNewValObs(time, robot1TimeLidarValVelObss, npValObs)
-                #             if newNpTimeValVelObss is not None:
-                #                 robot1TimeLidarValVelObss = newNpTimeValVelObss
-                #             else:
-                #                 continue
-                #             robot1LidarCounter += 1
-                #
-                #     elif robotId == configs["targetRobotIds"][1]:
-                #         if robot2LidarCounter == 0:
-                #             robot2TimeLidarValVelObss = np.concatenate(([time], npValObs, np.zeros(valObsDim)), axis=0)
-                #             robot2LidarCounter += 1
-                #             continue
-                #         elif robot2LidarCounter >= 1:
-                #             newNpTimeValVelObss = self.getTimeValVelObssFromNewValObs(time, robot2TimeLidarValVelObss, npValObs)
-                #             if newNpTimeValVelObss is not None:
-                #                 robot2TimeLidarValVelObss = newNpTimeValVelObss
-                #             else:
-                #                 continue
-                #             robot2LidarCounter += 1
-                #
-                #     if robot1LidarCounter <= 1 or robot2LidarCounter <= 1:
-                #         continue
-                #
-                #     # lidar abn computer
-                #     curRobotsEncodedObs = self.getEncodedObs(robot1TimeLidarValVelObss[-1, 1:]
-                #                                              , robot2TimeLidarValVelObss[-1, 1:]
-                #                                              , lidarEncoder
-                #                                              , lidarScaler
-                #                                              )
-                #     robotsLidarEncodedObss.append(curRobotsEncodedObs)
-                #     # lidar abn computer
-                #     abnVal = self.getAbnVal(np.asarray(robotsLidarEncodedObss[-(trainingSeqLen + 1):])
-                #                             , lidarLstmModelsDictByClusteringLabels
-                #                             , lidarClustering)
-                #     if abnVal is not None:
-                #         lidarTimeAbnVals.append([time, abnVal])
-                #         if topicRowCounter % configs["plotUpdateRate"] == 0:
-                #             plotAll.updateLidarAbnPlot(np.array(lidarTimeAbnVals))
+                elif sensorName == "rplidar":
+                    if robotId == configs["targetRobotIds"][0]:
+                        if robot1LidarCounter == 0:
+                            npRobot1TimeLidarValVelObss = np.concatenate(([time], npValObs, np.zeros(valObsDim)),axis=0)
+                            robot1LidarCounter += 1
+                            continue
+                        elif robot1LidarCounter >= 1:
+                            newNpTimeValVelObss = self.getTimeValVelObssFromNewValObs(time, npRobot1TimeLidarValVelObss, npValObs)
+                            if newNpTimeValVelObss is not None:
+                                npRobot1TimeLidarValVelObss = newNpTimeValVelObss
+                            else:
+                                continue
+                            robot1LidarCounter += 1
+                    elif robotId == configs["targetRobotIds"][1]:
+                        if robot2LidarCounter == 0:
+                            robot2TimeLidarValVelObss = np.concatenate(([time], npValObs, np.zeros(valObsDim)),axis=0)
+                            robot2LidarCounter += 1
+                            continue
+                        elif robot2LidarCounter >= 1:
+                            newNpTimeValVelObss = self.getTimeValVelObssFromNewValObs(time, robot2TimeLidarValVelObss, npValObs)
+                            if newNpTimeValVelObss is not None:
+                                robot2TimeLidarValVelObss = newNpTimeValVelObss
+                            else:
+                                continue
+                            robot2LidarCounter += 1
+
+                    if robot1LidarCounter <= 1 or robot2LidarCounter <= 1:
+                        continue
+
+                    npLidarCurRobotsValEncodedObs = self.getEncodedObs(npRobot1TimeLidarValVelObss[-1, 1:lidarValDim+1]
+                                                             ,robot2TimeLidarValVelObss[-1, 1:lidarValDim+1]
+                                                             ,lidarEncoder
+                                                             # ,lidarScalerB4Encoding
+                                                             )
+                    lidarRobotsMeanTime = (npRobot1TimeLidarValVelObss[-1, 0]+robot2TimeLidarValVelObss[-1, 0])/2
+                    npLidarCurRobotsValEncodedObs = np.concatenate(([lidarRobotsMeanTime],npLidarCurRobotsValEncodedObs),axis=0)
+                    robotsLidarTimeValEncodedVelObss.append(npLidarCurRobotsValEncodedObs)
+                    if(len(robotsLidarTimeValEncodedVelObss)>trainingSeqLen+1):
+                        npRobotsLidarTimeValEncodedVelObss = TimePosRowsDerivativeComputer.computer(robotsLidarTimeValEncodedVelObss, velCo)
+                        # npRobotsLidarValEncodedVelObssScaled = lidarEncodedVelCoScaler.transform(npRobotsLidarTimeValEncodedVelObss[:,1:])
+                        npRobotsLidarValEncodedVelObssScaled = npRobotsLidarTimeValEncodedVelObss[:,1:]
+                        # lidar abn computer
+                        abnVal= self.getAbnVal(npRobotsLidarValEncodedVelObssScaled[-(trainingSeqLen+1):]
+                                                ,lidarLstmModelsDictByClusteringLabels
+                                                ,lidarClustering)
+                        if abnVal is not None:
+                            lidarTimeAbnVals.append([time,abnVal])
+                            if topicRowCounter % configs["plotUpdateRate"] == 0:
+                                plotAll.updateLidarAbnPlot(np.array(lidarTimeAbnVals))
                 if len(npRobot1TimeGpsValVelObss.shape) == 2:
                     if (npRobot1TimeGpsValVelObss[-1,0]-npRobot1TimeGpsValVelObss[0,0])>10:
-                        if np.linalg.norm(npRobot1TimeGpsValVelObss[-1,1:4] - npRobot1TimeGpsValVelObss[0,1:4])<0.01:
+                        if np.linalg.norm(npRobot1TimeGpsValVelObss[-1,1:4] - npRobot1TimeGpsValVelObss[0,1:4])<0.1:
                             with open('{}/followScenarioGpsTimeAbnVals.pkl'.format(testSharedPath),
                                       'wb') as file:
                                 pickle.dump(gpsTimeAbnVals, file)
-                            # with open('{}/followScenarioLidarTimeAbnVals.pkl'.format(testSharedPath),
-                            #           'wb') as file:
-                            #     pickle.dump(lidarTimeAbnVals, file)
+                            with open('{}/followScenarioLidarTimeAbnVals.pkl'.format(testSharedPath),
+                                      'wb') as file:
+                                pickle.dump(lidarTimeAbnVals, file)
                             break
 
                 prvTime = time
@@ -627,7 +630,7 @@ class Core:
 
         for i in range(0, 10):
             randIndex = np.random.randint(0, npValFlatObssScaled.shape[0])
-            encoderPredicted = encoder.predict(npValFlatObssScaled[randIndex].reshape(1, 6))
+            encoderPredicted = encoder.predict(npValFlatObssScaled[randIndex].reshape(1, robotsNumValObsShape))
             reco = decoder.predict(encoderPredicted)[0]
             print("distance:", np.linalg.norm(npValFlatObssScaled[randIndex] - reco))
 
@@ -685,19 +688,34 @@ if __name__ == "__main__":
             gpsInputSeqs, gpsRelevantOutputSeqs = core.getTrainingSequences(gpsValEncodedVelObssForACluster)
             gpsLstmModel = core.getLstmTrainedModel("gps", gpsInputSeqs, gpsRelevantOutputSeqs,clusterLabel)
             gpsLstmModelsDictByClusteringLabels[clusterLabel] = gpsLstmModel
-    #
-    # # LIDAR
-    # npCombinedRobotsTimeLidarValVelObss = npCombinedRobotsTimeLidarValVelObss[0:72000,1:lidarValDim]
-    # lidarEncoder, lidarDecoder, lidarRobotsEncodedObss, lidarScaler = core.getRobotsAutoEncoder("lidar",
-    #                                                                                                npCombinedRobotsTimeLidarValVelObss)
-    # lidarClustering, lidarRobotsEncodedObssClustersDict = core.getClusters("lidar",lidarRobotsEncodedObss)
-    #
-    # lidarLstmModelsDictByClusteringLabels = {}
-    # for clusterLabel, npCombinedRobotsLidarObssForACluster in lidarRobotsEncodedObssClustersDict.items():
-    #     lidarInputSeqs, lidarRelevantOutputSeqs = core.getTrainingSequences(npCombinedRobotsLidarObssForACluster)
-    #     lidarLstmModel = core.getLstmTrainedModel("lidar", lidarInputSeqs, lidarRelevantOutputSeqs, clusterLabel)
-    #     lidarLstmModelsDictByClusteringLabels[clusterLabel] = lidarLstmModel
-    #
+    
+    # LIDAR
+    lidarObssLen = 36000
+    npCombinedRobotsTimeLidarValObss = npCombinedRobotsTimeLidarValVelObss[0:lidarObssLen, :, 0:lidarValDim + 1]
+    lidarEncoder, lidarTimeRobotsValEncodedObss = core.getRobotsAutoEncoder("Lidar", npCombinedRobotsTimeLidarValObss)
+    npLidarTimeRobotsValEncodedVelObss = TimePosRowsDerivativeComputer.computer(lidarTimeRobotsValEncodedObss, velCo)
+
+    # lidarEncodedVelCoScaler = StandardScaler()
+    # lidarRobotsEncodedValVelObssScaled = lidarEncodedVelCoScaler.fit_transform(npLidarTimeRobotsEncodedValVelObss[:,1:])
+    lidarRobotsValEncodedVelObssScaled = npLidarTimeRobotsValEncodedVelObss[:, 1:]
+
+    lidarClustering, lidarRobotsEncodedValVelScaledObssClustersDict = core.getClusters("Lidar",
+                                                                                   lidarRobotsValEncodedVelObssScaled)
+
+    lidarLstmModelsDictByClusteringLabels = {}
+    for clusterLabel, lidarValEncodedVelObssForACluster in lidarRobotsEncodedValVelScaledObssClustersDict.items():
+        if len(lidarValEncodedVelObssForACluster) > trainingSeqLen:
+            lidarInputSeqs, lidarRelevantOutputSeqs = core.getTrainingSequences(lidarValEncodedVelObssForACluster)
+            lidarLstmModel = core.getLstmTrainedModel("lidar", lidarInputSeqs, lidarRelevantOutputSeqs, clusterLabel)
+            lidarLstmModelsDictByClusteringLabels[clusterLabel] = lidarLstmModel
+    
     #loop
-    core.loopThroughTestSensoryData(gpsLstmModelsDictByClusteringLabels,gpsClustering,gpsEncoder)
+    core.loopThroughTestSensoryData(
+        gpsLstmModelsDictByClusteringLabels
+        ,gpsClustering
+        ,gpsEncoder
+        ,lidarLstmModelsDictByClusteringLabels
+        ,lidarClustering
+        ,lidarEncoder
+    )
 
