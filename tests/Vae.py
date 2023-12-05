@@ -3,6 +3,7 @@ import pickle
 import numpy as np
 import tensorflow as tf
 from matplotlib import pyplot as plt
+from sklearn.manifold import TSNE
 from tensorflow.keras import layers
 from sklearn.preprocessing import MinMaxScaler
 
@@ -24,8 +25,9 @@ with open('{}/normalScenarioRobot1TimeLidarValVelObss.pkl'.format(testSharedPath
     robot1NpTimeLidarValVelObss = pickle.load(file)
 
 lidarValObss = robot1NpTimeLidarValVelObss[0:samplesNum, 1:inputDim + 1]
-scaler = MinMaxScaler()
-lidarValObssNormalized = scaler.fit_transform(lidarValObss)
+# scaler = MinMaxScaler()
+# lidarValObssNormalized = scaler.fit_transform(lidarValObss)
+lidarValObssNormalized = lidarValObss/15.
 lidarValObssNormalizedTensor = tf.convert_to_tensor(lidarValObssNormalized, dtype=tf.float32)
 
 # Define the VAE architecture
@@ -144,4 +146,64 @@ vae_model = Vae(latentDim)
 optimizer = tf.keras.optimizers.Adam(learning_rate=0.0001)
 
 # Train the VAE
-train_vae(vae_model, dataset, optimizer, epochs=100)
+train_vae(vae_model, dataset, optimizer, epochs=30)
+
+
+# After training the VAE, you can visualize the latent space using t-SNE
+def visualize_latent_space(model, data):
+    latent_representations = []
+
+    for idx in range(data.shape[0]):
+        x_actual = data[idx].reshape(1, inputDim)
+        mean, _ = model.getEncodedMeanAndLogVar(x_actual)
+        latent_representations.append(mean.numpy())
+
+    latent_representations = np.array(latent_representations).reshape(-1, latentDim)
+
+    # Use t-SNE for visualization
+    tsne = TSNE(n_components=2, random_state=42)
+    latent_tsne = tsne.fit_transform(latent_representations)
+
+    # Plot the latent space
+    plt.scatter(latent_tsne[:, 0], latent_tsne[:, 1])
+    plt.xlabel('Latent Dimension 1')
+    plt.ylabel('Latent Dimension 2')
+    plt.title('Visualization of Latent Space')
+    plt.show()
+
+# Call the visualization function after training
+visualize_latent_space(vae_model, lidarValObssNormalizedTensor.numpy())
+
+# Function to get mean and variance for several samples in the latent space
+def get_mean_and_variance(model, data, num_samples):
+    latent_representations = []
+
+    for idx in range(data.shape[0]):
+        x_actual = data[idx].reshape(1, inputDim)
+
+        # Encode the data to get the mean and log-variance
+        mean, log_var = model.getEncodedMeanAndLogVar(x_actual)
+
+        # Convert log-variance to variance
+        variance = np.exp(log_var)
+
+        # Generate random samples from the learned distribution in the latent space
+        latent_samples = np.random.normal(loc=mean, scale=np.sqrt(variance), size=(num_samples, latentDim))
+
+        # Calculate mean and variance for the generated samples
+        sample_mean = np.mean(latent_samples, axis=0)
+        sample_variance = np.var(latent_samples, axis=0)
+
+        # Store mean and variance for each data point
+        latent_representations.append((sample_mean, sample_variance))
+
+    return latent_representations
+
+# Call the function to get mean and variance for several samples
+num_samples = 100
+latent_stats = get_mean_and_variance(vae_model, lidarValObssNormalizedTensor.numpy(), num_samples)
+
+# Display mean and variance for a few samples
+for idx in range(5):  # Display for the first 5 samples
+    sample_mean, sample_variance = latent_stats[idx]
+    print(f"Sample {idx + 1} - Mean: {sample_mean}, Variance: {sample_variance}")

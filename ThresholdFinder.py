@@ -89,7 +89,7 @@ if __name__=="__main__":
     print(f"Best Gps threshold value: {gpsTrFinder.getBestMLParams()}")
 
 
-    # with open('{}/followScenarioLidarTimeAbnVals.pkl'.format(testSharedPath), 'rb') as file:
-    #     npTimeAbnVals = np.array(pickle.load(file))
-    # lidarTrFinder = ThresholdFinder("LIDAR", npTimeAbnVals, (75, 200), 1000)
-    # print(f"Best Lidar threshold value: {lidarTrFinder.getBestMLParams()}")
+    with open('{}/followScenarioLidarTimeAbnVals.pkl'.format(testSharedPath), 'rb') as file:
+        npTimeAbnVals = np.array(pickle.load(file))
+    lidarTrFinder = ThresholdFinder("LIDAR", npTimeAbnVals, (75, 200), 10000)
+    print(f"Best Lidar threshold value: {lidarTrFinder.getBestMLParams()}")
