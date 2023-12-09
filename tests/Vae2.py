@@ -8,6 +8,7 @@ from keras.models import Model, Sequential
 from matplotlib.patches import Ellipse
 from sklearn.preprocessing import MinMaxScaler
 from matplotlib.colors import to_rgba
+import tensorflow as tf
 
 sensorObssLen = 36000
 robotsNum = 2
@@ -16,6 +17,8 @@ latentDim = 2
 batchSize = 100
 epochs = 25
 epsilonStd = 1.0
+klCoefficient = 1
+
 activeSencor="gps"
 # activeSencor="lidar"
 
@@ -90,8 +93,7 @@ class KLDivergenceLayer(Layer):
     def call(self, inputs):
         mu, log_var = inputs
         kl_batch = - .5 * K.sum(1 + log_var - K.square(mu) - K.exp(log_var), axis=-1)
-        kl_coefficient = 0.01
-        self.add_loss(kl_coefficient*K.mean(kl_batch), inputs=inputs)
+        self.add_loss(klCoefficient * K.mean(kl_batch), inputs=inputs)
         return inputs
 
 
@@ -100,7 +102,7 @@ decoder = Sequential([
     Dense(2 * sensorValDim, activation='sigmoid')
 ])
 
-#2 here is for mean and variance
+#2 is num of robots
 x = Input(shape=(2 * sensorValDim,))
 h = Dense(intermediateDim, activation='relu')(x)
 
@@ -117,7 +119,8 @@ z = Add()([z_mu, z_eps])
 x_pred = decoder(z)
 
 vae = Model(inputs=[x, eps], outputs=x_pred)
-vae.compile(optimizer='rmsprop', loss=nll)
+
+vae.compile(optimizer=tf.keras.optimizers.RMSprop(), loss=nll)
 
 
 
@@ -126,11 +129,9 @@ history = vae.fit([npSensorValFlatObssScaled, np.random.normal(size=(sensorObssL
         npSensorValFlatObssScaled,
         shuffle=True,
         epochs=epochs,
-        batch_size=batchSize,
-        validation_split=0.2)
+        batch_size=batchSize)
 
 plt.plot(history.history['loss'], label='Training Loss')
-plt.plot(history.history['val_loss'], label='Validation Loss')
 plt.xlabel('Epochs')
 plt.ylabel('Loss')
 plt.legend()
